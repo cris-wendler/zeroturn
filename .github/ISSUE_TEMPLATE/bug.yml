@@ -1,0 +1,34 @@
+name: Bug report
+description: ZeroTurn did something wrong or unexpected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The command you ran and the output. Remove anything private before posting.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: zeroturn version
+      description: Output of `zeroturn version`
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and harness version
+      description: For example macOS 15, Claude Code 2.1.265
+  - type: textarea
+    id: doctor
+    attributes:
+      label: zeroturn doctor output
+      render: text

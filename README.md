@@ -230,7 +230,7 @@ Useful areas: harness adapters, event normalization, project detection, validati
 
 Contributions that add any of the following will be redirected: a model SDK or model calls, model selection, a chat interface, a complete coding harness, transcript collection, prompt inspection, remote telemetry, a hosted dashboard, output compression, automatic handoff, automatic compaction or clearing, shell strings in configuration, automatic force pushing or rebasing, credential bypasses, silent changes to global settings, Python packaging, or containers without a demonstrated need.
 
-Run `go vet ./...` and `go test ./...` before opening a pull request. The tests use temporary repositories and local bare remotes and never contact a real remote.
+How to build, test, and open a pull request is in [CONTRIBUTING.md](CONTRIBUTING.md). The tests use temporary repositories and local bare remotes and never contact a real remote.
 
 ## Limitations
 
@@ -243,14 +243,13 @@ Run `go vet ./...` and `go test ./...` before opening a pull request. The tests 
 
 ## Roadmap
 
-Current: everything described above.
+Current: everything described above, plus contributor documents and continuous integration on Linux and macOS.
 
 Planned:
 
 - release archives for macOS, Linux, and Windows, with SHA 256 checksums
 - `go install` and a Homebrew formula after the first public release
 - the harness contract document, JSON schemas, and a conformance suite
-- contributor documents and continuous integration
 - a Copilot adapter once Copilot exposes session values to hooks
 
 Not planned: `zeroturn sync`. The reasoning is in [docs/decisions.md](docs/decisions.md). The research behind the product boundary is in [docs/product-boundary.md](docs/product-boundary.md).

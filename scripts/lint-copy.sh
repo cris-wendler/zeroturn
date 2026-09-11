@@ -46,7 +46,9 @@ prompt_text='build a professional open source command line project|do not begin 
 placeholder='github\.com/OWNER|OWNER/tap|your-org/|example-owner'
 private_path='/Users/[A-Za-z]|/home/[a-z][a-z0-9_-]*/|C:\\\\Users\\\\'
 
-files=$(git ls-files | grep -v -E '^(LICENSE|COPYING)$' | grep -v -E '\.(svg|png|gif|jpg)$' | grep -v -E '^scripts/(lint-copy|check-commit-messages)\.sh$')
+# Files not yet committed are checked too, so a problem is found before
+# it reaches a commit.
+files=$(git ls-files --cached --others --exclude-standard | grep -v -E '^(LICENSE|COPYING)$' | grep -v -E '\.(svg|png|gif|jpg)$' | grep -v -E '^scripts/(lint-copy|check-commit-messages)\.sh$')
 
 for f in $files; do
 	[ -f "$f" ] || continue

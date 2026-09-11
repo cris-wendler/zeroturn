@@ -172,3 +172,15 @@ func TestIsProtected(t *testing.T) {
 		t.Fatal("protected branch matching is wrong")
 	}
 }
+
+func TestExampleFileIsValid(t *testing.T) {
+	dir := t.TempDir()
+	b, err := ioutil.ReadFile(filepath.Join("..", "..", ".zeroturn.example.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	ioutil.WriteFile(Path(dir), b, 0644)
+	if _, err := Load(dir); err != nil {
+		t.Fatalf(".zeroturn.example.json does not load: %v", err)
+	}
+}

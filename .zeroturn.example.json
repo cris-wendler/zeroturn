@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "guard": {
+    "mode": "observe",
+    "context": {
+      "warn": 70,
+      "confirm": 80,
+      "critical": 90
+    },
+    "limits": {
+      "fiveHourWarn": 75,
+      "sevenDayWarn": 75
+    },
+    "session": {
+      "durationWarnMinutes": 240,
+      "activeSubagentsWarn": 2,
+      "subagentStartsWarn": 4
+    }
+  },
+  "verify": {
+    "steps": [
+      {
+        "name": "lint",
+        "command": ["npm", "run", "lint"]
+      },
+      {
+        "name": "test",
+        "command": ["npm", "test"]
+      },
+      {
+        "name": "build",
+        "command": ["npm", "run", "build"]
+      }
+    ]
+  },
+  "git": {
+    "remote": "origin",
+    "protectedBranches": ["main", "master"]
+  }
+}

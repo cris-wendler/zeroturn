@@ -8,7 +8,6 @@ package verify
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -49,9 +48,9 @@ const (
 
 type Options struct {
 	RepoRoot string
-	Progress io.Writer
-	// Quiet suppresses per step progress, used when output is JSON.
-	Quiet bool
+	// OnStep, when set, receives each step result as soon as it is known,
+	// so progress streams one line per step instead of arriving at the end.
+	OnStep func(StepResult)
 }
 
 func LogDir(repoRoot string) string {
@@ -80,20 +79,27 @@ func Run(ctx context.Context, c config.Config, o Options) (Result, error) {
 		return res, err
 	}
 	stamp := time.Now().UTC().Format("20060102-150405")
+	add := func(sr StepResult) {
+		res.Steps = append(res.Steps, sr)
+		if o.OnStep != nil {
+			o.OnStep(sr)
+		}
+	}
+	skipRest := func(rest []config.Step, status string) {
+		for _, r := range rest {
+			add(StepResult{Name: r.Name, Command: display(r.Command), Status: status})
+			res.Skipped++
+		}
+	}
 
 	for i, step := range c.Verify.Steps {
 		if ctx.Err() != nil {
-			for _, remaining := range c.Verify.Steps[i:] {
-				res.Steps = append(res.Steps, StepResult{
-					Name: remaining.Name, Command: display(remaining.Command), Status: StatusCancelled,
-				})
-				res.Skipped++
-			}
+			skipRest(c.Verify.Steps[i:], StatusCancelled)
 			res.Cancelled = true
 			break
 		}
 		sr := runStep(ctx, step, o, stamp)
-		res.Steps = append(res.Steps, sr)
+		add(sr)
 		switch sr.Status {
 		case StatusPass:
 			res.Passed++
@@ -106,12 +112,7 @@ func Run(ctx context.Context, c config.Config, o Options) (Result, error) {
 			res.Failed++
 		}
 		if sr.Status == StatusFail || sr.Status == StatusMissing || sr.Status == StatusCancelled {
-			for _, remaining := range c.Verify.Steps[i+1:] {
-				res.Steps = append(res.Steps, StepResult{
-					Name: remaining.Name, Command: display(remaining.Command), Status: StatusSkipped,
-				})
-				res.Skipped++
-			}
+			skipRest(c.Verify.Steps[i+1:], StatusSkipped)
 			break
 		}
 	}
@@ -127,10 +128,6 @@ func runStep(ctx context.Context, step config.Step, o Options, stamp string) Ste
 		sr.Excerpt = step.Command[0] + " was not found on PATH"
 		return sr
 	}
-	if !o.Quiet && o.Progress != nil {
-		fmt.Fprintf(o.Progress, "RUN   %s\n", step.Name)
-	}
-
 	logPath := filepath.Join(LogDir(o.RepoRoot), stamp+"-"+safeName(step.Name)+".log")
 	lf, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {

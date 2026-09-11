@@ -76,12 +76,13 @@ func cmdVerify(ctx context.Context, args []string) error {
 			"install them, or change the commands in "+config.FileName)
 	}
 
+	opts := verify.Options{RepoRoot: repo.Root}
 	if !*asJSON {
 		fmt.Println("ZEROTURN VERIFY")
+		fmt.Println()
+		opts.OnStep = printStep
 	}
-	res, rerr := verify.Run(ctx, c, verify.Options{
-		RepoRoot: repo.Root, Progress: os.Stdout, Quiet: *asJSON,
-	})
+	res, rerr := verify.Run(ctx, c, opts)
 	if rerr != nil {
 		return output.Errorf(output.ExitInternal, "zeroturn verify could not start",
 			rerr.Error(), "check that the repository .git directory is writable")
@@ -96,7 +97,7 @@ func cmdVerify(ctx context.Context, args []string) error {
 			return jerr
 		}
 	} else {
-		printVerify(res)
+		printVerifySummary(res)
 	}
 
 	if res.Cancelled {
@@ -126,22 +127,27 @@ func printCommands(c config.Config) {
 	fmt.Println("They run directly, without a shell.")
 }
 
-func printVerify(res verify.Result) {
+// printStep writes one result line. It is passed to verify.Run so each
+// line appears when its step finishes.
+func printStep(s verify.StepResult) {
 	c := output.NewColor(os.Stdout, "")
-	for _, s := range res.Steps {
-		switch s.Status {
-		case verify.StatusPass:
-			fmt.Printf("%s  %-10s %.1fs\n", c.Green("PASS"), s.Name, s.Seconds)
-		case verify.StatusFail:
-			fmt.Printf("%s  %-10s %.1fs  exit %d\n", c.Red("FAIL"), s.Name, s.Seconds, s.ExitCode)
-		case verify.StatusMissing:
-			fmt.Printf("%s  %-10s %s\n", c.Red("MISS"), s.Name, s.Excerpt)
-		case verify.StatusCancelled:
-			fmt.Printf("%s  %-10s\n", c.Yellow("STOP"), s.Name)
-		default:
-			fmt.Printf("%s  %-10s\n", c.Dim("SKIP"), s.Name)
-		}
+	switch s.Status {
+	case verify.StatusPass:
+		fmt.Printf("%s  %-10s %.1fs\n", c.Green("PASS"), s.Name, s.Seconds)
+	case verify.StatusFail:
+		fmt.Printf("%s  %-10s %.1fs  exit %d\n", c.Red("FAIL"), s.Name, s.Seconds, s.ExitCode)
+	case verify.StatusMissing:
+		fmt.Printf("%s  %-10s %s\n", c.Red("MISS"), s.Name, s.Excerpt)
+	case verify.StatusCancelled:
+		fmt.Printf("%s  %-10s\n", c.Yellow("STOP"), s.Name)
+	default:
+		fmt.Printf("%s  %-10s\n", c.Dim("SKIP"), s.Name)
 	}
+}
+
+// printVerifySummary follows the streamed step lines with the failure
+// excerpt, the log location, and the result line.
+func printVerifySummary(res verify.Result) {
 	for _, s := range res.Steps {
 		if s.Status == verify.StatusFail && s.Excerpt != "" {
 			fmt.Printf("\nLast output from %s:\n", s.Name)
@@ -152,6 +158,11 @@ func printVerify(res verify.Result) {
 				fmt.Printf("Full output: %s\n", s.LogFile)
 			}
 		}
+	}
+	fmt.Println()
+	if res.Failed == 0 && res.Skipped == 0 {
+		fmt.Printf("Result: %d checks passed in %.1fs\n", res.Passed, res.Seconds)
+		return
 	}
 	fmt.Printf("Result: %d passed, %d failed, %d skipped in %.1fs\n",
 		res.Passed, res.Failed, res.Skipped, res.Seconds)

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 300" width="820" height="300" role="img" aria-labelledby="title desc">
+<title id="title">What zeroturn ship always does and always refuses</title>
+<desc id="desc">Always: stages only the files you name, scans them for credentials and reports the file, line, and category without the value, runs your approved checks, fetches and reads the branch state, asks before the first change, and pushes without force. Refuses: a protected branch, a path outside the repository, files already staged that you did not name, a branch that is behind or has diverged, git add -A, force pushing, rebasing, resetting, deleting branches, and skipping your Git hooks.</desc>
+<style>
+.card{fill:#0d1117;stroke:#30363d}
+.pane{fill:#161b22;stroke-width:2}
+.head{font:700 17px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+.body{font:14.5px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#c9d1d9}
+.mono{font:13.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:#e6edf3}
+.foot{font:14px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#9da7b3}
+</style>
+<rect class="card" x="0.5" y="0.5" width="819" height="299" rx="12"/>
+
+<rect class="pane" x="24" y="24" width="376" height="212" rx="8" stroke="#56d364"/>
+<path d="M44 44l6 7 12 -14" fill="none" stroke="#56d364" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text class="head" x="72" y="50" fill="#56d364">ship always</text>
+<text class="body" x="44" y="84">stages only the files you name</text>
+<text class="body" x="44" y="110">scans them for credentials</text>
+<text class="body" x="44" y="136">runs your approved checks</text>
+<text class="body" x="44" y="162">reads the branch state first</text>
+<text class="body" x="44" y="188">asks before the first change</text>
+<text class="body" x="44" y="214">pushes without force</text>
+
+<rect class="pane" x="420" y="24" width="376" height="212" rx="8" stroke="#ff7b72"/>
+<path d="M440 38l14 14M454 38l-14 14" fill="none" stroke="#ff7b72" stroke-width="3" stroke-linecap="round"/>
+<text class="head" x="468" y="50" fill="#ff7b72">ship refuses</text>
+<text class="body" x="440" y="84">a protected branch</text>
+<text class="body" x="440" y="110">a path outside the repository</text>
+<text class="body" x="440" y="136">files staged that you did not name</text>
+<text class="body" x="440" y="162">a branch behind or diverged</text>
+<text class="body" x="440" y="188">force push, rebase, reset, branch delete</text>
+<text class="body" x="440" y="214">skipping your Git hooks</text>
+
+<text class="foot" x="24" y="268">A credential stops the run. The report names the file, the line, and the kind, never the value.</text>
+<text class="mono" x="24" y="290">deploy.env:2  aws access key id</text>
+<text class="foot" x="290" y="290">and nothing is staged, committed, or pushed.</text>
+</svg>

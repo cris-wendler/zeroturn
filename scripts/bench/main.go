@@ -8,6 +8,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -72,7 +73,7 @@ func main() {
 		{name: "startup", note: "zeroturn version, process start only", args: []string{"version"}},
 		{name: "status line", note: "one status line payload on standard input", args: []string{"status", "--stdin", "--harness", "claude"}, stdin: payload},
 		{name: "subagent gate", note: "one PreToolUse event, decision written", args: []string{"event", "--harness", "claude", "--event", "PreToolUse"},
-			stdin: []byte(`{"session_id":"bench","hook_event_name":"PreToolUse","tool_name":"Agent","cwd":"` + root + `","tool_input":{"prompt":"x"}}`)},
+			stdin: gateEvent(root)},
 		{name: "policy check", note: "reads the repository configuration and records", args: []string{"policy", "check"}},
 		{name: "repository status", note: "reads the branch, so it starts git", args: []string{"status"}},
 	}
@@ -102,6 +103,20 @@ func main() {
 		fmt.Printf("| %s | %s | %s | %s | %s |\n", m.name,
 			ms(m.duration[len(m.duration)/2]), ms(m.duration[0]), ms(m.duration[len(m.duration)-1]), m.note)
 	}
+}
+
+// gateEvent is built with the JSON encoder, because a Windows path
+// contains backslashes, which are escape characters inside a JSON string.
+func gateEvent(root string) []byte {
+	b, err := json.Marshal(map[string]interface{}{
+		"session_id": "bench", "hook_event_name": "PreToolUse", "tool_name": "Agent",
+		"cwd": root, "tool_input": map[string]interface{}{"prompt": "x"},
+	})
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "the gate event could not be built:", err)
+		os.Exit(1)
+	}
+	return b
 }
 
 func ms(d time.Duration) string {

@@ -1,0 +1,56 @@
+name: release
+
+# Runs when a version tag is pushed. It builds the archives and opens a
+# draft release. A draft is not visible to anyone but the maintainer, so
+# publishing stays a deliberate, manual step.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to build, without the leading v
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+          cache: false
+      - name: version
+        id: version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "value=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: tests
+        run: go test ./...
+      - name: build archives
+        run: scripts/build-release.sh "${{ steps.version.outputs.value }}"
+      - name: homebrew formula
+        run: scripts/homebrew-formula.sh "${{ steps.version.outputs.value }}" > dist/zeroturn.rb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zeroturn-${{ steps.version.outputs.value }}
+          path: dist/
+      - name: draft release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --draft \
+            --title "$GITHUB_REF_NAME" \
+            --notes "See CHANGELOG.md. Checksums are in SHA256SUMS." \
+            dist/*.tar.gz dist/*.zip dist/SHA256SUMS

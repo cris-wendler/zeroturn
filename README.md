@@ -8,7 +8,8 @@ ZeroTurn works with coding harnesses. It is not another coding harness.
 
 ![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask because context, five hour usage, and active subagents are past their thresholds. zeroturn verify passes two checks, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
 
-The recording is real output from the executable, made with [docs/demo/record.sh](docs/demo/record.sh) against a sample project. The session values are sample data, not a real account. The last word of the status line says what happens to the next subagent. Here it is `ask`, so the harness asks you before starting another one, with a short reason such as "New subagent requires approval. Context is 82% and five hour usage is 81%."
+> [!NOTE]
+> The recording is real output from the executable, made with [docs/demo/record.sh](docs/demo/record.sh) against a sample project. The session values are sample data, not a real account. The last word of the status line says what happens to the next subagent. Here it is `ask`, so the harness asks you before starting another one, with a short reason such as "New subagent requires approval. Context is 82% and five hour usage is 81%."
 
 <details>
 <summary>Recording as text</summary>
@@ -67,7 +68,7 @@ ZeroTurn does not promise to remove session limits, and it does not estimate sav
 
 ## How it works
 
-![Diagram in two lanes. Session Guard: the coding harness sends events from its status line and hooks to ZeroTurn, which checks your thresholds, counts subagents, and keeps local records, then returns a decision for the next subagent: allow, ask you, or deny. The harness applies it before the subagent starts. Direct Lane: you run zeroturn verify or zeroturn ship, ZeroTurn runs only approved commands with a credential scan and safe Git rules, and acts on your project's tests, lint, build, commit, and push, on your machine without a model turn.](docs/demo/how-it-works.svg)
+![Diagram in two lanes. Session Guard: the coding harness sends events from its status line and hooks to ZeroTurn, which checks your thresholds, counts subagents, and keeps local records, then returns a decision for the next subagent: allow, ask you, or deny. The harness applies it before the subagent starts. Direct Lane: you run zeroturn verify or zeroturn ship, ZeroTurn runs only approved commands with a credential scan and safe Git rules, and acts on your project's tests, lint, build, commit, and push, on your machine without a model turn.](docs/img/how-it-works.svg)
 
 ## Session Guard
 
@@ -93,7 +94,9 @@ cd zeroturn
 go build -o zeroturn ./cmd/zeroturn
 ```
 
-Put the `zeroturn` executable somewhere on your `PATH`. Release archives, `go install`, and a Homebrew formula are planned for the first public release.
+Put the `zeroturn` executable somewhere on your `PATH`.
+
+Release archives for macOS, Linux, and Windows are built by `scripts/build-release.sh` and attached to each release with their checksums. `go install` and a Homebrew formula follow the first public release. The steps are in [docs/release.md](docs/release.md).
 
 ## Five minute setup
 
@@ -106,7 +109,8 @@ zeroturn integrate claude --apply  # write it after you confirm
 zeroturn doctor                    # check the installation
 ```
 
-Start a new coding session. The status line appears, and the gate is active.
+> [!TIP]
+> Start a new coding session after `--apply`. The settings are read when a session starts, so a running session does not pick them up.
 
 `init` proposes validation steps only for scripts that exist in the project. The file it writes looks like this:
 
@@ -133,11 +137,7 @@ The thresholds are starting points. They were chosen for a first run, not measur
 
 ## Policy modes
 
-| Mode | What it does |
-| --- | --- |
-| `observe` | The default. Shows the session condition and records counts. Never blocks and never asks. |
-| `confirm` | Asks for your approval before a new subagent starts when any threshold has been crossed. |
-| `strict` | Denies a new subagent when context reaches the critical threshold. Other thresholds ask. |
+![Three modes side by side. observe, the default, in green: shows the session condition and counts subagents, never blocks or asks. confirm, in yellow: asks before a new subagent once a threshold is crossed, you decide each time. strict, in red: denies a new subagent at critical context, other thresholds ask, and you approve it first.](docs/img/modes.svg)
 
 ```sh
 zeroturn policy show
@@ -147,19 +147,15 @@ zeroturn policy set guard.context.confirm 85
 zeroturn policy reset
 ```
 
-Strict mode is never switched on by a file alone. `zeroturn policy set guard.mode strict` shows the exact policy, explains what can be blocked and how to turn it off, checks the installed harness, runs a compatibility test, and asks you to confirm. A repository that commits `"mode": "strict"` gets Confirm behavior on every machine where nobody has approved Strict.
+> [!WARNING]
+> Strict mode is never switched on by a file alone. `zeroturn policy set guard.mode strict` shows the exact policy, explains what can be blocked and how to turn it off, checks the installed harness, runs a compatibility test, and asks you to confirm. A repository that commits `"mode": "strict"` gets Confirm behavior on every machine where nobody has approved Strict.
 
 ## Privacy
 
-ZeroTurn records only what it needs to count and decide:
+![Two columns. Recorded, on your machine: session identifier, harness and version, context percent and window size, five hour and seven day usage, session duration, subagent starts, stops and active count, gate decisions and command counts, and a hash of the repository rather than its path. Never recorded: prompts and responses, source code and diffs, subagent instructions, transcript contents, credentials and environment values, repository paths, and remote URLs holding credentials.](docs/img/privacy.svg)
 
-- session identifier, harness name and version, model label
-- context percentage and window size, five hour and seven day usage, reset times, session duration
-- subagent starts, stops, and active count, background task count
-- gate decisions, and how many direct validations and Git operations ran
-- a hash that identifies the repository without storing its path
-
-It never records prompts, responses, source code, diffs, subagent instructions, transcript contents, credentials, environment variables, repository paths, or remote URLs containing credentials. The harness sends a transcript path with most events. ZeroTurn discards it and never opens the file.
+> [!IMPORTANT]
+> The harness sends a transcript path with most events. ZeroTurn discards it and never opens the file. A test checks that no prompt, response, or path reaches its records.
 
 Records stay on your machine, in `~/Library/Application Support/zeroturn` on macOS, `$XDG_DATA_HOME/zeroturn` or `~/.local/share/zeroturn` on Linux, and `%LOCALAPPDATA%\zeroturn` on Windows. Records older than seven days are removed when a new session starts. `zeroturn report purge --all` removes every ZeroTurn record and nothing else.
 
@@ -208,9 +204,9 @@ The full contract document, JSON schemas, and a conformance suite are planned. S
 
 ## Safety
 
+![Two columns. ship always: stages only the files you name, scans them for credentials, runs your approved checks, reads the branch state first, asks before the first change, and pushes without force. ship refuses: a protected branch, a path outside the repository, files staged that you did not name, a branch behind or diverged, force push, rebase, reset, branch delete, and skipping your Git hooks.](docs/img/safety.svg)
+
 - Validation commands are argument arrays in `.zeroturn.json`, never shell strings. A repository's commands do not run until you approve them on your machine, and changing any command withdraws the approval.
-- `ship` never runs `git add -A`, never force pushes, never rebases, resets, or stashes, never deletes branches, and never passes `--no-verify`, so your Git hooks still run.
-- `ship` refuses protected branches, paths outside the repository, files already staged that you did not name, a branch that is behind or diverged, and content that looks like a credential. It reports the file, line, and kind of credential and never prints the value.
 - Output from validation steps is scanned for credentials before it is printed or logged.
 - The gate fails open. If ZeroTurn cannot read an event or its state, the harness behaves as if ZeroTurn were not installed.
 - Every error states what stopped, why, and the smallest safe next step.
@@ -241,6 +237,10 @@ Before contributing, check that the feature is not already there and search the 
 
 ## Limitations
 
+> [!CAUTION]
+> ZeroTurn shows and gates what the harness reports. It cannot see usage the harness does not send, and it does not promise to remove session limits.
+
+
 - Session values appear only when the harness sends them. Some accounts receive no usage window data.
 - Subagent counts cover only subagents started while ZeroTurn was installed.
 - The background task count is as current as the last `Stop` event.
@@ -254,7 +254,6 @@ Current: everything described above, plus contributor documents and continuous i
 
 Planned:
 
-- release archives for macOS, Linux, and Windows, with SHA 256 checksums
 - `go install` and a Homebrew formula after the first public release
 - the harness contract document, JSON schemas, and a conformance suite
 - a Copilot adapter once Copilot exposes session values to hooks

@@ -230,7 +230,7 @@ Useful areas: harness adapters, event normalization, project detection, validati
 
 Contributions that add any of the following will be redirected: a model SDK or model calls, model selection, a chat interface, a complete coding harness, transcript collection, prompt inspection, remote telemetry, a hosted dashboard, output compression, automatic handoff, automatic compaction or clearing, shell strings in configuration, automatic force pushing or rebasing, credential bypasses, silent changes to global settings, Python packaging, or containers without a demonstrated need.
 
-How to build, test, and open a pull request is in [CONTRIBUTING.md](CONTRIBUTING.md). The tests use temporary repositories and local bare remotes and never contact a real remote.
+Before contributing, check that the feature is not already there and search the existing issues. Then open a bug report or feature proposal on GitHub, and a pull request once the approach is agreed. The steps, and how to build and test, are in [CONTRIBUTING.md](CONTRIBUTING.md). Security problems go through [SECURITY.md](SECURITY.md), not a public issue. The tests use temporary repositories and local bare remotes and never contact a real remote.
 
 ## Limitations
 
@@ -238,12 +238,12 @@ How to build, test, and open a pull request is in [CONTRIBUTING.md](CONTRIBUTING
 - Subagent counts cover only subagents started while ZeroTurn was installed.
 - The background task count is as current as the last `Stop` event.
 - The interactive approval prompt for Confirm mode has not yet been observed.
-- Tested on macOS only so far. Linux and Windows builds are expected to work but have not been run.
+- The test suite runs on Linux, macOS, and Windows in continuous integration. On Windows, tests that need a POSIX shell are skipped. The harness integration has been used on macOS only.
 - The status line has been checked in the terminal interface of the harness only.
 
 ## Roadmap
 
-Current: everything described above, plus contributor documents and continuous integration on Linux and macOS.
+Current: everything described above, plus contributor documents and continuous integration on Linux, macOS, and Windows.
 
 Planned:
 

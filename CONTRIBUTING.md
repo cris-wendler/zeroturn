@@ -1,6 +1,21 @@
 # Contributing
 
-Thank you for considering a contribution. This file explains what fits the project, how to work on it, and what a pull request needs.
+Thank you for considering a contribution. Please follow these steps in order.
+
+## How to contribute
+
+1. **Check that it is not already there.** Read the Commands section of the [README](README.md), run `zeroturn <command> --help`, and run `zeroturn capabilities --json` to see what this build supports. Check [CHANGELOG.md](CHANGELOG.md) for recent changes.
+2. **Search the existing issues**, open and closed. Someone may have reported the same bug or proposed the same idea. If so, add your details there instead of opening a new issue.
+3. **Open an issue on GitHub** using one of the templates:
+   - **Bug report** for something that does not work as documented. Include the command, the output, `zeroturn version`, and `zeroturn doctor`.
+   - **Feature proposal** for something new. Describe the problem first, then the change you propose.
+
+   Wait for a maintainer to reply before starting a large change. The reply will say whether it fits the project, so you do not spend time on something that cannot be merged.
+4. **Open a pull request** from a fork, on its own branch, that references the issue, for example `Fixes #12`. Follow the checklist in the pull request template.
+
+Small fixes such as typos or broken links can go straight to step 4.
+
+Security problems are the exception: do not open a public issue. Follow [SECURITY.md](SECURITY.md).
 
 ## What fits
 
@@ -12,7 +27,7 @@ Useful areas:
 - event normalization and new fixtures
 - project detection for `zeroturn init`
 - validation presets for common toolchains
-- platform support, especially Linux and Windows testing
+- platform support, especially real use on Linux and Windows
 - security and redaction tests
 - terminal rendering and accessibility
 - documentation and examples

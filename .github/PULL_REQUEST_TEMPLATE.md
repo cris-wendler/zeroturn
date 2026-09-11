@@ -1,3 +1,7 @@
+## Related issue
+
+Fixes #
+
 ## What this changes
 
 ## Why

@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cris-wendler/zeroturn/schemas/config.schema.json",
+  "title": "ZeroTurn repository configuration",
+  "description": "The .zeroturn.json file. Unknown fields are refused when it is loaded.",
+  "type": "object",
+  "required": [
+    "version",
+    "guard",
+    "verify",
+    "git"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "guard": {
+      "type": "object",
+      "required": [
+        "mode",
+        "context",
+        "limits",
+        "session"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "observe",
+            "confirm",
+            "strict"
+          ],
+          "description": "strict also needs local approval with zeroturn policy set guard.mode strict, so a committed file cannot deny subagents on its own."
+        },
+        "context": {
+          "type": "object",
+          "required": [
+            "warn",
+            "confirm",
+            "critical"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "warn": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "confirm": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "critical": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          "description": "warn must stay below confirm, and confirm below critical."
+        },
+        "limits": {
+          "type": "object",
+          "required": [
+            "fiveHourWarn",
+            "sevenDayWarn"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "fiveHourWarn": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "sevenDayWarn": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "session": {
+          "type": "object",
+          "required": [
+            "durationWarnMinutes",
+            "activeSubagentsWarn",
+            "subagentStartsWarn"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "durationWarnMinutes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "activeSubagentsWarn": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "subagentStartsWarn": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "verify": {
+      "type": "object",
+      "required": [
+        "steps"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "command"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "command": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                },
+                "description": "An argument array. A shell string is refused, so repository configuration cannot smuggle shell syntax into an execution path."
+              }
+            }
+          }
+        }
+      }
+    },
+    "git": {
+      "type": "object",
+      "required": [
+        "remote",
+        "protectedBranches"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "remote": {
+          "type": "string",
+          "minLength": 1
+        },
+        "protectedBranches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

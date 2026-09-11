@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cris-wendler/zeroturn/schemas/capabilities.schema.json",
+  "title": "ZeroTurn capabilities",
+  "description": "Output of zeroturn capabilities --json. An adapter reads this to discover what a build supports rather than assuming it.",
+  "type": "object",
+  "required": [
+    "product",
+    "version",
+    "contractVersion",
+    "eventContract",
+    "guardModes",
+    "commands",
+    "eventTypes",
+    "harnesses",
+    "exitCodes",
+    "recordedFields",
+    "neverRecorded",
+    "makesNetworkRequests",
+    "makesModelCalls",
+    "runsDaemon"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "product": {
+      "const": "zeroturn"
+    },
+    "version": {
+      "type": "string"
+    },
+    "contractVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "eventContract": {
+      "const": "zeroturn.event/1"
+    },
+    "guardModes": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "observe",
+          "confirm",
+          "strict"
+        ]
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "eventTypes": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "status",
+          "subagent.pre",
+          "subagent.start",
+          "subagent.stop",
+          "session.stop",
+          "session.end"
+        ]
+      }
+    },
+    "harnesses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/harness"
+      }
+    },
+    "exitCodes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "recordedFields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "neverRecorded": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "makesNetworkRequests": {
+      "const": false
+    },
+    "makesModelCalls": {
+      "const": false
+    },
+    "runsDaemon": {
+      "const": false
+    }
+  },
+  "$defs": {
+    "harness": {
+      "type": "object",
+      "required": [
+        "name",
+        "status",
+        "testedVersions",
+        "events",
+        "gateSupported",
+        "statusSupported",
+        "notes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "supported",
+            "experimental",
+            "planned"
+          ]
+        },
+        "testedVersions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "gateSupported": {
+          "type": "boolean"
+        },
+        "statusSupported": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

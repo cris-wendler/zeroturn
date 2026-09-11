@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cris-wendler/zeroturn/schemas/policy-check.schema.json",
+  "title": "ZeroTurn policy check",
+  "description": "Output of zeroturn policy check --json. It evaluates the current session and changes nothing.",
+  "type": "object",
+  "required": [
+    "sessionDataAvailable",
+    "policy"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "sessionDataAvailable": {
+      "type": "boolean"
+    },
+    "policy": {
+      "$ref": "#/$defs/policy"
+    }
+  },
+  "$defs": {
+    "policy": {
+      "type": "object",
+      "required": [
+        "mode",
+        "level",
+        "decision",
+        "triggers"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "observe",
+            "confirm",
+            "strict"
+          ]
+        },
+        "level": {
+          "enum": [
+            "ok",
+            "warn",
+            "confirm",
+            "critical"
+          ]
+        },
+        "decision": {
+          "enum": [
+            "allow",
+            "ask",
+            "deny"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/trigger"
+          }
+        }
+      }
+    },
+    "trigger": {
+      "type": "object",
+      "required": [
+        "name",
+        "observed",
+        "limit",
+        "level",
+        "available"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "enum": [
+            "context",
+            "fiveHour",
+            "sevenDay",
+            "duration",
+            "activeSubagents",
+            "subagentStarts",
+            "backgroundTasks"
+          ]
+        },
+        "observed": {
+          "type": "number"
+        },
+        "limit": {
+          "type": "number"
+        },
+        "level": {
+          "enum": [
+            "warn",
+            "confirm",
+            "critical"
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "available": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

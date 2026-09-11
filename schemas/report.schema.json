@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cris-wendler/zeroturn/schemas/report.schema.json",
+  "title": "ZeroTurn report",
+  "description": "Output of zeroturn report <window> --json. Counts are events ZeroTurn observed locally, never a token or cost breakdown.",
+  "type": "object",
+  "required": [
+    "window",
+    "sessionsObserved",
+    "subagentsStarted",
+    "highestActiveSubagents",
+    "confirmationRequests",
+    "deniedSubagentStarts",
+    "directValidations",
+    "directGitOperations",
+    "generatedAt",
+    "provenance"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "window": {
+      "enum": [
+        "current",
+        "day",
+        "week"
+      ]
+    },
+    "sessionsObserved": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "peakContextPercent": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Absent when no session reported a context percentage."
+    },
+    "subagentsStarted": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "highestActiveSubagents": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "confirmationRequests": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "deniedSubagentStarts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "directValidations": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "directGitOperations": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "generatedAt": {
+      "type": "string"
+    },
+    "provenance": {
+      "const": "Based only on events observed locally by ZeroTurn on this machine."
+    }
+  }
+}

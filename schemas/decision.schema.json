@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cris-wendler/zeroturn/schemas/decision.schema.json",
+  "title": "ZeroTurn gate decision",
+  "description": "What zeroturn event prints when the gate asks or denies. An allow decision prints nothing at all, so that ZeroTurn never overrides the permission rules already configured in the harness.",
+  "type": "object",
+  "required": ["hookSpecificOutput"],
+  "additionalProperties": false,
+  "properties": {
+    "hookSpecificOutput": {
+      "type": "object",
+      "required": ["hookEventName", "permissionDecision", "permissionDecisionReason"],
+      "additionalProperties": false,
+      "properties": {
+        "hookEventName": {"const": "PreToolUse"},
+        "permissionDecision": {"enum": ["ask", "deny"]},
+        "permissionDecisionReason": {"type": "string", "minLength": 1, "description": "One short sentence naming at most two measurements. Never the policy in full, never the session report, never anything from the subagent prompt."}
+      }
+    }
+  }
+}

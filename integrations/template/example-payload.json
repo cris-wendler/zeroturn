@@ -1,0 +1,17 @@
+{
+  "session": {
+    "id": "example-session-1",
+    "version": "3.2.0",
+    "workingDirectory": "/path/to/repository",
+    "durationMs": 11520000
+  },
+  "tool": "subagent",
+  "usage": {
+    "contextPercent": 82,
+    "fiveHourPercent": 81
+  },
+  "subagent": {
+    "id": "a1",
+    "kind": "explore"
+  }
+}

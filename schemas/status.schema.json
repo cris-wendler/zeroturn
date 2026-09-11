@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cris-wendler/zeroturn/schemas/status.schema.json",
+  "title": "ZeroTurn status",
+  "description": "Output of zeroturn status --json. The session is present only when a recent record exists for this repository.",
+  "type": "object",
+  "required": [
+    "sessionDataAvailable",
+    "policy"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "sessionDataAvailable": {
+      "type": "boolean"
+    },
+    "session": {
+      "$ref": "#/$defs/session"
+    },
+    "policy": {
+      "$ref": "#/$defs/policy"
+    },
+    "branch": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "session": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "sessionId"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "repoHash": {
+          "type": "string",
+          "description": "Identifies the repository without recording its path."
+        },
+        "harness": {
+          "type": "string"
+        },
+        "harnessVersion": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "startedAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "durationMs": {
+          "type": "integer"
+        },
+        "contextPercent": {
+          "type": "number"
+        },
+        "contextWindowSize": {
+          "type": "integer"
+        },
+        "peakContextPercent": {
+          "type": "number"
+        },
+        "fiveHourPercent": {
+          "type": "number"
+        },
+        "fiveHourResetsAt": {
+          "type": "integer"
+        },
+        "sevenDayPercent": {
+          "type": "number"
+        },
+        "sevenDayResetsAt": {
+          "type": "integer"
+        },
+        "subagentStarts": {
+          "type": "integer"
+        },
+        "subagentStops": {
+          "type": "integer"
+        },
+        "activeSubagents": {
+          "type": "integer"
+        },
+        "peakActiveSubagents": {
+          "type": "integer"
+        },
+        "backgroundTasks": {
+          "type": "integer"
+        },
+        "confirmRequests": {
+          "type": "integer"
+        },
+        "deniedSubagentStarts": {
+          "type": "integer"
+        },
+        "allowedSubagentStarts": {
+          "type": "integer"
+        },
+        "directValidations": {
+          "type": "integer"
+        },
+        "directGitOperations": {
+          "type": "integer"
+        },
+        "lastDecision": {
+          "enum": [
+            "allow",
+            "ask",
+            "deny"
+          ]
+        },
+        "activeAgentIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "required": [
+        "mode",
+        "level",
+        "decision",
+        "triggers"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "observe",
+            "confirm",
+            "strict"
+          ]
+        },
+        "level": {
+          "enum": [
+            "ok",
+            "warn",
+            "confirm",
+            "critical"
+          ]
+        },
+        "decision": {
+          "enum": [
+            "allow",
+            "ask",
+            "deny"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/trigger"
+          }
+        }
+      }
+    },
+    "trigger": {
+      "type": "object",
+      "required": [
+        "name",
+        "observed",
+        "limit",
+        "level",
+        "available"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "enum": [
+            "context",
+            "fiveHour",
+            "sevenDay",
+            "duration",
+            "activeSubagents",
+            "subagentStarts",
+            "backgroundTasks"
+          ]
+        },
+        "observed": {
+          "type": "number"
+        },
+        "limit": {
+          "type": "number"
+        },
+        "level": {
+          "enum": [
+            "warn",
+            "confirm",
+            "critical"
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "available": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

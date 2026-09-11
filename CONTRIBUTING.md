@@ -59,7 +59,7 @@ Requirements: Go 1.17 or newer and Git. No other dependency is used, and a pull 
 ```sh
 go build -o zeroturn ./cmd/zeroturn
 go vet ./...
-go test ./...
+go test ./...          # includes the conformance suite
 scripts/lint-copy.sh
 ```
 
@@ -77,6 +77,8 @@ Layout:
 | `internal/security` | credential detection and redaction |
 | `internal/trust` | approval of repository commands and of Strict mode |
 | `fixtures` | harness payloads used by tests |
+| `schemas` | the published JSON schemas |
+| `conformance` | checks that output still follows those schemas |
 | `docs/demo` | the README recording and its renderer |
 
 ## Writing rules

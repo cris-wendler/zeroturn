@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cris-wendler/zeroturn/schemas/verify.schema.json",
+  "title": "ZeroTurn verify result",
+  "description": "Output of zeroturn verify --json.",
+  "type": "object",
+  "required": [
+    "steps",
+    "passed",
+    "failed",
+    "skipped",
+    "seconds",
+    "cancelled"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/step"
+      }
+    },
+    "passed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "failed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "skipped": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "cancelled": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "step": {
+      "type": "object",
+      "required": [
+        "name",
+        "command",
+        "status",
+        "exitCode",
+        "seconds"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "pass",
+            "fail",
+            "skipped",
+            "missing",
+            "cancelled"
+          ]
+        },
+        "exitCode": {
+          "type": "integer"
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "logFile": {
+          "type": "string"
+        },
+        "excerpt": {
+          "type": "string",
+          "description": "Short tail of the output, with credentials replaced by their category."
+        }
+      }
+    }
+  }
+}

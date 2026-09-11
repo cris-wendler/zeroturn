@@ -202,7 +202,7 @@ Not supported in this version. No Copilot hook payload carries usage, context ut
 
 Other harnesses can send events in a normalized JSON form with `zeroturn event --harness normalized`. Each event names the contract `zeroturn.event/1`, and an event that names a different contract is refused with a clear message. `zeroturn capabilities --json` lists the commands, event types, recorded fields, and exit codes.
 
-The full contract document, JSON schemas, and a conformance suite are planned. See the roadmap.
+[docs/harness-contract.md](docs/harness-contract.md) states what ZeroTurn promises an adapter and what an adapter must do in return: process invocation, event shapes, decisions, mutation classification, exit codes, cancellation, redaction, and how versions change. [docs/adapter-authoring.md](docs/adapter-authoring.md) is the practical guide, and [integrations/template/](integrations/template) holds a worked example you can copy.
 
 ## Safety
 
@@ -227,7 +227,14 @@ The full contract document, JSON schemas, and a conformance suite are planned. S
 
 ## JSON schemas
 
-`status`, `policy show`, `policy check`, `report`, `verify`, `doctor`, and `capabilities` accept `--json`. Published schemas for each output are planned.
+`status`, `policy show`, `policy check`, `report`, `verify`, `doctor`, and `capabilities` accept `--json`. The schemas are published in [schemas/](schemas), including the repository configuration file and the normalized event an adapter sends.
+
+```sh
+go test ./conformance                                                      # every output still follows its schema
+go run ./conformance/validate schemas/normalized-event.schema.json e.json  # check one document
+```
+
+The validator is part of the project and has no dependencies. A schema using a keyword it does not support is reported rather than skipped, so a contract can never look checked when it is not.
 
 ## Contributing
 
@@ -252,12 +259,11 @@ Before contributing, check that the feature is not already there and search the 
 
 ## Roadmap
 
-Current: everything described above, plus contributor documents and continuous integration on Linux, macOS, and Windows.
+Current: everything described above, plus contributor documents, the harness contract with published schemas and a conformance suite, and continuous integration on Linux, macOS, and Windows.
 
 Planned:
 
 - `go install` and a Homebrew formula after the first public release
-- the harness contract document, JSON schemas, and a conformance suite
 - a Copilot adapter once Copilot exposes session values to hooks
 
 Considered, not decided: a warning before a credential reaches the model, using the detection that `ship` already performs. The two possible forms, and what each would cost, are in [docs/decisions.md](docs/decisions.md).

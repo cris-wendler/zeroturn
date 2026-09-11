@@ -69,8 +69,9 @@ agent_start a2
 # status line keeps its colors because the harness renders it in color.
 echo '$ zeroturn status --stdin --harness claude < session.json'
 session | env -u NO_COLOR "$zt" status --stdin --harness claude
-echo '$ zeroturn event --harness claude --event PreToolUse < subagent.json | jq .hookSpecificOutput'
-propose_subagent | jq .hookSpecificOutput
+propose_subagent >/dev/null
+echo '$ zeroturn policy check'
+"$zt" policy check
 echo '---'
 echo '$ zeroturn verify'
 "$zt" verify || true

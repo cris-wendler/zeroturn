@@ -6,9 +6,9 @@ ZeroTurn shows context, usage windows, session duration, and subagent activity w
 
 ZeroTurn works with coding harnesses. It is not another coding harness.
 
-![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. The subagent gate returns an ask decision because context and five hour usage are past their thresholds. zeroturn verify passes two checks, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
+![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask because context, five hour usage, and active subagents are past their thresholds. zeroturn verify passes two checks, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
 
-The recording is real output from the executable, made with [docs/demo/record.sh](docs/demo/record.sh) against a sample project. The session values are sample data, not a real account. The last word of the status line says what happens to the next subagent. Here it is `ask`, so the harness asks you before starting another one.
+The recording is real output from the executable, made with [docs/demo/record.sh](docs/demo/record.sh) against a sample project. The session values are sample data, not a real account. The last word of the status line says what happens to the next subagent. Here it is `ask`, so the harness asks you before starting another one, with a short reason such as "New subagent requires approval. Context is 82% and five hour usage is 81%."
 
 <details>
 <summary>Recording as text</summary>
@@ -16,12 +16,15 @@ The recording is real output from the executable, made with [docs/demo/record.sh
 ```text
 $ zeroturn status --stdin --harness claude < session.json
 ZT  ctx 82%  5h 81%  7d 47%  session 3h12m  agents 2  ask
-$ zeroturn event --harness claude --event PreToolUse < subagent.json | jq .hookSpecificOutput
-{
-  "hookEventName": "PreToolUse",
-  "permissionDecision": "ask",
-  "permissionDecisionReason": "New subagent requires approval. Context is 82% and five hour usage is 81%."
-}
+$ zeroturn policy check
+ZEROTURN POLICY CHECK
+mode       confirm
+level      confirm
+decision   ask
+thresholds crossed:
+  context          Context is 82% (limit 80)
+  fiveHour         Five hour usage is 81% (limit 75)
+  activeSubagents  2 subagents are active (limit 2)
 
 $ zeroturn verify
 ZEROTURN VERIFY
@@ -40,9 +43,9 @@ branch:   docs-update
 remote:   origin  ../remote.git
 
 PASS  vet        0.2s
-PASS  test       0.3s
+PASS  test       0.2s
 
-Result: 2 checks passed in 0.5s
+Result: 2 checks passed in 0.4s
 
 READY TO SHIP
 Dry run finished. Nothing was staged, committed, or pushed.
@@ -61,6 +64,10 @@ It shows the condition of the current session, asks before more delegated work w
 The coding tool should solve the problem. It should not spend the rest of the session narrating commands the computer already knows how to run. You should not need another agent to manage work that never needed an agent in the first place.
 
 ZeroTurn does not promise to remove session limits, and it does not estimate savings.
+
+## How it works
+
+![Diagram in two lanes. Session Guard: the coding harness sends events from its status line and hooks to ZeroTurn, which checks your thresholds, counts subagents, and keeps local records, then returns a decision for the next subagent: allow, ask you, or deny. The harness applies it before the subagent starts. Direct Lane: you run zeroturn verify or zeroturn ship, ZeroTurn runs only approved commands with a credential scan and safe Git rules, and acts on your project's tests, lint, build, commit, and push, on your machine without a model turn.](docs/demo/how-it-works.svg)
 
 ## Session Guard
 

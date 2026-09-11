@@ -78,6 +78,8 @@ Before a new subagent starts, the gate compares those values with your threshold
 
 A value the harness did not send is left out. It is never shown as zero.
 
+The status line and the gate each take about 8 ms on the machine they were measured on, including process start, and neither makes a network request or starts a background process. The method and the numbers are in [docs/benchmarks.md](docs/benchmarks.md).
+
 ## Direct Lane
 
 `zeroturn verify` runs the checks listed in `.zeroturn.json` directly, without a shell and without a model turn. It prints one line per step and keeps the full output under `.git/zeroturn/logs/`.
@@ -264,6 +266,16 @@ Not planned: `zeroturn sync`. The reasoning is in [docs/decisions.md](docs/decis
 
 ## License
 
-ZeroTurn is free software licensed under GNU GPL version 3. You may use, study, modify, and distribute it under the terms of that license. See [LICENSE](LICENSE).
+ZeroTurn is free software licensed under GNU GPL version 3. You may use, study, modify, and distribute it under the terms of that license.
 
-SPDX identifier: `GPL-3.0-only`. Contributions accepted into the repository use the same license.
+| | |
+| --- | --- |
+| SPDX identifier | `GPL-3.0-only` |
+| Full text | [LICENSE](LICENSE), and the same text under the traditional GNU name in [COPYING](COPYING) |
+| Contributions | accepted under the same license, with no contributor license agreement |
+| Dependencies | none, see [docs/dependency-licenses.md](docs/dependency-licenses.md) |
+
+In short: you can run it for any purpose, read and change the source, and share it. If you distribute a changed version, it carries the same license and its source stays available.
+
+> [!NOTE]
+> Both `LICENSE` and `COPYING` hold the same official text, unmodified. `LICENSE` is the name GitHub and most tools look for, `COPYING` is the name the GNU project uses. Because both are present, GitHub lists the license twice in its sidebar. That is the only effect.

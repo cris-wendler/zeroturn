@@ -184,6 +184,24 @@ func TestRemoveKeepsUserHookInSharedEntry(t *testing.T) {
 	}
 }
 
+// Removing the last entry leaves a tidy empty object, not a blank line.
+func TestRemoveLeavesTidyFile(t *testing.T) {
+	work, _ := repoWithConfig(t, nil)
+	if err := integrate(t, work, true, "--apply"); err != nil {
+		t.Fatal(err)
+	}
+	if err := integrate(t, work, true, "--remove"); err != nil {
+		t.Fatal(err)
+	}
+	b, err := ioutil.ReadFile(settingsFile(work))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(b) != "{}\n" {
+		t.Fatalf("settings file after removal: %q", b)
+	}
+}
+
 func TestIntegrateRefusesInvalidJSON(t *testing.T) {
 	work, _ := repoWithConfig(t, nil)
 	testutil.Write(t, work, ".claude/settings.local.json", "{broken")

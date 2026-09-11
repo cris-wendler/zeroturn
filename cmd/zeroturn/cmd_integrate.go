@@ -570,6 +570,11 @@ func writeOrdered(path string, top map[string]json.RawMessage, order []string) e
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return err
 	}
+	if len(top) == 0 {
+		// Removing the last entry leaves an empty settings file rather
+		// than a file with a stray blank line in it.
+		return state.AtomicWrite(path, []byte("{}\n"), 0644)
+	}
 	seen := map[string]bool{}
 	var buf bytes.Buffer
 	buf.WriteString("{\n")

@@ -3,8 +3,8 @@
 #
 # The license texts are official documents and are not checked. Test files
 # and fixtures may contain sample paths on purpose, so the private path
-# check skips them. This script names the phrases it looks for, so it
-# skips itself.
+# check skips them. This script and scripts/check-commit-messages.sh name
+# the phrases they look for, so both are skipped.
 set -u
 
 cd "$(dirname "$0")/.." || exit 2
@@ -36,7 +36,7 @@ check() {
 	fi
 }
 
-promotional='AI[- ]powered|agentic|revolutionary|next[- ]generation|game[- ]changing|intelligent automation|seamless|supercharge|transform your workflow|future of development|cutting[- ]edge|blazing[- ]fast|effortless|\bmagic\b|autonomous engineering|leverage|harness the power|redefine|disrupt|best[- ]in[- ]class|enterprise[- ]grade|battle[- ]tested|one[- ]stop solution'
+promotional='AI[- ]powered|agentic|revolutionary|next[- ]generation|game[- ]changing|intelligent automation|seamless|supercharge|transform your workflow|future of development|cutting[- ]edge|blazing[- ]fast|effortless|\bmagic\b|autonomous engineering|leverage|harness the power|redefine|\bdisrupt(s|ing)?\b|best[- ]in[- ]class|enterprise[- ]grade|battle[- ]tested|one[- ]stop solution'
 # unlock is a promotional word in prose and an ordinary identifier in Go.
 promotional_prose="$promotional|unlock"
 filler="in today's rapidly changing world|whether you are a beginner or an expert|say goodbye to|look no further|at its core|it is important to note|this powerful tool|this comprehensive solution|the possibilities are endless|welcome to the future"
@@ -46,7 +46,7 @@ prompt_text='build a professional open source command line project|do not begin 
 placeholder='github\.com/OWNER|OWNER/tap|your-org/|example-owner'
 private_path='/Users/[A-Za-z]|/home/[a-z][a-z0-9_-]*/|C:\\\\Users\\\\'
 
-files=$(git ls-files | grep -v -E '^(LICENSE|COPYING)$' | grep -v -E '\.(svg|png|gif|jpg)$' | grep -v '^scripts/lint-copy\.sh$')
+files=$(git ls-files | grep -v -E '^(LICENSE|COPYING)$' | grep -v -E '\.(svg|png|gif|jpg)$' | grep -v -E '^scripts/(lint-copy|check-commit-messages)\.sh$')
 
 for f in $files; do
 	[ -f "$f" ] || continue

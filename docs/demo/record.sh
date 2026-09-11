@@ -9,7 +9,9 @@
 # Approving the sample project's validation commands needs a terminal, so
 # the script answers that one prompt with expect, which ships with macOS.
 #
-# Usage: docs/demo/record.sh [path to zeroturn]
+# Usage:
+#   docs/demo/record.sh [path to zeroturn] > docs/demo/transcript.txt
+#   go run ./docs/demo/render < docs/demo/transcript.txt > docs/demo/zeroturn.svg
 set -eu
 
 repo_root=$(cd "$(dirname "$0")/../.." && pwd)
@@ -62,15 +64,17 @@ session | "$zt" status --stdin --harness claude >/dev/null
 agent_start a1
 agent_start a2
 
+# The transcript below is what docs/demo/render turns into the animation.
+# Lines starting with "$ " are typed, "---" clears the screen, and the
+# status line keeps its colors because the harness renders it in color.
 echo '$ zeroturn status --stdin --harness claude < session.json'
-session | "$zt" status --stdin --harness claude
-echo
-echo '# the harness proposes another subagent'
-propose_subagent
-echo
+session | env -u NO_COLOR "$zt" status --stdin --harness claude
+echo '$ zeroturn event --harness claude --event PreToolUse < subagent.json | jq .hookSpecificOutput'
+propose_subagent | jq .hookSpecificOutput
+echo '---'
 echo '$ zeroturn verify'
 "$zt" verify || true
-echo
+echo '---'
 printf '# Release notes\n\nFirst draft.\n' >NOTES.md
 echo '$ zeroturn ship --message "docs: add release notes" --files NOTES.md --dry-run'
 "$zt" ship --message "docs: add release notes" --files NOTES.md --dry-run || true

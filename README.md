@@ -6,31 +6,30 @@ ZeroTurn shows context, usage windows, session duration, and subagent activity w
 
 ZeroTurn works with coding harnesses. It is not another coding harness.
 
-## What it looks like
+![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. The subagent gate returns an ask decision because context and five hour usage are past their thresholds. zeroturn verify passes two checks, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
 
-Recorded from the real executable with [docs/demo/record.sh](docs/demo/record.sh), which builds a sample project in a temporary directory. The session values are sample data, not a real account.
+The recording is real output from the executable, made with [docs/demo/record.sh](docs/demo/record.sh) against a sample project. The session values are sample data, not a real account. The last word of the status line says what happens to the next subagent. Here it is `ask`, so the harness asks you before starting another one.
+
+<details>
+<summary>Recording as text</summary>
 
 ```text
 $ zeroturn status --stdin --harness claude < session.json
 ZT  ctx 82%  5h 81%  7d 47%  session 3h12m  agents 2  ask
-```
+$ zeroturn event --harness claude --event PreToolUse < subagent.json | jq .hookSpecificOutput
+{
+  "hookEventName": "PreToolUse",
+  "permissionDecision": "ask",
+  "permissionDecisionReason": "New subagent requires approval. Context is 82% and five hour usage is 81%."
+}
 
-The last word says what happens to the next subagent. This session is past the configured thresholds, so when the harness proposes another subagent, it asks you first with this message:
-
-```text
-New subagent requires approval. Context is 82% and five hour usage is 81%.
-```
-
-Routine checks and a commit run without another model turn:
-
-```text
 $ zeroturn verify
 ZEROTURN VERIFY
 
-PASS  vet        0.3s
+PASS  vet        0.2s
 PASS  test       0.2s
 
-Result: 2 checks passed in 0.5s
+Result: 2 checks passed in 0.4s
 
 $ zeroturn ship --message "docs: add release notes" --files NOTES.md --dry-run
 ZEROTURN SHIP
@@ -48,6 +47,8 @@ Result: 2 checks passed in 0.5s
 READY TO SHIP
 Dry run finished. Nothing was staged, committed, or pushed.
 ```
+
+</details>
 
 ## Why it exists
 
@@ -176,7 +177,7 @@ Every report ends with the line "Based only on events observed locally by ZeroTu
 
 ## Claude Code
 
-Supported. ZeroTurn uses these official interfaces:
+Supported. The full guide, including what each hook does and which payload fields are read, is in [docs/integrations/claude.md](docs/integrations/claude.md). ZeroTurn uses these official interfaces:
 
 - the status line, for context, usage windows, and session duration
 - `PreToolUse` with the exact matcher `Agent`, the only hook that can allow, ask, or deny a subagent

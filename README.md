@@ -182,7 +182,7 @@ Every report ends with the line "Based only on events observed locally by ZeroTu
 
 ## Claude Code
 
-Supported. The full guide, including what each hook does and which payload fields are read, is in [docs/integrations/claude.md](docs/integrations/claude.md). ZeroTurn uses these official interfaces:
+Supported. The full guide, including what each hook does and which payload fields are read, is in [docs/integrations/claude-code.md](docs/integrations/claude-code.md). ZeroTurn uses these official interfaces:
 
 - the status line, for context, usage windows, and session duration
 - `PreToolUse` with the exact matcher `Agent`, the only hook that can allow, ask, or deny a subagent

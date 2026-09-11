@@ -49,7 +49,7 @@ func TestPassAndFail(t *testing.T) {
 		sh("ok", "echo fine"),
 		sh("bad", "echo broken >&2; exit 3"),
 		sh("after", "echo never"),
-	), Options{RepoRoot: root, Quiet: true})
+	), Options{RepoRoot: root})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func TestMissingExecutable(t *testing.T) {
 	if m := MissingExecutables(c); len(m) != 1 {
 		t.Fatalf("missing %v", m)
 	}
-	res, _ := Run(context.Background(), c, Options{RepoRoot: repo(t), Quiet: true})
+	res, _ := Run(context.Background(), c, Options{RepoRoot: repo(t)})
 	if res.Steps[0].Status != StatusMissing || res.Failed != 1 {
 		t.Fatalf("result %+v", res)
 	}
@@ -82,7 +82,7 @@ func TestNoShellInterpretation(t *testing.T) {
 	root := repo(t)
 	marker := filepath.Join(root, "pwned")
 	c := steps(config.Step{Name: "echo", Command: []string{"echo", "; touch " + marker, "$(touch " + marker + ")"}})
-	res, _ := Run(context.Background(), c, Options{RepoRoot: root, Quiet: true})
+	res, _ := Run(context.Background(), c, Options{RepoRoot: root})
 	if res.Passed != 1 {
 		t.Fatalf("result %+v", res)
 	}
@@ -94,7 +94,7 @@ func TestNoShellInterpretation(t *testing.T) {
 func TestRunsInRepositoryRoot(t *testing.T) {
 	skipWithoutSh(t)
 	root := repo(t)
-	res, _ := Run(context.Background(), steps(sh("where", "test -d .git")), Options{RepoRoot: root, Quiet: true})
+	res, _ := Run(context.Background(), steps(sh("where", "test -d .git")), Options{RepoRoot: root})
 	if res.Passed != 1 {
 		t.Fatalf("step did not run in the repository root: %+v", res.Steps)
 	}
@@ -105,7 +105,7 @@ func TestLogPreservedAndRedacted(t *testing.T) {
 	root := repo(t)
 	secret := "AKIA" + "QWERTYUIOPASDFGH"
 	res, _ := Run(context.Background(), steps(sh("leak", "echo line one; echo key "+secret+"; exit 1")),
-		Options{RepoRoot: root, Quiet: true})
+		Options{RepoRoot: root})
 	s := res.Steps[0]
 	if !strings.HasPrefix(s.LogFile, LogDir(root)) {
 		t.Fatalf("log at %q", s.LogFile)
@@ -125,7 +125,7 @@ func TestLogPreservedAndRedacted(t *testing.T) {
 func TestExcerptIsBounded(t *testing.T) {
 	skipWithoutSh(t)
 	res, _ := Run(context.Background(), steps(sh("noisy", "i=0; while [ $i -lt 500 ]; do echo line $i; i=$((i+1)); done; exit 1")),
-		Options{RepoRoot: repo(t), Quiet: true})
+		Options{RepoRoot: repo(t)})
 	lines := strings.Split(res.Steps[0].Excerpt, "\n")
 	if len(lines) > tailLines || !strings.Contains(lines[len(lines)-1], "line 499") {
 		t.Fatalf("excerpt has %d lines, last %q", len(lines), lines[len(lines)-1])
@@ -145,7 +145,7 @@ func TestCancellationStopsChildProcesses(t *testing.T) {
 	res, _ := Run(ctx, steps(
 		sh("slow", "(sleep 2; touch "+marker+") & sleep 5"),
 		sh("next", "echo never"),
-	), Options{RepoRoot: root, Quiet: true})
+	), Options{RepoRoot: root})
 	if time.Since(start) > 3*time.Second {
 		t.Fatal("cancellation did not stop the step")
 	}
@@ -161,5 +161,15 @@ func TestCancellationStopsChildProcesses(t *testing.T) {
 func TestSafeName(t *testing.T) {
 	if got := safeName("../x y"); strings.ContainsAny(got, "./ ") {
 		t.Fatalf("got %q", got)
+	}
+}
+
+func TestOnStepStreamsEveryResult(t *testing.T) {
+	skipWithoutSh(t)
+	var seen []string
+	Run(context.Background(), steps(sh("a", "exit 0"), sh("b", "exit 1"), sh("c", "exit 0")),
+		Options{RepoRoot: repo(t), OnStep: func(s StepResult) { seen = append(seen, s.Name+":"+s.Status) }})
+	if strings.Join(seen, ",") != "a:pass,b:fail,c:skipped" {
+		t.Fatalf("got %v", seen)
 	}
 }

@@ -50,13 +50,15 @@ func Render(l Line) string {
 		parts = append(parts, c.Dim("session data unavailable"))
 	}
 
-	switch l.Result.Level {
-	case policy.LevelWarn:
+	// The last word says what the gate would do with the next subagent:
+	// ask or deny, or warn when a threshold is crossed but nothing will stop.
+	switch {
+	case l.Result.Decision == policy.DecisionDeny:
+		parts = append(parts, c.Red("deny"))
+	case l.Result.Decision == policy.DecisionAsk:
+		parts = append(parts, c.Yellow("ask"))
+	case l.Result.Level != policy.LevelOK:
 		parts = append(parts, c.Yellow("warn"))
-	case policy.LevelConfirm:
-		parts = append(parts, c.Yellow(l.Result.Mode))
-	case policy.LevelCritical:
-		parts = append(parts, c.Red("critical"))
 	}
 
 	return strings.Join(parts, "  ")

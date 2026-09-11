@@ -15,7 +15,7 @@ import (
 // Version is set at build time. The zero value marks a development build.
 var Version = "0.1.0-dev"
 
-const usage = `zeroturn - session pressure and local development commands
+const usage = `zeroturn shows session pressure and runs routine development commands locally.
 
 Usage:
   zeroturn <command> [flags]

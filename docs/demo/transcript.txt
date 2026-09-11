@@ -1,0 +1,32 @@
+$ zeroturn status --stdin --harness claude < session.json
+[1mZT[0m  [2mctx [0m[33m82%[0m  [2m5h [0m[33m81%[0m  [2m7d [0m47%  [2msession [0m3h12m  [2magents [0m[33m2[0m  [33mask[0m
+$ zeroturn event --harness claude --event PreToolUse < subagent.json | jq .hookSpecificOutput
+{
+  "hookEventName": "PreToolUse",
+  "permissionDecision": "ask",
+  "permissionDecisionReason": "New subagent requires approval. Context is 82% and five hour usage is 81%."
+}
+---
+$ zeroturn verify
+ZEROTURN VERIFY
+
+PASS  vet        0.2s
+PASS  test       0.2s
+
+Result: 2 checks passed in 0.4s
+---
+$ zeroturn ship --message "docs: add release notes" --files NOTES.md --dry-run
+ZEROTURN SHIP
+files:
+  NOTES.md
+message:  docs: add release notes
+branch:   docs-update
+remote:   origin  ../remote.git
+
+PASS  vet        0.2s
+PASS  test       0.3s
+
+Result: 2 checks passed in 0.5s
+
+READY TO SHIP
+Dry run finished. Nothing was staged, committed, or pushed.

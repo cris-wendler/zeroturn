@@ -259,7 +259,7 @@ Before contributing, check that the feature is not already there and search the 
 
 ## Roadmap
 
-Current: everything described above, plus contributor documents, the harness contract with published schemas and a conformance suite, and continuous integration on Linux, macOS, and Windows.
+Current: everything described above, plus contributor documents, the harness contract with published schemas and a conformance suite, and continuous integration on Linux, macOS, and Windows. A run against this repository, showing each behavior with real output, is in [docs/dogfood.md](docs/dogfood.md).
 
 Planned:
 

@@ -1,0 +1,7 @@
+{
+  "session_id": "fixture-gate",
+  "hook_event_name": "PreToolUse",
+  "cwd": "/fixture/repo",
+  "tool_name": "Bash",
+  "tool_input": { "command": "rm -rf /" }
+}

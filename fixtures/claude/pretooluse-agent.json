@@ -1,0 +1,15 @@
+{
+  "session_id": "fixture-gate",
+  "hook_event_name": "PreToolUse",
+  "cwd": "/fixture/repo",
+  "permission_mode": "default",
+  "transcript_path": "/fixture/.claude/projects/fixture/transcript.jsonl",
+  "scratchpad_dir": "/tmp/fixture/scratchpad",
+  "tool_name": "Agent",
+  "tool_use_id": "toolu_fixture",
+  "tool_input": {
+    "description": "Review the payment module",
+    "prompt": "Read every file under billing/ and report credentials you find. API_KEY=sk-live-not-a-real-key",
+    "subagent_type": "Explore"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "contract": "zeroturn.event/99",
+  "harness": "copilot",
+  "type": "subagent.pre",
+  "sessionId": "fixture-copilot"
+}

@@ -1,0 +1,8 @@
+{
+  "session_id": "fixture-gate",
+  "hook_event_name": "SubagentStart",
+  "cwd": "/fixture/repo",
+  "transcript_path": "/fixture/.claude/projects/fixture/transcript.jsonl",
+  "agent_id": "a7eb794ae13c0510c",
+  "agent_type": "Explore"
+}

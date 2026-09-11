@@ -1,0 +1,15 @@
+{
+  "session_id": "fixture-gate",
+  "hook_event_name": "SubagentStop",
+  "cwd": "/fixture/repo",
+  "transcript_path": "/fixture/.claude/projects/fixture/transcript.jsonl",
+  "agent_transcript_path": "/fixture/.claude/projects/fixture/subagents/agent-a7eb.jsonl",
+  "agent_id": "a7eb794ae13c0510c",
+  "agent_type": "Explore",
+  "stop_hook_active": false,
+  "last_assistant_message": "Analysis complete. The billing module has three issues.",
+  "background_tasks": [
+    { "id": "a7eb794ae13c0510c", "type": "subagent", "status": "running", "description": "List files", "agent_type": "Explore" }
+  ],
+  "session_crons": []
+}

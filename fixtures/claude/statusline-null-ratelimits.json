@@ -1,0 +1,8 @@
+{
+  "session_id": "fixture-null",
+  "cwd": "/fixture/repo",
+  "model": null,
+  "context_window": null,
+  "rate_limits": null,
+  "cost": null
+}

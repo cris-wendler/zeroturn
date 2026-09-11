@@ -1,0 +1,19 @@
+{
+  "session_id": "fixture-full",
+  "cwd": "/fixture/repo",
+  "version": "2.1.265",
+  "model": { "id": "claude-opus-5", "display_name": "Opus" },
+  "workspace": { "current_dir": "/fixture/repo", "project_dir": "/fixture/repo" },
+  "context_window": {
+    "total_input_tokens": 152000,
+    "context_window_size": 200000,
+    "used_percentage": 76,
+    "remaining_percentage": 24
+  },
+  "rate_limits": {
+    "five_hour": { "used_percentage": 81, "resets_at": 1788000000 },
+    "seven_day": { "used_percentage": 47, "resets_at": 1788400000 }
+  },
+  "cost": { "total_cost_usd": 1.23, "total_duration_ms": 11520000 },
+  "exceeds_200k_tokens": false
+}

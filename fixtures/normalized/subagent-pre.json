@@ -1,0 +1,9 @@
+{
+  "contract": "zeroturn.event/1",
+  "harness": "copilot",
+  "harnessVersion": "1.0.83",
+  "type": "subagent.pre",
+  "sessionId": "fixture-copilot",
+  "cwd": "/fixture/repo",
+  "agentType": "task"
+}

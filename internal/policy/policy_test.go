@@ -1,0 +1,173 @@
+package policy
+
+import (
+	"strings"
+	"testing"
+
+	"github.com/cris-wendler/zeroturn/internal/config"
+	"github.com/cris-wendler/zeroturn/internal/state"
+)
+
+func f(v float64) *float64 { return &v }
+func i64(v int64) *int64   { return &v }
+
+func withMode(mode string) config.Config {
+	c := config.Default()
+	c.Guard.Mode = mode
+	return c
+}
+
+func TestEmptySessionAllowsInEveryMode(t *testing.T) {
+	for _, mode := range []string{config.ModeObserve, config.ModeConfirm, config.ModeStrict} {
+		r := Evaluate(withMode(mode), state.Session{})
+		if r.Decision != DecisionAllow || r.Level != LevelOK {
+			t.Errorf("%s: got %s/%s, want allow/ok", mode, r.Decision, r.Level)
+		}
+		if r.Triggers == nil {
+			t.Errorf("%s: triggers must be an empty list, not null, for the JSON contract", mode)
+		}
+	}
+}
+
+func TestObserveNeverBlocks(t *testing.T) {
+	s := state.Session{ContextPct: f(99), FiveHourPct: f(99), ActiveSubagents: 9, SubagentStarts: 20}
+	r := Evaluate(withMode(config.ModeObserve), s)
+	if r.Decision != DecisionAllow {
+		t.Fatalf("observe returned %s", r.Decision)
+	}
+	if r.Level != LevelCritical {
+		t.Fatalf("observe must still report the level, got %s", r.Level)
+	}
+	if r.Reason != "" {
+		t.Fatalf("observe must not produce a reason for the harness, got %q", r.Reason)
+	}
+}
+
+func TestContextThresholdBoundaries(t *testing.T) {
+	cases := []struct {
+		pct   float64
+		level string
+	}{
+		{69.9, LevelOK},
+		{70, LevelWarn},
+		{79.9, LevelWarn},
+		{80, LevelConfirm},
+		{89.9, LevelConfirm},
+		{90, LevelCritical},
+		{100, LevelCritical},
+	}
+	for _, c := range cases {
+		r := Evaluate(withMode(config.ModeObserve), state.Session{ContextPct: f(c.pct)})
+		if r.Level != c.level {
+			t.Errorf("context %.1f: level %s, want %s", c.pct, r.Level, c.level)
+		}
+	}
+}
+
+func TestConfirmAsksOnlyAtConfirmLevel(t *testing.T) {
+	c := withMode(config.ModeConfirm)
+	if r := Evaluate(c, state.Session{ContextPct: f(75)}); r.Decision != DecisionAllow {
+		t.Errorf("warn level must not ask, got %s", r.Decision)
+	}
+	r := Evaluate(c, state.Session{ContextPct: f(82), ActiveSubagents: 2})
+	if r.Decision != DecisionAsk {
+		t.Fatalf("got %s, want ask", r.Decision)
+	}
+	want := "New subagent requires approval. Context is 82% and 2 subagents are active."
+	if r.Reason != want {
+		t.Errorf("reason\n got %q\nwant %q", r.Reason, want)
+	}
+	if r := Evaluate(c, state.Session{ContextPct: f(95)}); r.Decision != DecisionAsk {
+		t.Errorf("confirm mode must never deny, got %s", r.Decision)
+	}
+}
+
+func TestStrictDeniesOnlyAtCritical(t *testing.T) {
+	c := withMode(config.ModeStrict)
+	if r := Evaluate(c, state.Session{ContextPct: f(85)}); r.Decision != DecisionAsk {
+		t.Errorf("confirm level in strict mode must ask, got %s", r.Decision)
+	}
+	if r := Evaluate(c, state.Session{FiveHourPct: f(100), SevenDayPct: f(100), ActiveSubagents: 10}); r.Decision != DecisionAsk {
+		t.Errorf("no hard limit crossed, strict must ask rather than deny, got %s", r.Decision)
+	}
+	r := Evaluate(c, state.Session{ContextPct: f(91)})
+	if r.Decision != DecisionDeny {
+		t.Fatalf("got %s, want deny", r.Decision)
+	}
+	if !strings.HasPrefix(r.Reason, "New subagent denied by ZeroTurn strict mode.") {
+		t.Errorf("reason %q", r.Reason)
+	}
+}
+
+func TestEachThresholdTriggers(t *testing.T) {
+	c := withMode(config.ModeConfirm)
+	mins := int64(c.Guard.Session.DurationWarnMinutes) * 60000
+	cases := map[string]state.Session{
+		"fiveHour":        {FiveHourPct: f(75)},
+		"sevenDay":        {SevenDayPct: f(75)},
+		"duration":        {DurationMS: i64(mins)},
+		"activeSubagents": {ActiveSubagents: c.Guard.Session.ActiveSubagentsWarn},
+		"subagentStarts":  {SubagentStarts: c.Guard.Session.SubagentStartsWarn},
+	}
+	for name, s := range cases {
+		r := Evaluate(c, s)
+		if len(r.Triggers) != 1 || r.Triggers[0].Name != name {
+			t.Errorf("%s: triggers %+v", name, r.Triggers)
+			continue
+		}
+		if r.Decision != DecisionAsk {
+			t.Errorf("%s: decision %s, want ask", name, r.Decision)
+		}
+	}
+}
+
+func TestBackgroundWorkWarnsWithoutAsking(t *testing.T) {
+	r := Evaluate(withMode(config.ModeConfirm), state.Session{BackgroundTasks: 1})
+	if r.Level != LevelWarn || r.Decision != DecisionAllow {
+		t.Fatalf("got %s/%s, want warn/allow", r.Level, r.Decision)
+	}
+}
+
+// Missing measurements must never be treated as zero or as a crossing.
+func TestMissingMeasurementsAreIgnored(t *testing.T) {
+	r := Evaluate(withMode(config.ModeStrict), state.Session{ContextPct: nil, FiveHourPct: nil, DurationMS: nil})
+	if len(r.Triggers) != 0 {
+		t.Fatalf("triggers from absent data: %+v", r.Triggers)
+	}
+}
+
+// Percentages from different measurements are compared separately. Two
+// values that are each below their own threshold must not combine.
+func TestPercentagesAreNeverSummed(t *testing.T) {
+	r := Evaluate(withMode(config.ModeStrict), state.Session{ContextPct: f(60), FiveHourPct: f(60), SevenDayPct: f(60)})
+	if len(r.Triggers) != 0 || r.Decision != DecisionAllow {
+		t.Fatalf("got %s with %+v", r.Decision, r.Triggers)
+	}
+}
+
+func TestTriggersSortedMostSevereFirst(t *testing.T) {
+	r := Evaluate(withMode(config.ModeStrict), state.Session{BackgroundTasks: 2, FiveHourPct: f(80), ContextPct: f(95)})
+	if r.Triggers[0].Level != LevelCritical || r.Triggers[len(r.Triggers)-1].Level != LevelWarn {
+		t.Fatalf("order %+v", r.Triggers)
+	}
+}
+
+func TestReasonNamesAtMostTwoTriggers(t *testing.T) {
+	r := Evaluate(withMode(config.ModeConfirm), state.Session{
+		ContextPct: f(85), FiveHourPct: f(90), SevenDayPct: f(90), ActiveSubagents: 5,
+	})
+	if n := strings.Count(r.Reason, "%"); n > 2 {
+		t.Fatalf("reason carries %d measurements: %q", n, r.Reason)
+	}
+	if strings.Count(r.Reason, " and ") != 1 {
+		t.Fatalf("reason %q", r.Reason)
+	}
+}
+
+func TestHumanMinutes(t *testing.T) {
+	for in, want := range map[float64]string{0: "0m", 59.9: "59m", 60: "1h00m", 192: "3h12m"} {
+		if got := HumanMinutes(in); got != want {
+			t.Errorf("HumanMinutes(%v) = %q, want %q", in, got, want)
+		}
+	}
+}

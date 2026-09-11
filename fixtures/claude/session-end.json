@@ -1,0 +1,7 @@
+{
+  "session_id": "fixture-gate",
+  "hook_event_name": "SessionEnd",
+  "cwd": "/fixture/repo",
+  "transcript_path": "/fixture/.claude/projects/fixture/transcript.jsonl",
+  "reason": "clear"
+}

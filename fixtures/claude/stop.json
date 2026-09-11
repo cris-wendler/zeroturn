@@ -1,0 +1,10 @@
+{
+  "session_id": "fixture-gate",
+  "hook_event_name": "Stop",
+  "cwd": "/fixture/repo",
+  "transcript_path": "/fixture/.claude/projects/fixture/transcript.jsonl",
+  "stop_hook_active": false,
+  "last_assistant_message": "Done.",
+  "background_tasks": [],
+  "session_crons": []
+}

@@ -83,6 +83,14 @@ If ZeroTurn cannot parse an event, open its state, or load the configuration, it
 
 Other versions are not refused. `zeroturn policy set guard.mode strict` reports when the installed version differs from the tested one.
 
+## Where this overlaps with the harness
+
+Claude Code tracks the context window on its own. It shows how much is left before it summarises the conversation, and it summarises automatically when that point is reached. At high context you can therefore hear about context twice, once from the harness and once from ZeroTurn.
+
+They answer different questions. The harness asks whether the conversation needs summarising. ZeroTurn asks whether another subagent should start, and it asks earlier, while there is still room to decide. The measurements the harness never reports, the five hour and seven day usage windows, session duration, and how many subagents are running, are the ones only ZeroTurn watches.
+
+To hear less about context, raise the thresholds, for example `zeroturn policy set guard.context.confirm 88`. To stop context from triggering the gate at all, raise `guard.context.confirm` and `guard.context.critical` to 100. The status line keeps showing the percentage either way.
+
 ## Fields read from the status line payload
 
 | Field | Shown as |

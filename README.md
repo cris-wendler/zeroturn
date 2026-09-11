@@ -258,6 +258,8 @@ Planned:
 - the harness contract document, JSON schemas, and a conformance suite
 - a Copilot adapter once Copilot exposes session values to hooks
 
+Considered, not decided: a warning before a credential reaches the model, using the detection that `ship` already performs. The two possible forms, and what each would cost, are in [docs/decisions.md](docs/decisions.md).
+
 Not planned: `zeroturn sync`. The reasoning is in [docs/decisions.md](docs/decisions.md). The research behind the product boundary is in [docs/product-boundary.md](docs/product-boundary.md).
 
 ## License

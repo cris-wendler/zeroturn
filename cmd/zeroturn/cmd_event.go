@@ -13,13 +13,22 @@ import (
 	"github.com/cris-wendler/zeroturn/internal/state"
 )
 
+func repoHashFor(cwd string) string {
+	if root, ok := git.FindRoot(cwd); ok {
+		return state.RepoHash(root)
+	}
+	return ""
+}
+
 // applyEvent folds one normalized event into the stored session record.
 func applyEvent(st *state.Store, e events.Event) (state.Session, error) {
-	repoHash := ""
-	if root, ok := git.FindRoot(e.CWD); ok {
-		repoHash = state.RepoHash(root)
-	}
-	return st.Update(e.SessionID, repoHash, func(s *state.Session) {
+	return st.Update(e.SessionID, repoHashFor(e.CWD), func(s *state.Session) {
+		applyTo(s, e)
+	})
+}
+
+func applyTo(s *state.Session, e events.Event) {
+	{
 		if e.Harness != "" {
 			s.Harness = e.Harness
 		}
@@ -67,7 +76,7 @@ func applyEvent(st *state.Store, e events.Event) (state.Session, error) {
 		case events.TypeSubagentStop:
 			s.RemoveActive(e.AgentID)
 		}
-	})
+	}
 }
 
 // decisionOutput is the Claude Code permission response shape.
@@ -109,17 +118,21 @@ func cmdEvent(ctx context.Context, args []string) error {
 	if serr != nil {
 		return nil
 	}
-	sess, uerr := applyEvent(st, e)
-	if uerr != nil {
-		return nil
-	}
 
 	if e.Type != events.TypeSubagentPre {
+		if _, uerr := applyEvent(st, e); uerr != nil {
+			return nil
+		}
 		return nil
 	}
 
-	res := policy.Evaluate(sessionConfig(st, e.CWD), sess)
-	st.Update(e.SessionID, "", func(s *state.Session) {
+	// The gate folds the event and the decision into one state write,
+	// because it runs while the developer waits for the subagent.
+	cfg := sessionConfig(st, e.CWD)
+	var res policy.Result
+	if _, uerr := st.Update(e.SessionID, repoHashFor(e.CWD), func(s *state.Session) {
+		applyTo(s, e)
+		res = policy.Evaluate(cfg, *s)
 		s.LastDecision = res.Decision
 		switch res.Decision {
 		case policy.DecisionAsk:
@@ -129,7 +142,9 @@ func cmdEvent(ctx context.Context, args []string) error {
 		default:
 			s.AllowedStarts++
 		}
-	})
+	}); uerr != nil {
+		return nil
+	}
 
 	// An allow decision prints nothing so that ZeroTurn does not override
 	// the permission rules the user already configured in the harness.

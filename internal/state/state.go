@@ -341,10 +341,11 @@ func atomicWrite(path string, data []byte, perm os.FileMode) error {
 		f.Close()
 		return err
 	}
-	if err := f.Sync(); err != nil {
-		f.Close()
-		return err
-	}
+	// The file is renamed into place, so a reader sees either the old
+	// record or the new one. The contents are deliberately not flushed to
+	// the disk: these are session records that are rewritten many times a
+	// minute, a flush costs more than the records are worth, and a record
+	// lost to a power failure is replaced by the next event.
 	if err := f.Close(); err != nil {
 		return err
 	}

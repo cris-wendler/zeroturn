@@ -171,3 +171,14 @@ func TestHumanMinutes(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkEvaluate(b *testing.B) {
+	c := withMode(config.ModeConfirm)
+	s := state.Session{ContextPct: f(82), FiveHourPct: f(81), SevenDayPct: f(47), DurationMS: i64(11520000), ActiveSubagents: 2, SubagentStarts: 5}
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		if r := Evaluate(c, s); r.Decision == "" {
+			b.Fatal("no decision")
+		}
+	}
+}

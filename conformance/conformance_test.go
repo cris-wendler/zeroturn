@@ -7,6 +7,7 @@ package conformance
 
 import (
 	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -97,8 +98,19 @@ func repo(t *testing.T, mode string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	line := strings.Replace(string(payload), "/fixture/repo", work, -1)
-	run(t, work, line, "status", "--stdin", "--harness", "claude")
+	// The document is rebuilt with the JSON encoder rather than by
+	// replacing text, because a Windows path contains backslashes, which
+	// are escape characters inside a JSON string.
+	var doc map[string]interface{}
+	if err := json.Unmarshal(payload, &doc); err != nil {
+		t.Fatal(err)
+	}
+	doc["cwd"] = work
+	if ws, ok := doc["workspace"].(map[string]interface{}); ok {
+		ws["current_dir"] = work
+		ws["project_dir"] = work
+	}
+	run(t, work, encode(t, doc), "status", "--stdin", "--harness", "claude")
 	return work
 }
 
@@ -142,7 +154,10 @@ func TestVerifyOutputFollowsItsSchema(t *testing.T) {
 
 func TestDecisionFollowsItsSchema(t *testing.T) {
 	work := repo(t, config.ModeConfirm)
-	event := `{"session_id":"fixture-full","hook_event_name":"PreToolUse","cwd":"` + work + `","tool_name":"Agent","tool_input":{"prompt":"private"}}`
+	event := encode(t, map[string]interface{}{
+		"session_id": "fixture-full", "hook_event_name": "PreToolUse", "cwd": work,
+		"tool_name": "Agent", "tool_input": map[string]interface{}{"prompt": "private"},
+	})
 	out, _, code := run(t, work, event, "event", "--harness", "claude", "--event", "PreToolUse")
 	if code != 0 {
 		t.Fatalf("exit %d", code)
@@ -218,6 +233,15 @@ func TestEverySchemaIsSupported(t *testing.T) {
 			}
 		}
 	}
+}
+
+func encode(t *testing.T, v interface{}) string {
+	t.Helper()
+	b, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
 }
 
 func approve(t *testing.T, work string) {

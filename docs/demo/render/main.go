@@ -22,11 +22,11 @@ import (
 )
 
 const (
-	fontSize   = 14.0
-	charWidth  = 8.45 // close to 0.6em, the advance width of common monospace fonts
-	lineHeight = 20.0
+	fontSize   = 16.0
+	charWidth  = 9.65 // close to 0.6em, the advance width of common monospace fonts
+	lineHeight = 23.0
 	padX       = 20.0
-	padTop     = 52.0
+	padTop     = 56.0
 	padBottom  = 20.0
 
 	idleBeforeTyping = 350  // ms with the prompt and cursor shown
@@ -88,7 +88,7 @@ func parse(r io.Reader) ([][]item, error) {
 			screens = append(screens, cur)
 			cur = nil
 		case strings.HasPrefix(line, "$ "):
-			cur = append(cur, item{command: true, spans: []span{{"$ ", "p"}, {line[2:], "w"}}})
+			cur = append(cur, item{command: true, spans: append([]span{{"$ ", "p"}}, commandSpans(line[2:])...)})
 		default:
 			cur = append(cur, item{spans: colorize(line)})
 		}
@@ -102,26 +102,103 @@ func parse(r io.Reader) ([][]item, error) {
 	return screens, sc.Err()
 }
 
+// commandSpans colors a typed command: the program, the subcommand, flags,
+// quoted text, and shell operators each get their own color.
+func commandSpans(cmd string) []span {
+	var out []span
+	word := 0
+	for len(cmd) > 0 {
+		if cmd[0] == ' ' {
+			out = append(out, span{" ", ""})
+			cmd = cmd[1:]
+			continue
+		}
+		end := strings.IndexByte(cmd, ' ')
+		if cmd[0] == '"' {
+			if q := strings.IndexByte(cmd[1:], '"'); q >= 0 {
+				end = q + 2
+			}
+		}
+		if end < 0 {
+			end = len(cmd)
+		}
+		tok := cmd[:end]
+		cmd = cmd[end:]
+		class := "w"
+		switch {
+		case word == 0:
+			class = "cmd b"
+		case word == 1:
+			class = "sub b"
+		case strings.HasPrefix(tok, "--"):
+			class = "flag"
+		case strings.HasPrefix(tok, `"`):
+			class = "str"
+		case tok == "<" || tok == "|" || tok == ">":
+			class = "op"
+		}
+		out = append(out, span{tok, class})
+		word++
+	}
+	return out
+}
+
+var fieldNames = map[string]bool{
+	"files:": true, "message:": true, "branch:": true, "remote:": true,
+	"mode": true, "level": true, "decision": true, "thresholds crossed:": true,
+}
+
 // colorize keeps ANSI colors when present and otherwise applies the colors
-// the CLI itself uses on a terminal.
+// the CLI uses on a terminal, plus colors for field names and decisions so
+// the recording is easier to scan. Every state is also written as a word,
+// so nothing depends on color alone.
 func colorize(line string) []span {
 	if strings.Contains(line, "\x1b[") {
 		return fromANSI(line)
 	}
+	trimmed := strings.TrimSpace(line)
 	switch {
 	case strings.HasPrefix(line, "PASS"):
-		return []span{{"PASS", "g"}, {line[4:], ""}}
+		return []span{{"PASS", "g b"}, {line[4:], ""}}
 	case strings.HasPrefix(line, "FAIL"):
-		return []span{{"FAIL", "r"}, {line[4:], ""}}
+		return []span{{"FAIL", "r b"}, {line[4:], ""}}
 	case line == "READY TO SHIP":
-		return []span{{line, "g b"}}
+		return []span{{line, "g b hl"}}
 	case strings.HasPrefix(line, "ZEROTURN "):
-		return []span{{line, "b"}}
+		return []span{{line, "h b"}}
 	case strings.HasPrefix(line, "Result: ") && !strings.Contains(line, "failed"):
 		return []span{{line, "g"}}
-	case strings.Contains(line, `"ask"`):
-		i := strings.Index(line, `"ask"`)
-		return []span{{line[:i], ""}, {`"ask"`, "y"}, {line[i+5:], ""}}
+	case fieldNames[trimmed]:
+		return []span{{line, "k"}}
+	}
+	if f := strings.Fields(line); len(f) >= 2 && fieldNames[f[0]] && !strings.HasPrefix(line, " ") {
+		key := line[:strings.Index(line, f[0])+len(f[0])]
+		rest := line[len(key):]
+		value := strings.TrimSpace(rest)
+		class := "w b"
+		switch value {
+		case "ask", "confirm":
+			class = "y b"
+		case "deny", "critical":
+			class = "r b"
+		case "allow", "ok":
+			class = "g b"
+		}
+		switch key {
+		case "remote:", "files:", "message:", "branch:":
+			class = "w"
+		case "mode":
+			class = "w b"
+		}
+		pad := rest[:len(rest)-len(strings.TrimLeft(rest, " "))]
+		return []span{{key, "k"}, {pad, ""}, {value, class}}
+	}
+	if strings.HasPrefix(line, "  ") && strings.Contains(line, "(limit ") {
+		f := strings.Fields(line)
+		name := f[0]
+		i := strings.Index(line, name) + len(name)
+		j := strings.LastIndex(line, "(limit ")
+		return []span{{line[:i], "o"}, {line[i:j], "w"}, {line[j:], "m"}}
 	}
 	return []span{{line, ""}}
 }
@@ -162,7 +239,7 @@ func fromANSI(line string) []span {
 	return out
 }
 
-func width(spans []span) int {
+func textWidth(spans []span) int {
 	n := 0
 	for _, s := range spans {
 		n += len([]rune(s.text))
@@ -181,7 +258,7 @@ func timeline(screens [][]item) ([]element, int, int, int) {
 		start := len(els)
 		row := 0
 		for _, it := range screen {
-			if w := width(it.spans); w+2 > cols {
+			if w := textWidth(it.spans); w+2 > cols {
 				cols = w + 2
 			}
 			if !it.command {
@@ -194,8 +271,8 @@ func timeline(screens [][]item) ([]element, int, int, int) {
 				row++
 				continue
 			}
-			cmd := []rune(it.spans[1].text)
-			els = append(els, element{row: row, spans: withCursor(""), from: t, to: t + idleBeforeTyping})
+			cmd := []rune(plain(it.spans[1:]))
+			els = append(els, element{row: row, spans: withCursor(nil), from: t, to: t + idleBeforeTyping})
 			t += idleBeforeTyping
 			for i := 1; i <= len(cmd); i++ {
 				d := typeBase + jitter(i)
@@ -206,7 +283,7 @@ func timeline(screens [][]item) ([]element, int, int, int) {
 				if i == len(cmd) {
 					next = t + afterTyping
 				}
-				els = append(els, element{row: row, spans: withCursor(string(cmd[:i])), from: t, to: next})
+				els = append(els, element{row: row, spans: withCursor(prefix(it.spans[1:], i)), from: t, to: next})
 				t = next
 			}
 			els = append(els, element{row: row, spans: it.spans, from: t})
@@ -225,8 +302,34 @@ func timeline(screens [][]item) ([]element, int, int, int) {
 	return els, t, cols, rows
 }
 
-func withCursor(typed string) []span {
-	return []span{{"$ ", "p"}, {typed, "w"}, {"█", "c"}}
+func withCursor(typed []span) []span {
+	out := append([]span{{"$ ", "p"}}, typed...)
+	return append(out, span{"█", "c"})
+}
+
+func plain(spans []span) string {
+	var b strings.Builder
+	for _, s := range spans {
+		b.WriteString(s.text)
+	}
+	return b.String()
+}
+
+// prefix returns the first n characters of spans, keeping each color.
+func prefix(spans []span, n int) []span {
+	var out []span
+	for _, s := range spans {
+		r := []rune(s.text)
+		if n <= 0 {
+			break
+		}
+		if len(r) > n {
+			r = r[:n]
+		}
+		out = append(out, span{string(r), s.class})
+		n -= len(r)
+	}
+	return out
 }
 
 func pct(ms, total int) string {
@@ -246,12 +349,15 @@ func writeSVG(w io.Writer, els []element, total, cols, rows int) {
 	fmt.Fprintf(b, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %.0f %.0f" width="%.0f" height="%.0f" role="img" aria-labelledby="title desc" xml:space="preserve">`+"\n",
 		width, height, width, height)
 	b.WriteString(`<title id="title">ZeroTurn terminal demonstration</title>` + "\n")
-	b.WriteString(`<desc id="desc">A terminal types four commands. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. The subagent gate then returns an ask decision with the reason: New subagent requires approval. Context is 82% and five hour usage is 81%. zeroturn verify passes two checks, and zeroturn ship with dry run passes the same checks and prints READY TO SHIP. The session values are sample data.</desc>` + "\n")
+	b.WriteString(`<desc id="desc">A terminal types four commands. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask, with three thresholds crossed: context 82 percent over a limit of 80, five hour usage 81 percent over 75, and 2 active subagents at a limit of 2. zeroturn verify passes two checks, and zeroturn ship with dry run passes the same checks and prints READY TO SHIP. The session values are sample data.</desc>` + "\n")
 	b.WriteString("<style>\n")
-	fmt.Fprintf(b, `text{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;font-size:%.0fpx;fill:#c9d1d9;white-space:pre}`+"\n", fontSize)
+	fmt.Fprintf(b, `text{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;font-size:%.0fpx;fill:#e6edf3;white-space:pre}`+"\n", fontSize)
 	fmt.Fprintf(b, ".a{opacity:0;animation-duration:%dms;animation-iteration-count:infinite;animation-timing-function:step-end}\n", total)
-	b.WriteString(".p{fill:#3fb950}.w{fill:#e6edf3}.c{fill:#8b949e}.g{fill:#3fb950}.y{fill:#d29922}.r{fill:#f85149}.m{fill:#8b949e}.b{font-weight:700}\n")
-	b.WriteString(".t{font-size:12px;fill:#8b949e}\n")
+	// Colors are from the GitHub dark palette, chosen for contrast of at
+	// least 4.5 to 1 against the background.
+	b.WriteString(".p{fill:#56d364}.w{fill:#e6edf3}.c{fill:#9da7b3}.g{fill:#56d364}.y{fill:#e3b341}.r{fill:#ff7b72}.m{fill:#9da7b3}.b{font-weight:700}\n")
+	b.WriteString(".cmd{fill:#56d4dd}.sub{fill:#f0f6fc}.flag{fill:#d2a8ff}.str{fill:#ffa657}.op{fill:#ff7b72}.h{fill:#79c0ff}.k{fill:#79c0ff}.o{fill:#ffa657}\n")
+	b.WriteString(".t{font-size:13px;fill:#9da7b3}.hlb{fill:#238636;fill-opacity:.28}\n")
 	for i, e := range els {
 		fmt.Fprintf(b, "@keyframes k%d{", i)
 		if e.from == 0 {
@@ -283,7 +389,13 @@ func writeSVG(w io.Writer, els []element, total, cols, rows int) {
 		if i >= lastScreenStart && e.to == total && !isCursor(e.spans) {
 			cls = "a f"
 		}
-		fmt.Fprintf(b, `<text class="%s" style="animation-name:k%d" x="%.0f" y="%.0f">`, cls, i, padX, padTop+float64(e.row)*lineHeight+fontSize)
+		y := padTop + float64(e.row)*lineHeight
+		fmt.Fprintf(b, `<g class="%s" style="animation-name:k%d">`, cls, i)
+		if hasClass(e.spans, "hl") {
+			fmt.Fprintf(b, `<rect class="hlb" x="%.0f" y="%.1f" width="%.1f" height="%.0f" rx="4"/>`,
+				padX-6, y-2, float64(textWidth(e.spans))*charWidth+12, lineHeight)
+		}
+		fmt.Fprintf(b, `<text x="%.0f" y="%.1f">`, padX, y+fontSize)
 		for _, s := range e.spans {
 			if s.text == "" {
 				continue
@@ -294,9 +406,20 @@ func writeSVG(w io.Writer, els []element, total, cols, rows int) {
 			}
 			fmt.Fprintf(b, `<tspan class="%s">%s</tspan>`, s.class, esc(s.text))
 		}
-		b.WriteString("</text>\n")
+		b.WriteString("</text></g>\n")
 	}
 	b.WriteString("</svg>\n")
+}
+
+func hasClass(spans []span, class string) bool {
+	for _, s := range spans {
+		for _, c := range strings.Fields(s.class) {
+			if c == class {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func isCursor(spans []span) bool {

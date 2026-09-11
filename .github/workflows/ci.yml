@@ -1,0 +1,72 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: format, vet, copy, commit messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.17"
+      # gofmt is checked with the minimum supported Go only, because newer
+      # releases reformat doc comments differently.
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; echo "run gofmt -w on the files above"; exit 1; }
+      - name: go vet
+        run: go vet ./...
+      - name: writing rules
+        run: scripts/lint-copy.sh
+      - name: no coding tool attribution in commit messages
+        run: |
+          if git log --format=%B | grep -i -n -E '^co-authored-by:.*(claude|anthropic|copilot|openai|chatgpt|gemini|cursor|codeium|aider)|noreply@anthropic\.com|generated (with|by) \[?(claude|copilot|an ai)'; then
+            echo "a commit message credits a coding tool, rewrite it before merging"
+            exit 1
+          fi
+
+  test:
+    name: test (${{ matrix.os }}, Go ${{ matrix.go }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            go: "1.17"
+          - os: ubuntu-latest
+            go: stable
+          - os: macos-latest
+            go: stable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+      - name: go test
+        run: go test ./...
+
+  windows:
+    name: test (windows, not yet verified)
+    runs-on: windows-latest
+    # Windows support has not been verified yet. The result is reported
+    # here without blocking a merge until it has been.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: go build
+        run: go build ./...
+      - name: go test
+        run: go test ./...

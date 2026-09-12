@@ -50,6 +50,27 @@ ZeroTurn works with coding harnesses. It is not another coding harness. It shows
 
 If you are unsure, open an issue describing the change before writing it.
 
+## Branches and pull requests
+
+Nothing goes straight to `main`. Every change, including documentation, goes on a branch and through a pull request, so the history shows what changed and why.
+
+| Prefix | For |
+| --- | --- |
+| `feat/` | A new behavior |
+| `fix/` | A correction to existing behavior |
+| `docs/` | Documentation, images, and the recording |
+| `test/` | Tests without a behavior change |
+| `chore/` | Build, tooling, continuous integration |
+
+```sh
+git checkout -b docs/short-description
+git commit ...
+git push --set-upstream origin docs/short-description
+gh pr create --fill
+```
+
+Pull requests are **squashed** into one commit, so `main` carries one commit per change with the detail in the pull request. The branch is deleted when it merges. The checks in [.github/workflows/ci.yml](.github/workflows/ci.yml) run on every pull request, and a red check blocks the merge.
+
 ## Working on the code
 
 Requirements: **Go 1.17 or newer** and **Git**. Nothing else. A pull request that adds a dependency needs a reason and a row in [docs/dependency-licenses.md](docs/dependency-licenses.md).

@@ -145,3 +145,13 @@ Date: 2026-09-12
 Decision: `LICENSE` holds the complete official GPL version 3 text, unmodified. `COPYING` stays, because that is the name the GNU project uses, but it names the license, gives the SPDX identifier, and points to `LICENSE` instead of repeating the text.
 
 Evidence: with the full text in both files, GitHub detected two licenses and showed two identical "GPL-3.0 license" tabs on the repository page, which reads as a mistake. The plan asked for both files and for the official text without modification. Both still hold: the text is present once, unmodified, and both file names exist for anyone looking for either.
+
+## 15. Every change goes through a branch and a pull request
+
+Date: 2026-09-12
+
+Decision: no more commits directly on `main`. Each change goes on a branch named for its kind, `feat/`, `fix/`, `docs/`, `test/`, or `chore/`, and reaches `main` through a pull request that is squashed into one commit. The branch is deleted on merge. The repository allows squash merges only.
+
+Evidence: the first days of work were committed straight to `main`, which is reasonable for a prototype nobody can see. Once the repository is public, that history shows no review and no trace of why anything changed. A pull request per change gives each one a description, a place for review comments, and a run of the checks before it lands, and it costs a minute.
+
+Consequence: `main` keeps one commit per change. The detail of how a change was built stays in its pull request rather than in a string of small commits.

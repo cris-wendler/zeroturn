@@ -72,7 +72,7 @@ ZeroTurn does not promise to remove session limits, and it does not estimate sav
 
 ## Session Guard
 
-Session Guard reads what the harness already reports: context use, the five hour and seven day usage windows, and session duration. It adds one thing the harness does not report, the number of subagents started and currently running, counted from the harness's own start and stop events.
+**Session Guard reads what the harness already reports:** context use, the five hour and seven day usage windows, and session duration. It adds one thing the harness does not report, the number of subagents started and currently running, counted from the harness's own start and stop events.
 
 Before a new subagent starts, the gate compares those values with your thresholds. Each measurement is checked against its own limit. Percentages from different measurements are never added together.
 
@@ -82,9 +82,9 @@ The status line and the gate each take about 8 ms on the machine they were measu
 
 ## Direct Lane
 
-`zeroturn verify` runs the checks listed in `.zeroturn.json` directly, without a shell and without a model turn. It prints one line per step and keeps the full output under `.git/zeroturn/logs/`.
+**`zeroturn verify`** runs the checks listed in `.zeroturn.json` directly, without a shell and without a model turn. It prints one line per step and keeps the full output under `.git/zeroturn/logs/`.
 
-`zeroturn ship` stages only the files you name, scans them for credentials, runs the checks, fetches, refuses unsafe branch states, asks for confirmation, then commits with your message and pushes without force. `--dry-run` stops before anything changes.
+**`zeroturn ship`** stages only the files you name, scans them for credentials, runs the checks, fetches, refuses unsafe branch states, asks for confirmation, then commits with your message and pushes without force. `--dry-run` stops before anything changes.
 
 ## Installation
 
@@ -165,20 +165,33 @@ ZeroTurn makes no network requests of its own, calls no model, and runs no backg
 
 ## Commands
 
+**Session Guard**
+
+| Command | Purpose |
+| --- | --- |
+| `zeroturn status` | The session condition, or repository status outside a session |
+| `zeroturn policy show \| check \| set \| reset` | Read or change the guard thresholds |
+| `zeroturn report current \| day \| week \| purge` | Summarise locally observed events, `--json` for machine output |
+| `zeroturn integrate claude --plan \| --apply \| --remove` | Show, install, or remove the harness integration |
+
+**Direct Lane**
+
+| Command | Purpose |
+| --- | --- |
+| `zeroturn verify` | Run the approved validation steps, `--approve` to review them first |
+| `zeroturn ship --message ... --files ...` | Stage named files, check, commit, and push, `--dry-run` to stop before any change |
+
+**Setup and support**
+
 | Command | Purpose |
 | --- | --- |
 | `zeroturn init` | Detect the project and write `.zeroturn.json` after confirmation |
-| `zeroturn integrate claude --plan \| --apply \| --remove` | Show, install, or remove the harness integration |
-| `zeroturn status` | Show the session condition, or repository status outside a session |
-| `zeroturn policy show \| check \| set \| reset` | Read or change guard thresholds |
-| `zeroturn report current \| day \| week \| purge` | Summarise locally observed events, `--json` for machine output |
-| `zeroturn verify` | Run the approved validation steps, `--approve` to review them first |
-| `zeroturn ship --message ... --files ...` | Stage named files, check, commit, and push, `--dry-run` to stop before changes |
-| `zeroturn capabilities --json` | Describe what this build supports |
 | `zeroturn doctor` | Check the installation, `--compat` for guard decisions, `--compat --live` for a real session |
+| `zeroturn capabilities --json` | Describe what this build supports |
 | `zeroturn version` | Print the version |
 
-Every report ends with the line "Based only on events observed locally by ZeroTurn on this machine."
+> [!NOTE]
+> Every report ends with the line "Based only on events observed locally by ZeroTurn on this machine." The counts are events, never tokens, cost, or a saving.
 
 ## Claude Code
 

@@ -1,106 +1,104 @@
 # Contributing
 
-Thank you for considering a contribution. Please follow these steps in order.
+Thank you for considering a contribution. Follow the four steps below, in order.
 
-## How to contribute
+![Four steps. 1 Check: is it already there, read the commands and run zeroturn capabilities. 2 Search: look through issues, open and closed, and add to one that matches. 3 Open an issue: a bug report or a feature proposal, and wait for a reply before big work. 4 Pull request: from a fork, with tests, referencing the issue, and the checks must pass. Small fixes can go straight to step 4, and a security problem is never reported in a public issue.](docs/img/contributing.svg)
 
-1. **Check that it is not already there.** Read the Commands section of the [README](README.md), run `zeroturn <command> --help`, and run `zeroturn capabilities --json` to see what this build supports. Check [CHANGELOG.md](CHANGELOG.md) for recent changes.
-2. **Search the existing issues**, open and closed. Someone may have reported the same bug or proposed the same idea. If so, add your details there instead of opening a new issue.
-3. **Open an issue on GitHub** using one of the templates:
-   - **Bug report** for something that does not work as documented. Include the command, the output, `zeroturn version`, and `zeroturn doctor`.
-   - **Feature proposal** for something new. Describe the problem first, then the change you propose.
+| Step | What to do | Why |
+| --- | --- | --- |
+| **1. Check** | Read the Commands section of the [README](README.md), run `zeroturn <command> --help`, and run `zeroturn capabilities --json`. Check [CHANGELOG.md](CHANGELOG.md). | It may already be there under another name. |
+| **2. Search** | Look through the issues, open and closed. If one matches, add your details there. | Two issues for one problem split the discussion. |
+| **3. Open an issue** | **Bug report** for something that does not work as documented, with the command, the output, `zeroturn version`, and `zeroturn doctor`. **Feature proposal** for something new, describing the problem before the change. | The reply tells you whether it fits, before you spend time on it. |
+| **4. Pull request** | From a fork, on its own branch, referencing the issue, for example `Fixes #12`. | Review is faster when the reason is already agreed. |
 
-   Wait for a maintainer to reply before starting a large change. The reply will say whether it fits the project, so you do not spend time on something that cannot be merged.
-4. **Open a pull request** from a fork, on its own branch, that references the issue, for example `Fixes #12`. Follow the checklist in the pull request template.
+> [!TIP]
+> Small fixes such as a typo or a broken link can go straight to step 4.
 
-Small fixes such as typos or broken links can go straight to step 4.
-
-Security problems are the exception: do not open a public issue. Follow [SECURITY.md](SECURITY.md).
+> [!IMPORTANT]
+> Never open a public issue for a security problem. Follow [SECURITY.md](SECURITY.md), which explains how to report it privately.
 
 ## What fits
 
 ZeroTurn works with coding harnesses. It is not another coding harness. It shows session pressure, asks before more delegated work, and runs routine validation and Git workflows locally.
 
-Useful areas:
-
-- coding harness adapters that follow the event contract
-- event normalization and new fixtures
-- project detection for `zeroturn init`
-- validation presets for common toolchains
-- platform support, especially real use on Linux and Windows
-- security and redaction tests
-- terminal rendering and accessibility
-- documentation and examples
-- conformance fixtures
+| Area | Examples |
+| --- | --- |
+| **Adapters** | A harness ZeroTurn does not support yet, following [docs/adapter-authoring.md](docs/adapter-authoring.md) |
+| **Events** | Normalization, new fixtures, better handling of missing fields |
+| **Detection** | Project detection for `zeroturn init`, validation presets for common toolchains |
+| **Platforms** | Real use on Linux and Windows, where only the tests have run so far |
+| **Safety** | Security and redaction tests, credential patterns that matter in practice |
+| **Presentation** | Terminal rendering, accessibility, documentation, examples |
 
 ## What does not fit
 
-Pull requests that add any of the following will be closed or redirected, however well they are written:
+> [!WARNING]
+> These are closed or redirected however well they are written. The reasons are in [docs/product-boundary.md](docs/product-boundary.md) and [docs/decisions.md](docs/decisions.md).
 
-- a model SDK, model calls, or model selection
-- a chat interface or a complete coding harness
-- transcript collection or prompt inspection
-- remote telemetry or a hosted dashboard
-- generic output compression
-- automatic handoff generation, automatic compaction, or automatic session clearing
-- shell strings in configuration
-- automatic force pushing or automatic rebasing
-- a way to bypass credential detection
-- silent changes to global settings
-- Python packaging or a Python wrapper
-- a container image without a demonstrated need
+| Not accepted | Why |
+| --- | --- |
+| A model SDK, model calls, or model selection | ZeroTurn never calls a model to decide whether a model call should happen |
+| A chat interface or a complete coding harness | It works with harnesses, it does not replace them |
+| Transcript collection or prompt inspection | It never reads what you or the model wrote |
+| Remote telemetry or a hosted dashboard | Everything stays on the machine |
+| Output compression, automatic handoff, compaction, or clearing | These change the session behind your back |
+| Shell strings in configuration | Commands are argument arrays, so configuration cannot smuggle in shell syntax |
+| Automatic force pushing or rebasing | Git history is the developer's to rewrite, never the tool's |
+| A way around credential detection | A bypass makes the check worthless |
+| Silent changes to global settings | Every change is planned, confirmed, and backed up first |
+| Python packaging, or a container without a demonstrated need | One executable, no runtime to install |
 
 If you are unsure, open an issue describing the change before writing it.
 
 ## Working on the code
 
-Requirements: Go 1.17 or newer and Git. No other dependency is used, and a pull request that adds one needs a reason and an entry in the dependency record.
+Requirements: **Go 1.17 or newer** and **Git**. Nothing else. A pull request that adds a dependency needs a reason and a row in [docs/dependency-licenses.md](docs/dependency-licenses.md).
 
-```sh
-go build -o zeroturn ./cmd/zeroturn
-go vet ./...
-go test ./...          # includes the conformance suite
-scripts/lint-copy.sh
-```
+| Command | What it does |
+| --- | --- |
+| `go build -o zeroturn ./cmd/zeroturn` | Builds the executable |
+| `go test ./...` | Runs every test, including the conformance suite, in about a minute |
+| `go vet ./...` | The standard Go checks |
+| `scripts/lint-copy.sh` | The writing rules below |
+| `scripts/check-commit-messages.sh` | Refuses a commit message that credits a coding tool |
+| `go run ./scripts/bench ./zeroturn 50` | Measures the commands that run inside a session |
 
-The tests build the executable, create temporary repositories with local bare remotes, and point Git and ZeroTurn at temporary configuration. They never contact a real remote or change your own settings. The full run takes about a minute.
-
-Layout:
+The tests build the executable, create temporary repositories with local bare remotes, and point Git and ZeroTurn at temporary configuration. They never contact a real remote or change your own settings.
 
 | Path | Contents |
 | --- | --- |
-| `cmd/zeroturn` | commands, flags, and output |
-| `internal/policy` | turns session values into a gate decision |
-| `internal/state` | local session records, locking, retention |
-| `internal/events` | reads harness payloads and discards everything not permitted |
-| `internal/git` | the only Git commands ZeroTurn runs |
-| `internal/security` | credential detection and redaction |
-| `internal/trust` | approval of repository commands and of Strict mode |
-| `fixtures` | harness payloads used by tests |
-| `schemas` | the published JSON schemas |
-| `conformance` | checks that output still follows those schemas |
-| `docs/demo` | the README recording and its renderer |
+| `cmd/zeroturn` | Commands, flags, and output |
+| `internal/policy` | Turns session values into a gate decision |
+| `internal/state` | Local session records, locking, retention |
+| `internal/events` | Reads harness payloads and discards everything not permitted |
+| `internal/git` | The only Git commands ZeroTurn runs |
+| `internal/security` | Credential detection and redaction |
+| `internal/trust` | Approval of repository commands and of Strict mode |
+| `schemas`, `conformance` | The published contract, and the suite that checks output against it |
+| `fixtures` | Harness payloads used by tests |
+| `docs/demo` | The README recording and its renderer |
 
 ## Writing rules
 
-These apply to code comments, CLI output, error messages, and documentation.
+These apply to code comments, CLI output, error messages, and documentation. `scripts/lint-copy.sh` checks most of them.
 
-- Describe what happens. Leave out promotional words and claims that are not measured.
-- Do not use em dashes or en dashes.
-- Comment only a security decision, a Git safety rule, a compatibility limit, a public contract, or a choice that is not obvious from the code.
-- Every error states what stopped, why, and the smallest safe next step. Use `output.Errorf`.
-- No emoji in default output and no decorative banners.
-- Do not describe event counts as savings.
-
-`scripts/lint-copy.sh` checks most of these.
+- **Describe what happens.** No promotional words, no claims that were not measured.
+- **No em dashes or en dashes.**
+- **Comment only** a security decision, a Git safety rule, a compatibility limit, a public contract, or a choice that is not obvious from the code.
+- **Errors state three things:** what stopped, why, and the smallest safe next step. Use `output.Errorf`.
+- **No emoji in default output**, and no decorative banners.
+- **Never call event counts savings.**
 
 ## Pull requests
 
-- Keep a pull request to one change.
-- Add or update tests. A fix should come with a test that fails without it.
-- Update the README or the relevant document when behavior changes.
-- Exit codes, the event contract, and JSON output are public. Changing their meaning needs a major contract version.
-- Do not add generated attribution, tool trailers, or prompt text to commits or files.
+- [ ] One change per pull request.
+- [ ] Tests added or updated. A fix comes with a test that fails without it.
+- [ ] Documentation updated where behavior changed.
+- [ ] `go test ./...`, `go vet ./...`, and `scripts/lint-copy.sh` pass.
+- [ ] No generated attribution, tool trailers, or prompt text in commits or files.
+
+> [!NOTE]
+> Exit codes, the event contract, and the JSON output are public. Changing what any of them means needs a major contract version, described in [docs/harness-contract.md](docs/harness-contract.md).
 
 ## License
 

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 250" width="820" height="250" role="img" aria-labelledby="title desc">
+<title id="title">How to contribute, in four steps</title>
+<desc id="desc">Step 1, check it is not already there: read the commands in the README, run zeroturn capabilities. Step 2, search the issues, open and closed, and add to one that matches. Step 3, open an issue, a bug report or a feature proposal, and wait for a reply before a large change. Step 4, open a pull request from a fork that references the issue. Small fixes such as typos can go straight to step 4. A security problem is the exception: report it privately instead.</desc>
+<style>
+.card{fill:#0d1117;stroke:#30363d}
+.step{fill:#161b22;stroke:#30363d;stroke-width:1.5}
+.num{font:700 15px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#0d1117}
+.head{font:700 16px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#f0f6fc}
+.body{font:14px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#c9d1d9}
+.foot{font:14px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#9da7b3}
+.warn{font:600 14px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#ff7b72}
+</style>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#56d4dd"/></marker>
+</defs>
+<rect class="card" x="0.5" y="0.5" width="819" height="249" rx="12"/>
+
+<rect class="step" x="24" y="40" width="172" height="118" rx="8"/>
+<circle cx="46" cy="64" r="13" fill="#56d4dd"/>
+<text class="num" x="46" y="69" text-anchor="middle">1</text>
+<text class="head" x="68" y="69">Check</text>
+<text class="body" x="40" y="100">Is it already there?</text>
+<text class="body" x="40" y="122">Read the commands,</text>
+<text class="body" x="40" y="144">run zeroturn capabilities.</text>
+
+<rect class="step" x="220" y="40" width="172" height="118" rx="8"/>
+<circle cx="242" cy="64" r="13" fill="#56d4dd"/>
+<text class="num" x="242" y="69" text-anchor="middle">2</text>
+<text class="head" x="264" y="69">Search</text>
+<text class="body" x="236" y="100">Look through issues,</text>
+<text class="body" x="236" y="122">open and closed. Add</text>
+<text class="body" x="236" y="144">to one that matches.</text>
+
+<rect class="step" x="416" y="40" width="172" height="118" rx="8"/>
+<circle cx="438" cy="64" r="13" fill="#e3b341"/>
+<text class="num" x="438" y="69" text-anchor="middle">3</text>
+<text class="head" x="460" y="69">Open an issue</text>
+<text class="body" x="432" y="100">Bug report, or feature</text>
+<text class="body" x="432" y="122">proposal. Wait for a</text>
+<text class="body" x="432" y="144">reply before big work.</text>
+
+<rect class="step" x="612" y="40" width="184" height="118" rx="8"/>
+<circle cx="634" cy="64" r="13" fill="#56d364"/>
+<text class="num" x="634" y="69" text-anchor="middle">4</text>
+<text class="head" x="656" y="69">Pull request</text>
+<text class="body" x="628" y="100">From a fork, with tests,</text>
+<text class="body" x="628" y="122">referencing the issue.</text>
+<text class="body" x="628" y="144">Checks must pass.</text>
+
+<path d="M196 99H216" stroke="#56d4dd" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M392 99H412" stroke="#56d4dd" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M588 99H608" stroke="#56d4dd" stroke-width="2" marker-end="url(#arrow)"/>
+
+<text class="foot" x="24" y="196">Small fixes, a typo or a broken link, can go straight to step 4.</text>
+<text class="warn" x="24" y="222">A security problem is the exception. Never open a public issue for one.</text>
+<text class="foot" x="516" y="222">See the security policy.</text>
+</svg>

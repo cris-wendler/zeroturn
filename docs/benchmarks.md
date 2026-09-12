@@ -33,6 +33,23 @@ Policy evaluation on its own, without process start, measured with `go test -ben
 BenchmarkEvaluate-12    481686    2276 ns/op    928 B/op    17 allocs/op
 ```
 
+## Several hooks at once
+
+A turn that ends fires more than one hook at the same moment: the status line repaints, `Stop` arrives, and a subagent reports that it finished. Each is a separate process, and they contend for the state lock.
+
+Twenty events started at the same instant, on 2026-09-12:
+
+| Measurement | Result |
+| --- | --- |
+| All twenty finished in | 54 ms |
+| Average per event | 2.7 ms |
+
+Before the lock was changed, the same test took 89 ms, and sixty writers inside one process took 1.5 seconds rather than 0.2. The lock waited on a fixed 25 ms sleep, so a waiter stayed asleep while the lock was already free. It now waits 200 microseconds, doubling to at most 2 ms, which matches how long a hook actually holds it, about one millisecond.
+
+## How much these numbers move
+
+They move with the load on the machine. The table above was taken on an idle machine. The same commands measured while the test suite was running gave 10.0 ms for the status line and 11.2 ms for the gate, against 7.5 and 7.7 when idle. Treat the figures as the shape of the cost, a few milliseconds of process start plus a small file read and write, rather than as a guarantee.
+
 ## Against the targets
 
 | Target | Result |

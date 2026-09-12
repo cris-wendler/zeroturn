@@ -203,3 +203,38 @@ func TestStatusLineStartsNoGitProcess(t *testing.T) {
 		t.Fatal("the status line or gate started a git process")
 	}
 }
+
+// A subagent that never reports stopping, because a session was
+// interrupted, must not keep the gate asking about it. The end of a turn
+// clears what is still counted as running.
+func TestTurnEndClearsSubagentsThatNeverStopped(t *testing.T) {
+	work, _ := repoWithConfig(t, func(c *config.Config) { c.Guard.Mode = config.ModeConfirm })
+	statusline(t, work, "s", contextAt(10))
+	for _, id := range []string{"a1", "a2"} {
+		agent := id
+		run(t, work, claudeEvent(t, "claude/subagent-start.json", work, "s",
+			func(m map[string]interface{}) { m["agent_id"] = agent }),
+			"event", "--harness", "claude", "--event", "SubagentStart")
+	}
+	if d, _ := decision(t, gate(t, work, "s")); d != "ask" {
+		t.Fatalf("two active subagents did not reach the threshold, decision %q", d)
+	}
+
+	run(t, work, claudeEvent(t, "claude/stop.json", work, "s", nil), "event", "--harness", "claude", "--event", "Stop")
+
+	if d, _ := decision(t, gate(t, work, "s")); d != "" {
+		t.Fatalf("the gate still counts subagents from a finished turn, decision %q", d)
+	}
+	line := statusline(t, work, "s", contextAt(10))
+	if strings.Contains(line.stdout, "agents 2") {
+		t.Fatalf("the status line still shows them: %q", line.stdout)
+	}
+	r := run(t, work, "", "report", "current", "--json")
+	var rep reportJSON
+	if err := json.Unmarshal([]byte(r.stdout), &rep); err != nil {
+		t.Fatal(err)
+	}
+	if rep.SubagentStarts != 2 || rep.HighestActive != 2 {
+		t.Fatalf("the report lost what happened: %+v", rep)
+	}
+}

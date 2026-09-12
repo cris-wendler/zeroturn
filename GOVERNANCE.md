@@ -1,7 +1,13 @@
 # Governance
 
-ZeroTurn has one primary maintainer, listed in [MAINTAINERS.md](MAINTAINERS.md). The maintainer reviews and merges pull requests, decides the scope of the project, and publishes releases.
+ZeroTurn has one primary maintainer, listed in [MAINTAINERS.md](MAINTAINERS.md).
 
-Scope decisions and their reasons are recorded in [docs/decisions.md](docs/decisions.md). A proposal to change scope starts as an issue. When a decision is made, it is added to that file with the evidence behind it.
+| Question | Answer |
+| --- | --- |
+| Who merges pull requests | The maintainer |
+| Who decides the scope | The maintainer, and every decision is written down |
+| Where decisions are recorded | [docs/decisions.md](docs/decisions.md), with the evidence behind each one |
+| How to propose a change of scope | Open an issue. If it is accepted, it becomes an entry in that file |
+| What happens as more people join | They are added to MAINTAINERS.md, and this file describes how decisions are shared |
 
-When more people maintain the project regularly, they will be added to MAINTAINERS.md and this file will describe how decisions are shared.
+The reason for writing decisions down is that a small tool stays small only when the refusals are as clear as the features.

@@ -169,3 +169,18 @@ Evidence: a credential that reaches the model has to be rotated, and the most co
 Consequence: ZeroTurn now declares one field of `tool_input`, `file_path`, for that one tool. Everything else a tool carries still has no field in the decoder. The contract version moves to 1.1.0, and the integration installs a second `PreToolUse` entry with an exact matcher.
 
 Limits, stated wherever the feature is described: high confidence patterns only, files over 4 MB skipped, and a credential reaching the model by another route, a command's output for example, is not caught.
+
+## 17. The prompt guard is built, and it is off by default
+
+Date: 2026-09-12
+
+Decision: the second form from entry 12 is built. With `guard.credentials.prompts` set to `block`, a `UserPromptSubmit` hook hands ZeroTurn each message before it is sent, ZeroTurn scans it for credentials in memory, and stops one that carries a value. The default is `off`, the hook is not installed while it is off, and switching it on asks for confirmation after stating both costs.
+
+Evidence: a key pasted into a message reaches the model exactly as surely as one in a file, and the file guard cannot see it. The harness supports only block or allow for a message, so there is no ask.
+
+The costs, stated wherever this is described:
+
+- ZeroTurn reads messages in that repository while the guard is on. It keeps nothing, but the promise changes from "never reads what you write" to "reads it in memory, in this repository, when you asked for it".
+- A blocked message is erased by the harness rather than handed back, so a long message is lost.
+
+Consequence: the privacy section now describes both guards. The normalized contract is unchanged: there is no prompt event in it, and an adapter never sends message text.

@@ -174,6 +174,21 @@ func CredentialDecision(mode, file string, line int, categories []string) (decis
 		head, file, line, what)
 }
 
+// PromptCredentialDecision reports whether a message about to be sent
+// should be stopped. The harness has no way to ask about a message, so
+// the answer is block or nothing, and the reason never repeats the value.
+func PromptCredentialDecision(prompts string, categories []string) (block bool, reason string) {
+	if prompts != config.PromptsBlock || len(categories) == 0 {
+		return false, ""
+	}
+	what := categories[0]
+	if len(categories) > 1 {
+		what = fmt.Sprintf("%s and %d more", what, len(categories)-1)
+	}
+	return true, fmt.Sprintf("Your message was not sent. It contains what looks like %s, and sending it would mean rotating the value. "+
+		"Remove it and send the message again. Turn this check off with zeroturn policy set guard.credentials.prompts off.", what)
+}
+
 // Reason builds the short message shown in the harness permission prompt.
 // It names at most two triggers so the prompt stays readable, and it never
 // carries the full policy or the session report into model context.

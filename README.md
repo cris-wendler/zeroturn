@@ -109,6 +109,24 @@ zeroturn policy set guard.credentials.mode deny
 > [!NOTE]
 > It looks for high confidence patterns, so it catches a common mistake rather than every possible one. A file larger than 4 MB is skipped, and a credential in an unusual format can pass. It is a guard, not a guarantee.
 
+### Messages you send
+
+A key you paste into a message is the other way one reaches the model. ZeroTurn can check for that too, and it is **off by default**, because switching it on changes what ZeroTurn reads.
+
+```sh
+zeroturn policy set guard.credentials.prompts block
+```
+
+The command explains both consequences and asks you to confirm. With it on, in that repository only:
+
+- Every message you send passes through ZeroTurn first. It is read in memory, checked, and never stored, logged, or sent anywhere.
+- A message carrying a credential is stopped before it leaves your machine, with an explanation that never repeats the value.
+
+> [!WARNING]
+> The harness erases a stopped message rather than handing it back, so a long message is lost. That is the cost of catching the key before it is sent.
+
+With it off, ZeroTurn never reads what you write, and the hook that would do so is not even installed.
+
 ## Direct Lane
 
 **`zeroturn verify`** runs the checks listed in `.zeroturn.json` directly, without a shell and without a model turn. It prints one line per step and keeps the full output under `.git/zeroturn/logs/`.

@@ -24,6 +24,14 @@ const (
 
 // Credential guard modes. The guard scans a file the model is about to
 // read and can ask before the content reaches the conversation.
+// Prompt guard settings. Off is the default, because reading messages
+// is a promise this project otherwise does not make, and because a
+// blocked message is erased by the harness.
+const (
+	PromptsOff   = "off"
+	PromptsBlock = "block"
+)
+
 const (
 	CredentialOff  = "off"
 	CredentialAsk  = "ask"
@@ -55,6 +63,10 @@ type Guard struct {
 // that holds something shaped like a credential.
 type Credentials struct {
 	Mode string `json:"mode"`
+	// Prompts is off unless the developer switches it on. When it is
+	// block, ZeroTurn reads each message before it is sent, in memory,
+	// and stops one that carries a credential.
+	Prompts string `json:"prompts"`
 }
 
 type Context struct {
@@ -101,7 +113,7 @@ func Default() Config {
 			Context:     Context{Warn: 70, Confirm: 80, Critical: 90},
 			Limits:      Limits{FiveHourWarn: 75, SevenDayWarn: 75},
 			Session:     Session{DurationWarnMinutes: 240, ActiveSubagentsWarn: 2, SubagentStartsWarn: 4},
-			Credentials: Credentials{Mode: CredentialAsk},
+			Credentials: Credentials{Mode: CredentialAsk, Prompts: PromptsOff},
 		},
 		Verify: Verify{Steps: []Step{}},
 		Git:    Git{Remote: "origin", ProtectedBranches: []string{"main", "master"}},
@@ -133,6 +145,9 @@ func Load(repoRoot string) (Config, error) {
 	// It reads as the default rather than as a fault.
 	if c.Guard.Credentials.Mode == "" {
 		c.Guard.Credentials.Mode = CredentialAsk
+	}
+	if c.Guard.Credentials.Prompts == "" {
+		c.Guard.Credentials.Prompts = PromptsOff
 	}
 	if err := c.Validate(); err != nil {
 		return Config{}, err
@@ -209,6 +224,12 @@ func (c Config) Validate() error {
 	default:
 		return ValidationError{"guard.credentials.mode", "value " + quote(c.Guard.Credentials.Mode) + " is not a credential guard mode",
 			"use off, ask, or deny"}
+	}
+	switch c.Guard.Credentials.Prompts {
+	case PromptsOff, PromptsBlock:
+	default:
+		return ValidationError{"guard.credentials.prompts", "value " + quote(c.Guard.Credentials.Prompts) + " is not a prompt guard setting",
+			"use off, or block"}
 	}
 	for _, f := range []struct {
 		n string

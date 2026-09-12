@@ -117,6 +117,13 @@
                 "deny"
               ],
               "description": "What happens when the model asks to read a file holding something shaped like a credential. ask is the default. A file written before this setting existed reads as ask."
+            },
+            "prompts": {
+              "enum": [
+                "off",
+                "block"
+              ],
+              "description": "Whether ZeroTurn reads each message before it is sent, looking for credentials. off is the default. block stops a message that carries one, which the harness then erases."
             }
           }
         }

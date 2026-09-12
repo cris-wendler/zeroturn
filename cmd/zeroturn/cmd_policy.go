@@ -86,6 +86,8 @@ func policyTable(c config.Config) string {
 		{"duration warn", fmt.Sprintf("%d minutes", c.Guard.Session.DurationWarnMinutes)},
 		{"active subagents warn", fmt.Sprintf("%d", c.Guard.Session.ActiveSubagentsWarn)},
 		{"subagent starts warn", fmt.Sprintf("%d", c.Guard.Session.SubagentStartsWarn)},
+		{"credential guard", c.Guard.Credentials.Mode},
+		{"prompt guard", c.Guard.Credentials.Prompts},
 	})
 }
 
@@ -186,6 +188,11 @@ func policySet(ctx context.Context, args []string) error {
 			return err
 		}
 	}
+	if key == "guard.credentials.prompts" && c.Guard.Credentials.Prompts == config.PromptsBlock {
+		if err := confirmPromptGuard(); err != nil {
+			return err
+		}
+	}
 	if err := config.Save(repo.Root, c); err != nil {
 		return output.Errorf(output.ExitInternal, "zeroturn could not write the configuration",
 			err.Error(), "check that "+config.FileName+" is writable")
@@ -203,6 +210,36 @@ func policySet(ctx context.Context, args []string) error {
 		}
 	}
 	fmt.Printf("%s is now %s\n", key, value)
+	if key == "guard.credentials.prompts" {
+		fmt.Println("Run zeroturn integrate claude --plan to add or remove the prompt hook in the harness settings.")
+	}
+	return nil
+}
+
+// confirmPromptGuard states both costs before the prompt guard is
+// switched on: ZeroTurn starts reading messages, and a stopped message
+// is erased by the harness rather than returned to the developer.
+func confirmPromptGuard() error {
+	fmt.Println("ZEROTURN PROMPT GUARD")
+	fmt.Println()
+	fmt.Println("With this on, every message you send in this repository passes through ZeroTurn first.")
+	fmt.Println("It is read in memory, checked for credentials, and never stored, logged, or sent anywhere.")
+	fmt.Println("Everywhere else, ZeroTurn still never reads what you write.")
+	fmt.Println()
+	fmt.Println("A message that carries a credential is stopped. The harness erases it, so a long message")
+	fmt.Println("is lost rather than handed back. The value is never shown in the explanation.")
+	fmt.Println()
+	fmt.Println("It looks for high confidence patterns, so it catches a common mistake, not every one.")
+	fmt.Println("To turn it off later: zeroturn policy set guard.credentials.prompts off")
+	fmt.Println()
+	ok, err := confirm("Let ZeroTurn read your messages in this repository to look for credentials?")
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return output.Errorf(output.ExitDeclined, "zeroturn policy set changed nothing",
+			"the prompt guard was not confirmed", "run the command again when you are ready")
+	}
 	return nil
 }
 
@@ -329,6 +366,24 @@ func applyPolicyKey(c *config.Config, key, value string) error {
 			return err
 		}
 		c.Guard.Session.ActiveSubagentsWarn = n
+	case "guard.credentials.mode":
+		v := strings.ToLower(value)
+		if v != config.CredentialOff && v != config.CredentialAsk && v != config.CredentialDeny {
+			return output.Errorf(output.ExitInvalidUsage,
+				"zeroturn policy set changed nothing",
+				"value "+strconv.Quote(value)+" is not a credential guard mode",
+				"use off, ask, or deny")
+		}
+		c.Guard.Credentials.Mode = v
+	case "guard.credentials.prompts":
+		v := strings.ToLower(value)
+		if v != config.PromptsOff && v != config.PromptsBlock {
+			return output.Errorf(output.ExitInvalidUsage,
+				"zeroturn policy set changed nothing",
+				"value "+strconv.Quote(value)+" is not a prompt guard setting",
+				"use off, or block")
+		}
+		c.Guard.Credentials.Prompts = v
 	case "guard.session.subagentStartsWarn":
 		n, err := intVal()
 		if err != nil {

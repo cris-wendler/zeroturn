@@ -20,9 +20,14 @@ import (
 const Contract = "zeroturn.event/1"
 
 const (
-	TypeStatus       = "status"
-	TypeSubagentPre  = "subagent.pre"
-	TypeFileRead     = "file.read"
+	TypeStatus      = "status"
+	TypeSubagentPre = "subagent.pre"
+	TypeFileRead    = "file.read"
+	// TypePromptSubmit carries the message a developer is about to send.
+	// It exists only on the Claude path and only when the prompt guard is
+	// switched on. It is never part of the normalized contract, so an
+	// adapter never sends a prompt to ZeroTurn.
+	TypePromptSubmit = "prompt.submit"
 	TypeSubagentStop = "subagent.stop"
 	TypeSubagentStrt = "subagent.start"
 	TypeSessionStop  = "session.stop"
@@ -51,6 +56,11 @@ type Event struct {
 	AgentID   string
 	AgentType string
 
+	// Prompt is the message about to be sent, present only on
+	// prompt.submit. It is scanned in memory and never stored, never
+	// logged, and never written to a record.
+	Prompt string
+
 	// FilePath is the file a read tool is about to open. It is the one
 	// tool argument ZeroTurn binds, so that a credential can be found
 	// before its content reaches the model.
@@ -75,6 +85,9 @@ type claudePayload struct {
 	AgentID       string `json:"agent_id"`
 	AgentType     string `json:"agent_type"`
 	Reason        string `json:"reason"`
+	// Prompt arrives on UserPromptSubmit. ZeroTurn binds it only so the
+	// prompt guard can look for credentials before the message is sent.
+	Prompt string `json:"prompt"`
 
 	Model *struct {
 		DisplayName string `json:"display_name"`
@@ -187,6 +200,9 @@ func ParseClaude(r io.Reader, eventName string) (Event, error) {
 		default:
 			return Event{}, errUnsupportedTool{p.ToolName}
 		}
+	case "UserPromptSubmit":
+		e.Type = TypePromptSubmit
+		e.Prompt = p.Prompt
 	case "SubagentStart":
 		e.Type = TypeSubagentStrt
 	case "SubagentStop":

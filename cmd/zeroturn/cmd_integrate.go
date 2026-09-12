@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cris-wendler/zeroturn/internal/config"
 	"github.com/cris-wendler/zeroturn/internal/git"
 	"github.com/cris-wendler/zeroturn/internal/output"
 	"github.com/cris-wendler/zeroturn/internal/state"
@@ -149,6 +150,19 @@ type claudeHook struct {
 	Purpose string
 }
 
+// claudeHooksFor returns the entries to install for this configuration.
+// The prompt hook is included only when the prompt guard is switched on,
+// so a developer who has not asked for it never has ZeroTurn in the path
+// of their messages.
+func claudeHooksFor(c config.Config) []claudeHook {
+	hooks := claudeHooks
+	if c.Guard.Credentials.Prompts == config.PromptsBlock {
+		hooks = append(append([]claudeHook{}, hooks...),
+			claudeHook{"UserPromptSubmit", "", "the prompt guard, before a message is sent"})
+	}
+	return hooks
+}
+
 var claudeHooks = []claudeHook{
 	{"PreToolUse", "Agent", "the subagent gate"},
 	{"PreToolUse", "Read", "the credential guard, before a file is read"},
@@ -204,6 +218,16 @@ func integrateClaude(ctx context.Context, mode string, userWide, replaceStatus b
 	}
 	backupDir := filepath.Join(st.Dir(), "backups")
 
+	// The repository configuration decides whether the prompt hook is
+	// part of the plan. Outside a repository the defaults apply, which
+	// leave it out.
+	cfg := config.Default()
+	if repo, rerr := openRepo(ctx); rerr == nil {
+		if loaded, lerr := config.Load(repo.Root); lerr == nil {
+			cfg = loaded
+		}
+	}
+
 	plan := claudePlan{SettingsPath: path, Exists: exists}
 	plan.Backup = filepath.Join(backupDir, fmt.Sprintf("claude-settings-%s.json", time.Now().UTC().Format("20060102-150405")))
 
@@ -217,7 +241,7 @@ func integrateClaude(ctx context.Context, mode string, userWide, replaceStatus b
 	}
 
 	counted := map[string]bool{}
-	for _, h := range claudeHooks {
+	for _, h := range claudeHooksFor(cfg) {
 		found := false
 		for _, entry := range hooks[h.Event] {
 			if entryOwnedByZeroTurn(entry, h.Matcher) {

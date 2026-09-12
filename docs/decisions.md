@@ -137,3 +137,11 @@ Decision: the context defaults stay as they are: warn at 70, ask at 80, and deny
 Evidence: Claude Code tracks the context window itself, shows how much is left before it summarises the conversation, and then summarises automatically. That warning is about compacting. ZeroTurn's question is different: is it sensible to start another subagent now. Asking that while there is still room to act is the point, so the threshold sits below the harness warning on purpose.
 
 Consequence: at high context a developer may hear about context from both tools. The overlap is documented in the Claude Code guide so it does not look like a fault, and every threshold is configurable with `zeroturn policy set`. The measurements the harness does not report at all, the usage windows, session duration, and subagent counts, are the ones only ZeroTurn watches.
+
+## 14. One copy of the license text, under two names
+
+Date: 2026-09-12
+
+Decision: `LICENSE` holds the complete official GPL version 3 text, unmodified. `COPYING` stays, because that is the name the GNU project uses, but it names the license, gives the SPDX identifier, and points to `LICENSE` instead of repeating the text.
+
+Evidence: with the full text in both files, GitHub detected two licenses and showed two identical "GPL-3.0 license" tabs on the repository page, which reads as a mistake. The plan asked for both files and for the official text without modification. Both still hold: the text is present once, unmodified, and both file names exist for anyone looking for either.

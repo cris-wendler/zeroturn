@@ -277,11 +277,11 @@ ZeroTurn is free software licensed under GNU GPL version 3. You may use, study, 
 | | |
 | --- | --- |
 | SPDX identifier | `GPL-3.0-only` |
-| Full text | [LICENSE](LICENSE), and the same text under the traditional GNU name in [COPYING](COPYING) |
+| Full text | [LICENSE](LICENSE). [COPYING](COPYING), the traditional GNU name, points to it |
 | Contributions | accepted under the same license, with no contributor license agreement |
 | Dependencies | none, see [docs/dependency-licenses.md](docs/dependency-licenses.md) |
 
 In short: you can run it for any purpose, read and change the source, and share it. If you distribute a changed version, it carries the same license and its source stays available.
 
 > [!NOTE]
-> Both `LICENSE` and `COPYING` hold the same official text, unmodified. `LICENSE` is the name GitHub and most tools look for, `COPYING` is the name the GNU project uses. Because both are present, GitHub lists the license twice in its sidebar. That is the only effect.
+> `LICENSE` holds the official text, unmodified. `COPYING` exists because that is the name the GNU project uses, and it points to `LICENSE` rather than repeating it, so the license is listed once.

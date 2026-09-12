@@ -8,7 +8,7 @@ ZeroTurn shows context, usage windows, session duration, and subagent activity w
 
 ZeroTurn works with coding harnesses. It is not another coding harness.
 
-![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask because context, five hour usage, and active subagents are past their thresholds. The credential guard then stops a file that holds an aws access key id from being read. zeroturn verify passes two checks, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
+![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask because context, five hour usage, and active subagents are past their thresholds. The credential guard then stops a file that holds an aws access key id from being read, and, with the prompt guard switched on, stops a message carrying the same key from being sent. zeroturn verify passes two checks, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
 
 > [!NOTE]
 > The recording is real output from the executable, made with [docs/demo/record.sh](docs/demo/record.sh) against a sample project. The session values are sample data, not a real account. The last word of the status line says what happens to the next subagent. Here it is `ask`, so the harness asks you before starting another one, with a short reason such as "New subagent requires approval. Context is 82% and five hour usage is 81%."
@@ -35,6 +35,13 @@ $ zeroturn event --event PreToolUse < read.json \
 Reading this file would put a credential into the conversation. deploy.env 
 line 2 looks like aws access key id. Approving means the value is shared 
 and should be rotated.
+# the prompt guard is off by default, this session switched it on
+$ zeroturn event --event UserPromptSubmit < message.json \
+    | jq -r .reason
+Your message was not sent. It contains what looks like aws access key id, 
+and sending it would mean rotating the value. Remove it and send the 
+message again. Turn this check off with zeroturn policy set 
+guard.credentials.prompts off.
 
 $ zeroturn verify
 ZEROTURN VERIFY
@@ -42,7 +49,7 @@ ZEROTURN VERIFY
 PASS  vet        0.3s
 PASS  test       0.3s
 
-Result: 2 checks passed in 0.6s
+Result: 2 checks passed in 0.7s
 
 $ zeroturn ship --message "docs: add release notes" --files NOTES.md --dry-run
 ZEROTURN SHIP

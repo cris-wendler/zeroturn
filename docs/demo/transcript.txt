@@ -16,6 +16,13 @@ $ zeroturn event --event PreToolUse < read.json \
 Reading this file would put a credential into the conversation. deploy.env 
 line 2 looks like aws access key id. Approving means the value is shared 
 and should be rotated.
+# the prompt guard is off by default, this session switched it on
+$ zeroturn event --event UserPromptSubmit < message.json \
+    | jq -r .reason
+Your message was not sent. It contains what looks like aws access key id, 
+and sending it would mean rotating the value. Remove it and send the 
+message again. Turn this check off with zeroturn policy set 
+guard.credentials.prompts off.
 ---
 $ zeroturn verify
 ZEROTURN VERIFY
@@ -23,7 +30,7 @@ ZEROTURN VERIFY
 PASS  vet        0.3s
 PASS  test       0.3s
 
-Result: 2 checks passed in 0.6s
+Result: 2 checks passed in 0.7s
 ---
 $ zeroturn ship --message "docs: add release notes" --files NOTES.md --dry-run
 ZEROTURN SHIP

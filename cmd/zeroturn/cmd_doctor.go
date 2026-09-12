@@ -147,25 +147,84 @@ func checkRepo(ctx context.Context) []check {
 		}
 	}
 
-	installed := ""
-	for _, name := range []string{"settings.local.json", "settings.json"} {
-		p := filepath.Join(repo.Root, ".claude", name)
-		if b, rerr := ioutil.ReadFile(p); rerr == nil && strings.Contains(string(b), "event --harness claude") {
-			installed = p
-			break
-		}
-	}
-	if installed != "" {
-		out = append(out, check{"claude integration", checkOK, "installed in " + installed})
-	} else {
+	installed, paths := installedIntegration(repo.Root)
+	if installed == "" {
 		out = append(out, check{"claude integration", checkWarn,
 			"not installed for this repository, run zeroturn integrate claude --plan"})
+		return out
 	}
+	out = append(out, check{"claude integration", checkOK, "installed in " + installed})
+
+	// A hook pointing at an executable that has moved or been removed
+	// fails in silence, which for a guard is the worst way to fail.
+	self := selfPath()
+	for _, p := range paths {
+		if samePath(p, self) {
+			continue
+		}
+		if _, err := os.Stat(p); err != nil {
+			out = append(out, check{"integration path", checkFail,
+				"the settings point at " + p + ", which is not there, so the hooks do nothing. Run zeroturn integrate claude --apply to repoint them"})
+		} else {
+			out = append(out, check{"integration path", checkWarn,
+				"the settings point at " + p + ", this is " + self + ". Run zeroturn integrate claude --apply to repoint them"})
+		}
+		return out
+	}
+	out = append(out, check{"integration path", checkOK, "the settings point at this executable"})
 	return out
 }
 
 // compatFixtures proves that each mode produces the decision it claims,
 // using fixture events rather than a live session.
+// installedIntegration reports which settings file holds ZeroTurn's
+// entries, and every executable path those entries name.
+func installedIntegration(root string) (string, []string) {
+	for _, name := range []string{"settings.local.json", "settings.json"} {
+		p := filepath.Join(root, ".claude", name)
+		b, err := ioutil.ReadFile(p)
+		if err != nil {
+			continue
+		}
+		var doc struct {
+			StatusLine struct {
+				Command string `json:"command"`
+			} `json:"statusLine"`
+			Hooks map[string][]struct {
+				Hooks []struct {
+					Command string `json:"command"`
+				} `json:"hooks"`
+			} `json:"hooks"`
+		}
+		if json.Unmarshal(b, &doc) != nil {
+			continue
+		}
+		seen := map[string]bool{}
+		var paths []string
+		add := func(command string) {
+			if !owned(command) {
+				return
+			}
+			if path := installedPath(command); path != "" && !seen[path] {
+				seen[path] = true
+				paths = append(paths, path)
+			}
+		}
+		add(doc.StatusLine.Command)
+		for _, entries := range doc.Hooks {
+			for _, entry := range entries {
+				for _, h := range entry.Hooks {
+					add(h.Command)
+				}
+			}
+		}
+		if len(paths) > 0 {
+			return p, paths
+		}
+	}
+	return "", nil
+}
+
 func compatFixtures() []check {
 	var out []check
 	sess := state.Session{
@@ -258,7 +317,7 @@ func compatLive(ctx context.Context) []check {
 					"hooks": []interface{}{
 						map[string]interface{}{
 							"type":    "command",
-							"command": fmt.Sprintf("%q event --harness claude --event PreToolUse", selfPath()),
+							"command": `"` + selfPath() + `" event --harness claude --event PreToolUse`,
 							"timeout": 10,
 						},
 					},

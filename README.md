@@ -127,7 +127,7 @@ zeroturn policy set guard.credentials.mode deny
 > This reads the file the model was about to open, and only that file. It never reads your prompts. The message names the file, the line, and the kind of credential, never the value.
 
 > [!NOTE]
-> It looks for high confidence patterns, so it catches a common mistake rather than every possible one. A file larger than 4 MB is skipped, and a credential in an unusual format can pass. It is a guard, not a guarantee.
+> It looks for high confidence patterns, so it catches a common mistake rather than every possible one. A file larger than 1 MB is skipped, because a credential lives in a small file and a larger one is almost always data, and a credential in an unusual format can pass. It is a guard, not a guarantee.
 
 ### Messages you send
 

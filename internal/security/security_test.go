@@ -61,6 +61,11 @@ func TestPlaceholdersAreNotReported(t *testing.T) {
 		`client_secret = "<your-client-secret>"`,
 		`access_token = "0000000000000000000"`,
 		`password = "aaaaaaaaaaaaaaaaaaaa"`,
+		`api_key: "your-api-key-here"`,
+		`client_secret = "example_secret_value_here"`,
+		`access_token = "replace-with-your-token"`,
+		`secret = "{{ vault_secret }}"`,
+		`password = "%DEPLOY_PASSWORD%"`,
 	} {
 		f, _ := ScanBytes("example.md", []byte(line))
 		if len(f) != 0 {

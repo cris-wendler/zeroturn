@@ -168,7 +168,7 @@ Evidence: a credential that reaches the model has to be rotated, and the most co
 
 Consequence: ZeroTurn now declares one field of `tool_input`, `file_path`, for that one tool. Everything else a tool carries still has no field in the decoder. The contract version moves to 1.1.0, and the integration installs a second `PreToolUse` entry with an exact matcher.
 
-Limits, stated wherever the feature is described: high confidence patterns only, files over 4 MB skipped, and a credential reaching the model by another route, a command's output for example, is not caught.
+Limits, stated wherever the feature is described: high confidence patterns only, files over 1 MB skipped, and a credential reaching the model by another route, a command's output for example, is not caught.
 
 ## 17. The prompt guard is built, and it is off by default
 

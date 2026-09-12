@@ -2,6 +2,7 @@ package state
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -266,5 +267,47 @@ func TestNewSessionAppliesRetention(t *testing.T) {
 	st.Update("new", "", func(*Session) {})
 	if _, found, _ := st.Load("old"); found {
 		t.Fatal("a record past retention survived the start of a new session")
+	}
+}
+
+func TestClearActiveKeepsTheRecordOfWhatHappened(t *testing.T) {
+	var s Session
+	s.AddActive("a1")
+	s.AddActive("a2")
+	s.RemoveActive("a1")
+	s.ClearActive()
+	if s.ActiveSubagents != 0 || len(s.ActiveIDs) != 0 {
+		t.Fatalf("active after clearing: %d %v", s.ActiveSubagents, s.ActiveIDs)
+	}
+	if s.SubagentStarts != 2 || s.SubagentStops != 1 {
+		t.Fatalf("history was lost: starts %d stops %d", s.SubagentStarts, s.SubagentStops)
+	}
+}
+
+// A subagent that never reports stopping, because the session was
+// interrupted, must not be counted as running for the rest of the
+// session, and must not make the record grow without limit.
+func TestInterruptedSubagentsDoNotAccumulate(t *testing.T) {
+	st := testStore(t)
+	for turn := 0; turn < 50; turn++ {
+		for i := 0; i < 10; i++ {
+			id := fmt.Sprintf("turn%d-agent%d", turn, i)
+			st.Update("s", "repo", func(s *Session) { s.AddActive(id) })
+		}
+		st.Update("s", "repo", func(s *Session) { s.ClearActive() })
+	}
+	got, _, _ := st.Load("s")
+	if got.ActiveSubagents != 0 || len(got.ActiveIDs) != 0 {
+		t.Fatalf("active after 50 turns: %d", got.ActiveSubagents)
+	}
+	if got.SubagentStarts != 500 || got.PeakActive != 10 {
+		t.Fatalf("starts %d peak %d", got.SubagentStarts, got.PeakActive)
+	}
+	info, err := os.Stat(filepath.Join(st.SessionsDir(), "s.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Size() > 2048 {
+		t.Fatalf("the record reached %d bytes after 500 subagents", info.Size())
 	}
 }

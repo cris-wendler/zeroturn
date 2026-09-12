@@ -387,6 +387,16 @@ func (s *Session) AddActive(agentID string) {
 	s.SubagentStarts++
 }
 
+// ClearActive forgets which subagents are running. A subagent cannot
+// outlive the turn that started it, so anything still counted when a
+// turn ends never reported stopping, usually because the session was
+// interrupted. Starts, stops, and the peak are left alone: they are the
+// record of what happened.
+func (s *Session) ClearActive() {
+	s.ActiveIDs = nil
+	s.ActiveSubagents = 0
+}
+
 func (s *Session) RemoveActive(agentID string) {
 	s.SubagentStops++
 	if agentID == "" {

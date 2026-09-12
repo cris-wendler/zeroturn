@@ -1,0 +1,6 @@
+# Keep line endings stable across platforms, and treat the recording and
+# the schemas as text so they show as diffs rather than binary.
+* text=auto eol=lf
+*.svg text
+*.json text
+*.sh text eol=lf

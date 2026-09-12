@@ -276,7 +276,7 @@ Current: everything described above, plus contributor documents, the harness con
 
 Planned:
 
-- `go install` and a Homebrew formula after the first public release
+- `go install` and a Homebrew formula after the first public release, following [docs/going-public.md](docs/going-public.md)
 - a Copilot adapter once Copilot exposes session values to hooks
 
 Considered, not decided: a warning before a credential reaches the model, using the detection that `ship` already performs. The two possible forms, and what each would cost, are in [docs/decisions.md](docs/decisions.md).

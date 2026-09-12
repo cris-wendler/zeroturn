@@ -1,5 +1,7 @@
 # Making a release
 
+Making the repository public comes first, and has its own checklist in [going-public.md](going-public.md).
+
 Nothing here publishes automatically. The workflow prepares a draft, and a person decides whether it becomes a release.
 
 ## Before tagging

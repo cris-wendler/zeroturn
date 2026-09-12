@@ -1,0 +1,13 @@
+# ZeroTurn has no dependencies, so only the workflow actions are watched.
+# A pull request here is usually a version bump for actions/checkout or
+# actions/setup-go.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: chore
+    labels:
+      - chore

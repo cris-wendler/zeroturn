@@ -25,6 +25,8 @@ First prototype. Nothing has been released yet.
 
 **Direct Lane**
 
+- `init` recognises Python, Maven, Gradle, .NET and Ruby projects as well as Go, JavaScript and Rust, and reads a Makefile for the targets it declares.
+
 - `zeroturn verify` runs approved commands as argument arrays, without a shell, keeping full logs and printing a redacted excerpt.
 - `zeroturn ship` stages only named files, scans them for credentials, refuses unsafe Git states, and pushes without force.
 

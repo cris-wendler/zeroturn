@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/cris-wendler/zeroturn/internal/config"
 	"github.com/cris-wendler/zeroturn/internal/output"
@@ -130,53 +131,11 @@ func joinOrUnavailable(s []string) string {
 // the project, so init never writes a command that cannot run.
 func detect(ctx context.Context, root string) detected {
 	d := detected{Root: root}
+	d.Language, d.PkgManager, d.Steps = propose(root)
 
-	if b, err := ioutil.ReadFile(filepath.Join(root, "package.json")); err == nil {
-		d.Language = "javascript"
-		d.PkgManager = nodePackageManager(root)
-		var pkg struct {
-			Scripts map[string]string `json:"scripts"`
-		}
-		if json.Unmarshal(b, &pkg) == nil {
-			runner := d.PkgManager
-			if runner == "" {
-				runner = "npm"
-			}
-			for _, name := range []string{"lint", "test", "build", "typecheck"} {
-				if _, ok := pkg.Scripts[name]; !ok {
-					continue
-				}
-				cmd := []string{runner, "run", name}
-				if runner == "npm" && name == "test" {
-					cmd = []string{"npm", "test"}
-				}
-				d.Steps = append(d.Steps, config.Step{Name: name, Command: cmd})
-			}
-		}
-	}
-
-	if _, err := os.Stat(filepath.Join(root, "go.mod")); err == nil {
-		d.Language = appendLang(d.Language, "go")
-		if d.PkgManager == "" {
-			d.PkgManager = "go modules"
-		}
-		d.Steps = append(d.Steps,
-			config.Step{Name: "vet", Command: []string{"go", "vet", "./..."}},
-			config.Step{Name: "test", Command: []string{"go", "test", "./..."}},
-		)
-	}
-
-	if _, err := os.Stat(filepath.Join(root, "Cargo.toml")); err == nil {
-		d.Language = appendLang(d.Language, "rust")
-		d.Steps = append(d.Steps,
-			config.Step{Name: "test", Command: []string{"cargo", "test"}},
-		)
-	}
-
-	if _, err := os.Stat(filepath.Join(root, "Makefile")); err == nil && len(d.Steps) == 0 {
-		d.Steps = append(d.Steps, config.Step{Name: "make", Command: []string{"make"}})
-	}
-
+	// A step whose executable is not installed is reported rather than
+	// proposed, because a configuration that cannot run is worse than an
+	// empty one.
 	var kept []config.Step
 	for _, s := range d.Steps {
 		if _, err := exec.LookPath(s.Command[0]); err != nil {
@@ -189,13 +148,198 @@ func detect(ctx context.Context, root string) detected {
 	if d.Steps == nil {
 		d.Steps = []config.Step{}
 	}
+	d.Harnesses = detectHarnesses()
+	return d
+}
 
-	for name, bin := range map[string]string{"Claude Code": "claude", "GitHub Copilot CLI": "copilot"} {
-		if _, err := exec.LookPath(bin); err == nil {
-			d.Harnesses = append(d.Harnesses, name)
+// detectHarnesses reports which coding harnesses are installed, so init
+// can say what the integration would connect to.
+func detectHarnesses() []string {
+	var out []string
+	for _, h := range []struct{ name, bin string }{
+		{"Claude Code", "claude"},
+		{"GitHub Copilot CLI", "copilot"},
+	} {
+		if _, err := exec.LookPath(h.bin); err == nil {
+			out = append(out, h.name)
 		}
 	}
-	return d
+	return out
+}
+
+// propose reads the project and suggests validation steps. It is
+// separate from detect so it can be tested without the toolchains it
+// names being installed.
+func propose(root string) (language, pkgManager string, steps []config.Step) {
+	has := func(name string) bool {
+		_, err := os.Stat(filepath.Join(root, name))
+		return err == nil
+	}
+	add := func(name string, command ...string) {
+		steps = append(steps, config.Step{Name: name, Command: command})
+	}
+
+	if b, err := ioutil.ReadFile(filepath.Join(root, "package.json")); err == nil {
+		language = "javascript"
+		pkgManager = nodePackageManager(root)
+		var pkg struct {
+			Scripts map[string]string `json:"scripts"`
+		}
+		if json.Unmarshal(b, &pkg) == nil {
+			runner := pkgManager
+			if runner == "" {
+				runner = "npm"
+			}
+			for _, name := range []string{"lint", "typecheck", "test", "build"} {
+				if _, ok := pkg.Scripts[name]; !ok {
+					continue
+				}
+				cmd := []string{runner, "run", name}
+				if runner == "npm" && name == "test" {
+					cmd = []string{"npm", "test"}
+				}
+				add(name, cmd...)
+			}
+		}
+	}
+
+	if has("go.mod") {
+		language = appendLang(language, "go")
+		if pkgManager == "" {
+			pkgManager = "go modules"
+		}
+		add("vet", "go", "vet", "./...")
+		add("test", "go", "test", "./...")
+	}
+
+	if has("Cargo.toml") {
+		language = appendLang(language, "rust")
+		if pkgManager == "" {
+			pkgManager = "cargo"
+		}
+		add("test", "cargo", "test")
+	}
+
+	if python, runner := pythonProject(root); python {
+		language = appendLang(language, "python")
+		if pkgManager == "" {
+			pkgManager = runner
+		}
+		prefix := []string{}
+		switch runner {
+		case "poetry":
+			prefix = []string{"poetry", "run"}
+		case "uv":
+			prefix = []string{"uv", "run"}
+		}
+		content, _ := ioutil.ReadFile(filepath.Join(root, "pyproject.toml"))
+		text := string(content)
+		if strings.Contains(text, "[tool.ruff") {
+			add("lint", append(append([]string{}, prefix...), "ruff", "check", ".")...)
+		}
+		if strings.Contains(text, "[tool.mypy") {
+			add("typecheck", append(append([]string{}, prefix...), "mypy", ".")...)
+		}
+		add("test", append(append([]string{}, prefix...), "pytest")...)
+	}
+
+	if has("pom.xml") {
+		language = appendLang(language, "java")
+		if pkgManager == "" {
+			pkgManager = "maven"
+		}
+		add("test", "mvn", "--batch-mode", "test")
+	}
+	if has("build.gradle") || has("build.gradle.kts") {
+		language = appendLang(language, "java")
+		if pkgManager == "" {
+			pkgManager = "gradle"
+		}
+		runner := "gradle"
+		if has("gradlew") {
+			runner = filepath.Join(".", "gradlew")
+		}
+		add("test", runner, "test")
+	}
+
+	if projects, _ := filepath.Glob(filepath.Join(root, "*.csproj")); len(projects) > 0 {
+		language = appendLang(language, "dotnet")
+		if pkgManager == "" {
+			pkgManager = "dotnet"
+		}
+		add("test", "dotnet", "test")
+	}
+
+	if has("Gemfile") {
+		language = appendLang(language, "ruby")
+		if pkgManager == "" {
+			pkgManager = "bundler"
+		}
+		switch {
+		case has("spec"):
+			add("test", "bundle", "exec", "rspec")
+		case has("Rakefile"):
+			add("test", "bundle", "exec", "rake", "test")
+		}
+	}
+
+	// A Makefile is used only when nothing else was found, and only for
+	// targets it actually declares.
+	if len(steps) == 0 {
+		for _, target := range makeTargets(root) {
+			add(target, "make", target)
+		}
+	}
+	return language, pkgManager, steps
+}
+
+// pythonProject reports whether this is a Python project and which
+// runner its lock file implies.
+func pythonProject(root string) (bool, string) {
+	found := false
+	for _, name := range []string{"pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "tox.ini"} {
+		if _, err := os.Stat(filepath.Join(root, name)); err == nil {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return false, ""
+	}
+	if _, err := os.Stat(filepath.Join(root, "poetry.lock")); err == nil {
+		return true, "poetry"
+	}
+	if _, err := os.Stat(filepath.Join(root, "uv.lock")); err == nil {
+		return true, "uv"
+	}
+	return true, "pip"
+}
+
+// makeTargets reads the names of the targets a Makefile declares, so a
+// proposal names one that exists rather than a guess.
+func makeTargets(root string) []string {
+	b, err := ioutil.ReadFile(filepath.Join(root, "Makefile"))
+	if err != nil {
+		return nil
+	}
+	declared := map[string]bool{}
+	for _, line := range strings.Split(string(b), "\n") {
+		if len(line) == 0 || line[0] == '\t' || line[0] == '#' || line[0] == ' ' {
+			continue
+		}
+		colon := strings.Index(line, ":")
+		if colon <= 0 || strings.Contains(line[:colon], "=") {
+			continue
+		}
+		declared[strings.TrimSpace(line[:colon])] = true
+	}
+	var out []string
+	for _, name := range []string{"lint", "check", "test", "build"} {
+		if declared[name] {
+			out = append(out, name)
+		}
+	}
+	return out
 }
 
 func appendLang(current, add string) string {

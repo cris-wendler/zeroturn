@@ -87,6 +87,17 @@ Before a new subagent starts, the gate compares those values with your threshold
 
 A value the harness did not send is left out. It is never shown as zero.
 
+```text
+ZT  ctx 82%  5h 81%  7d 47%  session 3h12m  agents 2  ask
+     |        |       |       |             |         |
+     |        |       |       |             |         what happens to the next subagent
+     |        |       |       |             subagents running now, counted by ZeroTurn
+     |        |       |       how long this session has been open
+     |        |       seven day usage window
+     |        five hour usage window
+     context used in this conversation
+```
+
 The status line and the gate each take about 8 ms on the machine they were measured on, including process start, and neither makes a network request or starts a background process. The method and the numbers are in [docs/benchmarks.md](docs/benchmarks.md).
 
 ## Credential guard
@@ -179,7 +190,8 @@ zeroturn doctor                    # check the installation
     "mode": "observe",
     "context": { "warn": 70, "confirm": 80, "critical": 90 },
     "limits": { "fiveHourWarn": 75, "sevenDayWarn": 75 },
-    "session": { "durationWarnMinutes": 240, "activeSubagentsWarn": 2, "subagentStartsWarn": 4 }
+    "session": { "durationWarnMinutes": 240, "activeSubagentsWarn": 2, "subagentStartsWarn": 4 },
+    "credentials": { "mode": "ask", "prompts": "off" }
   },
   "verify": {
     "steps": [
@@ -215,6 +227,8 @@ zeroturn policy reset
 > [!IMPORTANT]
 > The harness sends a transcript path with most events. ZeroTurn discards it and never opens the file. A test checks that no prompt, response, or path reaches its records.
 
+Two things are read without being recorded, and only to look for credentials: the file the model is about to open, and, if you switch the prompt guard on, the message you are about to send. Both are scanned in memory and nothing from either is stored.
+
 Records stay on your machine, in `~/Library/Application Support/zeroturn` on macOS, `$XDG_DATA_HOME/zeroturn` or `~/.local/share/zeroturn` on Linux, and `%LOCALAPPDATA%\zeroturn` on Windows. Records older than seven days are removed when a new session starts. `zeroturn report purge --all` removes every ZeroTurn record and nothing else.
 
 ZeroTurn makes no network requests of its own, calls no model, and runs no background process. `zeroturn ship` contacts your Git remote because pushing requires it.
@@ -245,6 +259,7 @@ ZeroTurn makes no network requests of its own, calls no model, and runs no backg
 | `zeroturn doctor` | Check the installation, `--compat` for guard decisions, `--compat --live` for a real session |
 | `zeroturn capabilities --json` | Describe what this build supports |
 | `zeroturn version` | Print the version |
+| `zeroturn event` | The adapter entry point. Harness hooks call this, you do not |
 
 > [!NOTE]
 > Every report ends with the line "Based only on events observed locally by ZeroTurn on this machine." The counts are events, never tokens, cost, or a saving.
@@ -255,6 +270,8 @@ Supported. The full guide, including what each hook does and which payload field
 
 - the status line, for context, usage windows, and session duration
 - `PreToolUse` with the exact matcher `Agent`, the only hook that can allow, ask, or deny a subagent
+- `PreToolUse` with the exact matcher `Read`, for the credential guard
+- `UserPromptSubmit`, installed only if you switch the prompt guard on
 - `SubagentStart` and `SubagentStop`, to count subagents
 - `Stop`, to see whether background tasks are still running
 - `SessionEnd`
@@ -318,7 +335,6 @@ Before contributing, check that the feature is not already there and search the 
 > [!CAUTION]
 > ZeroTurn shows and gates what the harness reports. It cannot see usage the harness does not send, and it does not promise to remove session limits.
 
-
 - Session values appear only when the harness sends them. Some accounts receive no usage window data.
 - Subagent counts cover only subagents started while ZeroTurn was installed.
 - The background task count is as current as the last `Stop` event.
@@ -328,16 +344,18 @@ Before contributing, check that the feature is not already there and search the 
 
 ## Roadmap
 
-Current: everything described above, plus contributor documents, the harness contract with published schemas and a conformance suite, and continuous integration on Linux, macOS, and Windows. A run against this repository, showing each behavior with real output, is in [docs/dogfood.md](docs/dogfood.md).
+Current: everything described above, including both credential guards, plus contributor documents, the harness contract with published schemas and a conformance suite, and continuous integration on Linux, macOS, and Windows. A run against this repository, showing each behavior with real output, is in [docs/dogfood.md](docs/dogfood.md).
 
 Planned:
 
 - `go install` and a Homebrew formula after the first public release, following [docs/going-public.md](docs/going-public.md)
 - a Copilot adapter once Copilot exposes session values to hooks
 
-Considered, not decided: warning about a credential you type or paste yourself, which would mean ZeroTurn reading prompts. The trade off is in [docs/decisions.md](docs/decisions.md).
-
 Not planned: `zeroturn sync`. The reasoning is in [docs/decisions.md](docs/decisions.md). The research behind the product boundary is in [docs/product-boundary.md](docs/product-boundary.md).
+
+## How this was built
+
+The research came before the code, the differentiator was tested before the rest was written, and the constraints were kept rather than worked around. [docs/how-this-was-built.md](docs/how-this-was-built.md) is the record: what was examined and rejected, what would have stopped the project, the defects its own tests found, and what is still unproven.
 
 ## License
 

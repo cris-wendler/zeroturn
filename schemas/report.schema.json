@@ -14,7 +14,8 @@
     "directValidations",
     "directGitOperations",
     "generatedAt",
-    "provenance"
+    "provenance",
+    "credentialWarnings"
   ],
   "additionalProperties": false,
   "properties": {
@@ -64,6 +65,11 @@
     },
     "provenance": {
       "const": "Based only on events observed locally by ZeroTurn on this machine."
+    },
+    "credentialWarnings": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "How many times the credential guard asked or denied before a file was read."
     }
   }
 }

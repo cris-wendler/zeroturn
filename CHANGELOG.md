@@ -13,6 +13,11 @@ First prototype. Nothing has been released yet.
 - Subagent counting from harness start and stop events, which no harness reports itself.
 - Strict mode requires approval on the machine, so a committed configuration cannot deny subagents for everyone.
 
+**Credential guard**
+
+- Before the model reads a file, that file is scanned and the harness asks, or denies, when it holds something shaped like a credential. Modes: `ask`, the default, `deny`, and `off`.
+- The message names the file, the line, and the category, never the value.
+
 **Direct Lane**
 
 - `zeroturn verify` runs approved commands as argument arrays, without a shell, keeping full logs and printing a redacted excerpt.

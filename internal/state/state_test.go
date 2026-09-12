@@ -242,6 +242,7 @@ func TestStoredRecordHasOnlyPermittedFields(t *testing.T) {
 		"contextWindowSize": true, "peakContextPercent": true, "fiveHourPercent": true, "fiveHourResetsAt": true,
 		"sevenDayPercent": true, "sevenDayResetsAt": true, "subagentStarts": true, "subagentStops": true,
 		"activeSubagents": true, "peakActiveSubagents": true, "backgroundTasks": true, "confirmRequests": true,
+		"credentialWarnings":   true,
 		"deniedSubagentStarts": true, "allowedSubagentStarts": true, "directValidations": true,
 		"directGitOperations": true, "lastDecision": true, "activeAgentIds": true,
 	}

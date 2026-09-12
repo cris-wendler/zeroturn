@@ -155,3 +155,17 @@ Decision: no more commits directly on `main`. Each change goes on a branch named
 Evidence: the first days of work were committed straight to `main`, which is reasonable for a prototype nobody can see. Once the repository is public, that history shows no review and no trace of why anything changed. A pull request per change gives each one a description, a place for review comments, and a run of the checks before it lands, and it costs a minute.
 
 Consequence: `main` keeps one commit per change. The detail of how a change was built stays in its pull request rather than in a string of small commits.
+
+## 16. The credential guard reads files, not prompts
+
+Date: 2026-09-12
+
+Decision: the first form proposed in entry 12 is built. `PreToolUse` with the exact matcher `Read` gives ZeroTurn the path of a file the model is about to open. ZeroTurn scans that file with the detection `ship` already uses and answers ask or deny, naming the file, the line, and the category, never the value. The default is ask, and `guard.credentials.mode` can set deny or off.
+
+The second form, scanning what you type or paste, is still not built. It is the only way to catch a credential pasted into a message, and it would mean ZeroTurn reading prompts, which every privacy statement here rules out. That remains a decision for later.
+
+Evidence: a credential that reaches the model has to be rotated, and the most common way for one to arrive is a file the model reads on its own, an environment file or a key. The scan happens locally, the content is never stored, and only a count of warnings is kept.
+
+Consequence: ZeroTurn now declares one field of `tool_input`, `file_path`, for that one tool. Everything else a tool carries still has no field in the decoder. The contract version moves to 1.1.0, and the integration installs a second `PreToolUse` entry with an exact matcher.
+
+Limits, stated wherever the feature is described: high confidence patterns only, files over 4 MB skipped, and a credential reaching the model by another route, a command's output for example, is not caught.

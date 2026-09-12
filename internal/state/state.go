@@ -53,6 +53,8 @@ type Session struct {
 	PeakActive      int `json:"peakActiveSubagents"`
 	BackgroundTasks int `json:"backgroundTasks"`
 
+	CredentialWarnings int `json:"credentialWarnings"`
+
 	ConfirmRequests   int `json:"confirmRequests"`
 	DeniedStarts      int `json:"deniedSubagentStarts"`
 	AllowedStarts     int `json:"allowedSubagentStarts"`

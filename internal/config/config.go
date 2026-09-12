@@ -22,6 +22,14 @@ const (
 	Version = 1
 )
 
+// Credential guard modes. The guard scans a file the model is about to
+// read and can ask before the content reaches the conversation.
+const (
+	CredentialOff  = "off"
+	CredentialAsk  = "ask"
+	CredentialDeny = "deny"
+)
+
 const (
 	ModeObserve = "observe"
 	ModeConfirm = "confirm"
@@ -36,10 +44,17 @@ type Config struct {
 }
 
 type Guard struct {
-	Mode    string  `json:"mode"`
-	Context Context `json:"context"`
-	Limits  Limits  `json:"limits"`
-	Session Session `json:"session"`
+	Mode        string      `json:"mode"`
+	Context     Context     `json:"context"`
+	Limits      Limits      `json:"limits"`
+	Session     Session     `json:"session"`
+	Credentials Credentials `json:"credentials"`
+}
+
+// Credentials controls what happens when the model asks to read a file
+// that holds something shaped like a credential.
+type Credentials struct {
+	Mode string `json:"mode"`
 }
 
 type Context struct {
@@ -82,10 +97,11 @@ func Default() Config {
 	return Config{
 		Version: Version,
 		Guard: Guard{
-			Mode:    ModeObserve,
-			Context: Context{Warn: 70, Confirm: 80, Critical: 90},
-			Limits:  Limits{FiveHourWarn: 75, SevenDayWarn: 75},
-			Session: Session{DurationWarnMinutes: 240, ActiveSubagentsWarn: 2, SubagentStartsWarn: 4},
+			Mode:        ModeObserve,
+			Context:     Context{Warn: 70, Confirm: 80, Critical: 90},
+			Limits:      Limits{FiveHourWarn: 75, SevenDayWarn: 75},
+			Session:     Session{DurationWarnMinutes: 240, ActiveSubagentsWarn: 2, SubagentStartsWarn: 4},
+			Credentials: Credentials{Mode: CredentialAsk},
 		},
 		Verify: Verify{Steps: []Step{}},
 		Git:    Git{Remote: "origin", ProtectedBranches: []string{"main", "master"}},
@@ -112,6 +128,11 @@ func Load(repoRoot string) (Config, error) {
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&c); err != nil {
 		return Config{}, fmt.Errorf("%s is not valid ZeroTurn configuration: %v", FileName, err)
+	}
+	// A file written before the credential guard existed has no mode.
+	// It reads as the default rather than as a fault.
+	if c.Guard.Credentials.Mode == "" {
+		c.Guard.Credentials.Mode = CredentialAsk
 	}
 	if err := c.Validate(); err != nil {
 		return Config{}, err
@@ -182,6 +203,12 @@ func (c Config) Validate() error {
 	default:
 		return ValidationError{"guard.mode", "value " + quote(c.Guard.Mode) + " is not a guard mode",
 			"use observe, confirm, or strict"}
+	}
+	switch c.Guard.Credentials.Mode {
+	case CredentialOff, CredentialAsk, CredentialDeny:
+	default:
+		return ValidationError{"guard.credentials.mode", "value " + quote(c.Guard.Credentials.Mode) + " is not a credential guard mode",
+			"use off, ask, or deny"}
 	}
 	for _, f := range []struct {
 		n string

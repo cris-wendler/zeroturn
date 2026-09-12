@@ -1,0 +1,12 @@
+{
+  "session_id": "fixture-read",
+  "hook_event_name": "PreToolUse",
+  "cwd": "/fixture/repo",
+  "transcript_path": "/fixture/.claude/projects/fixture/transcript.jsonl",
+  "tool_name": "Read",
+  "tool_use_id": "toolu_fixture_read",
+  "tool_input": {
+    "file_path": "/fixture/repo/deploy.env",
+    "limit": 200
+  }
+}

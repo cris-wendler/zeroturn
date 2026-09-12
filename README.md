@@ -1,5 +1,7 @@
 # ZeroTurn
 
+[![Tests on Linux, macOS, and Windows](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml/badge.svg)](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml)
+
 Know when a coding session is under pressure. Keep routine development work local.
 
 ZeroTurn shows context, usage windows, session duration, and subagent activity when the coding harness provides them. It can request approval before additional delegation and can run validation and safe Git workflows directly on your machine.

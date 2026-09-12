@@ -68,7 +68,7 @@ Consequence: current editor tooling (gopls) does not support Go 1.17. Raising th
 
 Date: 2026-09-11
 
-Decision: the module path is `github.com/cris-wendler/zeroturn`, because the GitHub account `zeroturn` belongs to an inactive user. The GitHub repository exists and nothing has been pushed to it. The dogfood example uses LiveArena read only. LiveArena is not modified, committed to, or pushed.
+Decision: the module path is `github.com/cris-wendler/zeroturn`, because the GitHub account `zeroturn` belongs to an inactive user. The GitHub repository exists and nothing has been pushed to it. The dogfood example uses a second project on this machine read only. That project is not modified, committed to, or pushed.
 
 ## 7. What Strict mode can deny
 

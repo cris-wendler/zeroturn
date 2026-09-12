@@ -207,7 +207,7 @@ Counts of events observed locally. Not tokens, not cost, and not a saving.
 
 ## A second project
 
-LiveArena is a separate project on the same machine. It was read to prepare this example and was not modified, committed to, or pushed. The configuration below uses scripts that exist in that project, `lint`, `typecheck`, and `test` in `apps/web`, and it has not been written into that repository.
+A second project on the same machine, a web application with its own test and lint scripts, was read to prepare this example. It was not modified, committed to, or pushed, and the configuration below was never written into it. The steps name scripts that exist in that project rather than ones invented for the example.
 
 ```json
 {
@@ -229,7 +229,7 @@ LiveArena is a separate project on the same machine. It was read to prepare this
 }
 ```
 
-`zeroturn init` proposes steps only for scripts it finds, so on that project it would propose these three after reading `apps/web/package.json`. Running them still needs `zeroturn verify --approve` on the machine, which shows each command before anything executes.
+`zeroturn init` proposes steps only for scripts it finds, so it would propose these three after reading that project's `package.json`. Running them still needs `zeroturn verify --approve` on the machine, which shows each command before anything executes.
 
 ## What the run showed
 

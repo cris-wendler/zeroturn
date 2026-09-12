@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 300" width="820" height="300" role="img" aria-labelledby="title desc">
+<title id="title">GPL version 3 in plain words</title>
+<desc id="desc">You may run ZeroTurn for any purpose including at work, read and change the source, share copies, and charge for it. In return, if you distribute it or a changed version you must keep the license and the copyright notices, say what you changed, give recipients the source, and release it under the same license. There is no warranty. This is a summary, not the license. The text in the LICENSE file is what governs.</desc>
+<style>
+.card{fill:#0d1117;stroke:#30363d}
+.pane{fill:#161b22;stroke-width:2}
+.head{font:700 17px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+.body{font:14.5px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#c9d1d9}
+.foot{font:14px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#9da7b3}
+.tag{font:700 13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:#79c0ff}
+</style>
+<rect class="card" x="0.5" y="0.5" width="819" height="299" rx="12"/>
+
+<text class="tag" x="24" y="34">GPL-3.0-only</text>
+<text class="foot" x="140" y="34">in plain words</text>
+
+<rect class="pane" x="24" y="48" width="376" height="182" rx="8" stroke="#56d364"/>
+<path d="M44 68l6 7 12 -14" fill="none" stroke="#56d364" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text class="head" x="72" y="74" fill="#56d364">You may</text>
+<text class="body" x="44" y="108">run it for any purpose, at work too</text>
+<text class="body" x="44" y="134">read and change the source</text>
+<text class="body" x="44" y="160">share copies, changed or not</text>
+<text class="body" x="44" y="186">charge money for doing so</text>
+<text class="body" x="44" y="212">keep your private changes private</text>
+
+<rect class="pane" x="420" y="48" width="376" height="182" rx="8" stroke="#e3b341"/>
+<circle cx="440" cy="66" r="8" fill="none" stroke="#e3b341" stroke-width="3"/>
+<path d="M440 62v4M440 70v1" stroke="#e3b341" stroke-width="3" stroke-linecap="round"/>
+<text class="head" x="468" y="74" fill="#e3b341">If you share it, you must</text>
+<text class="body" x="440" y="108">keep the license and the notices</text>
+<text class="body" x="440" y="134">say what you changed</text>
+<text class="body" x="440" y="160">give people the source code</text>
+<text class="body" x="440" y="186">use this same license for it</text>
+<text class="body" x="440" y="212">expect no warranty of any kind</text>
+
+<text class="foot" x="24" y="266">This is a summary for orientation. It is not the license and it grants nothing.</text>
+<text class="foot" x="24" y="288">The text in LICENSE is what governs, unmodified, as the Free Software Foundation published it.</text>
+</svg>

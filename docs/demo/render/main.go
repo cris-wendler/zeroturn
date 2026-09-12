@@ -29,13 +29,13 @@ const (
 	padTop     = 56.0
 	padBottom  = 20.0
 
-	idleBeforeTyping = 350  // ms with the prompt and cursor shown
-	typeBase         = 14   // ms per character, before jitter
-	typeSpace        = 45   // ms for a space, which reads as a word boundary
-	afterTyping      = 320  // ms between the last character and the output
-	outputLine       = 45   // ms between ordinary output lines
+	idleBeforeTyping = 260  // ms with the prompt and cursor shown
+	typeBase         = 11   // ms per character, before jitter
+	typeSpace        = 36   // ms for a space, which reads as a word boundary
+	afterTyping      = 260  // ms between the last character and the output
+	outputLine       = 38   // ms between ordinary output lines
 	outputResult     = 260  // ms before a PASS or FAIL line, which reflects work
-	holdScreen       = 2100 // ms a finished screen stays before it clears
+	holdScreen       = 1600 // ms a finished screen stays before it clears
 )
 
 type span struct {
@@ -46,6 +46,9 @@ type span struct {
 type item struct {
 	command bool
 	spans   []span
+	// rows holds a typed command that continues onto another line, the
+	// way a shell does with a trailing backslash.
+	rows [][]span
 }
 
 type element struct {
@@ -78,17 +81,35 @@ func main() {
 }
 
 func parse(r io.Reader) ([][]item, error) {
+	var lines []string
+	sc := bufio.NewScanner(r)
+	sc.Buffer(make([]byte, 0, 64*1024), 1<<20)
+	for sc.Scan() {
+		lines = append(lines, sc.Text())
+	}
+	if err := sc.Err(); err != nil {
+		return nil, err
+	}
+
 	var screens [][]item
 	var cur []item
-	sc := bufio.NewScanner(r)
-	for sc.Scan() {
-		line := sc.Text()
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
 		switch {
 		case line == "---":
 			screens = append(screens, cur)
 			cur = nil
 		case strings.HasPrefix(line, "$ "):
-			cur = append(cur, item{command: true, spans: append([]span{{"$ ", "p"}}, commandSpans(line[2:])...)})
+			text := line[2:]
+			rows := [][]span{append([]span{{"$ ", "p"}}, commandSpans(text)...)}
+			// A shell continues a command after a trailing backslash, and
+			// prompts for the rest with a second prompt character.
+			for strings.HasSuffix(text, "\\") && i+1 < len(lines) {
+				i++
+				text = strings.TrimLeft(lines[i], " \t")
+				rows = append(rows, append([]span{{"> ", "c"}}, commandSpans(text)...))
+			}
+			cur = append(cur, item{command: true, rows: rows})
 		default:
 			cur = append(cur, item{spans: colorize(line)})
 		}
@@ -99,7 +120,7 @@ func parse(r io.Reader) ([][]item, error) {
 	if len(screens) == 0 {
 		return nil, fmt.Errorf("the transcript on standard input is empty")
 	}
-	return screens, sc.Err()
+	return screens, nil
 }
 
 // commandSpans colors a typed command: the program, the subcommand, flags,
@@ -158,6 +179,11 @@ func colorize(line string) []span {
 	}
 	trimmed := strings.TrimSpace(line)
 	switch {
+	case strings.HasPrefix(line, "# "):
+		return []span{{line, "m"}}
+	case strings.HasPrefix(line, "Reading this file"), strings.HasPrefix(line, "Your message was not sent"),
+		strings.HasPrefix(line, "line ") && strings.Contains(line, "looks like"):
+		return []span{{line, "y"}}
 	case strings.HasPrefix(line, "PASS"):
 		return []span{{"PASS", "g b"}, {line[4:], ""}}
 	case strings.HasPrefix(line, "FAIL"):
@@ -249,7 +275,7 @@ func textWidth(spans []span) int {
 
 // jitter varies typing speed deterministically so the recording looks
 // typed by a person and still renders identically every time.
-func jitter(i int) int { return (i * 7919 % 7) * 4 }
+func jitter(i int) int { return (i * 7919 % 7) * 3 }
 
 func timeline(screens [][]item) ([]element, int, int, int) {
 	var els []element
@@ -258,8 +284,14 @@ func timeline(screens [][]item) ([]element, int, int, int) {
 		start := len(els)
 		row := 0
 		for _, it := range screen {
-			if w := textWidth(it.spans); w+2 > cols {
-				cols = w + 2
+			widest := textWidth(it.spans)
+			for _, r := range it.rows {
+				if w := textWidth(r); w > widest {
+					widest = w
+				}
+			}
+			if widest+2 > cols {
+				cols = widest + 2
 			}
 			if !it.command {
 				delay := outputLine
@@ -271,23 +303,27 @@ func timeline(screens [][]item) ([]element, int, int, int) {
 				row++
 				continue
 			}
-			cmd := []rune(plain(it.spans[1:]))
-			els = append(els, element{row: row, spans: withCursor(nil), from: t, to: t + idleBeforeTyping})
-			t += idleBeforeTyping
-			for i := 1; i <= len(cmd); i++ {
-				d := typeBase + jitter(i)
-				if cmd[i-1] == ' ' {
-					d = typeSpace
+			for r, full := range it.rows {
+				prompt := full[:1]
+				rest := full[1:]
+				cmd := []rune(plain(rest))
+				els = append(els, element{row: row, spans: withCursor(prompt, nil), from: t, to: t + idleBeforeTyping})
+				t += idleBeforeTyping
+				for i := 1; i <= len(cmd); i++ {
+					d := typeBase + jitter(i)
+					if cmd[i-1] == ' ' {
+						d = typeSpace
+					}
+					next := t + d
+					if i == len(cmd) && r == len(it.rows)-1 {
+						next = t + afterTyping
+					}
+					els = append(els, element{row: row, spans: withCursor(prompt, prefix(rest, i)), from: t, to: next})
+					t = next
 				}
-				next := t + d
-				if i == len(cmd) {
-					next = t + afterTyping
-				}
-				els = append(els, element{row: row, spans: withCursor(prefix(it.spans[1:], i)), from: t, to: next})
-				t = next
+				els = append(els, element{row: row, spans: full, from: t})
+				row++
 			}
-			els = append(els, element{row: row, spans: it.spans, from: t})
-			row++
 		}
 		if row > rows {
 			rows = row
@@ -302,8 +338,8 @@ func timeline(screens [][]item) ([]element, int, int, int) {
 	return els, t, cols, rows
 }
 
-func withCursor(typed []span) []span {
-	out := append([]span{{"$ ", "p"}}, typed...)
+func withCursor(prompt, typed []span) []span {
+	out := append(append([]span{}, prompt...), typed...)
 	return append(out, span{"█", "c"})
 }
 

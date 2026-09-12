@@ -10,13 +10,20 @@ thresholds crossed:
   fiveHour         Five hour usage is 81% (limit 75)
   activeSubagents  2 subagents are active (limit 2)
 ---
+# the model asks to read a file that holds a key
+$ zeroturn event --event PreToolUse < read.json \
+    | jq -r .hookSpecificOutput.permissionDecisionReason
+Reading this file would put a credential into the conversation. deploy.env 
+line 2 looks like aws access key id. Approving means the value is shared 
+and should be rotated.
+---
 $ zeroturn verify
 ZEROTURN VERIFY
 
-PASS  vet        0.2s
-PASS  test       0.2s
+PASS  vet        0.3s
+PASS  test       0.3s
 
-Result: 2 checks passed in 0.4s
+Result: 2 checks passed in 0.6s
 ---
 $ zeroturn ship --message "docs: add release notes" --files NOTES.md --dry-run
 ZEROTURN SHIP
@@ -26,10 +33,10 @@ message:  docs: add release notes
 branch:   docs-update
 remote:   origin  ../remote.git
 
-PASS  vet        0.2s
-PASS  test       0.2s
+PASS  vet        0.3s
+PASS  test       0.3s
 
-Result: 2 checks passed in 0.4s
+Result: 2 checks passed in 0.6s
 
 READY TO SHIP
 Dry run finished. Nothing was staged, committed, or pushed.

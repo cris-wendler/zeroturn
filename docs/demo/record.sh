@@ -73,6 +73,14 @@ propose_subagent >/dev/null
 echo '$ zeroturn policy check'
 "$zt" policy check
 echo '---'
+printf 'region=eu\nkey=%sQWERTYUIOPASDFGH\n' AKIA >deploy.env
+echo '# the model asks to read a file that holds a key'
+echo '$ zeroturn event --event PreToolUse < read.json \\'
+echo '    | jq -r .hookSpecificOutput.permissionDecisionReason'
+printf '{"session_id":"demo","hook_event_name":"PreToolUse","cwd":"%s","tool_name":"Read","tool_input":{"file_path":"%s/deploy.env"}}' "$demo/app" "$demo/app" |
+	"$zt" event --harness claude --event PreToolUse | jq -r .hookSpecificOutput.permissionDecisionReason | fold -s -w 76
+rm -f deploy.env
+echo '---'
 echo '$ zeroturn verify'
 "$zt" verify || true
 echo '---'

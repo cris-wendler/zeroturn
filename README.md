@@ -287,6 +287,8 @@ Not planned: `zeroturn sync`. The reasoning is in [docs/decisions.md](docs/decis
 
 ZeroTurn is free software licensed under GNU GPL version 3. You may use, study, modify, and distribute it under the terms of that license.
 
+![GPL version 3 in plain words. You may: run it for any purpose including at work, read and change the source, share copies changed or not, charge money for doing so, and keep your private changes private. If you share it you must: keep the license and the notices, say what you changed, give people the source code, use this same license for it, and expect no warranty. This is a summary for orientation, not the license. The text in LICENSE is what governs.](docs/img/license.svg)
+
 | | |
 | --- | --- |
 | SPDX identifier | `GPL-3.0-only` |
@@ -294,7 +296,5 @@ ZeroTurn is free software licensed under GNU GPL version 3. You may use, study, 
 | Contributions | accepted under the same license, with no contributor license agreement |
 | Dependencies | none, see [docs/dependency-licenses.md](docs/dependency-licenses.md) |
 
-In short: you can run it for any purpose, read and change the source, and share it. If you distribute a changed version, it carries the same license and its source stays available.
-
 > [!NOTE]
-> `LICENSE` holds the official text, unmodified. `COPYING` exists because that is the name the GNU project uses, and it points to `LICENSE` rather than repeating it, so the license is listed once.
+> The card is a summary, not the license, and it grants nothing. The text in `LICENSE` is the Free Software Foundation's, unmodified, because the license itself forbids changing that document and because tools identify the license by matching it exactly.

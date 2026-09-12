@@ -149,6 +149,17 @@ Hook payloads also carry `transcript_path`, `tool_input` (which holds the subage
 
 The status line reads one small file, starts no Git process, and makes no network request. On the machine used for the measurements it renders in 8.0 ms, of which about 6 ms is process start, and the gate answers in 7.7 ms. The method and the full table are in [../benchmarks.md](../benchmarks.md).
 
+## When the executable moves
+
+The settings hold the full path of the `zeroturn` executable. If it is moved, reinstalled somewhere else, or removed, the entries keep pointing at the old place and the hooks quietly do nothing, which for a guard is the worst way to fail.
+
+```text
+FAIL  integration path       the settings point at /old/path/zeroturn, which is not there, so the hooks
+                             do nothing. Run zeroturn integrate claude --apply to repoint them
+```
+
+`zeroturn doctor` reports it, `zeroturn integrate claude --plan` shows what it would repair, and `--apply` rewrites only the entries ZeroTurn owns. A path that reaches the same file through a symbolic link, which is how a package manager usually installs an executable, is not treated as a change.
+
 ## Troubleshooting
 
 `zeroturn doctor` shows whether the integration is installed for the current repository and whether the configuration loads.

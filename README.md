@@ -256,7 +256,7 @@ ZeroTurn makes no network requests of its own, calls no model, and runs no backg
 | Command | Purpose |
 | --- | --- |
 | `zeroturn init` | Detect the project and write `.zeroturn.json` after confirmation |
-| `zeroturn doctor` | Check the installation, `--compat` for guard decisions, `--compat --live` for a real session |
+| `zeroturn doctor` | Check the installation, including whether the hooks still point at this executable. `--compat` for guard decisions, `--compat --live` for a real session |
 | `zeroturn capabilities --json` | Describe what this build supports |
 | `zeroturn version` | Print the version |
 | `zeroturn event` | The adapter entry point. Harness hooks call this, you do not |

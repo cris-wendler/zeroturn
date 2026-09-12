@@ -25,6 +25,11 @@ First prototype. Nothing has been released yet.
 - `zeroturn verify` runs approved commands as argument arrays, without a shell, keeping full logs and printing a redacted excerpt.
 - `zeroturn ship` stages only named files, scans them for credentials, refuses unsafe Git states, and pushes without force.
 
+**Keeping the integration working**
+
+- `doctor` reports when the settings point at an executable that has moved or is no longer there, since hooks in that state fail in silence.
+- `integrate claude --apply` repairs those entries, and leaves commands it does not own untouched.
+
 **Contract and safety**
 
 - Published JSON schemas and a conformance suite.

@@ -29,13 +29,13 @@ const (
 	padTop     = 56.0
 	padBottom  = 20.0
 
-	idleBeforeTyping = 260  // ms with the prompt and cursor shown
+	idleBeforeTyping = 200  // ms with the prompt and cursor shown
 	typeBase         = 11   // ms per character, before jitter
 	typeSpace        = 36   // ms for a space, which reads as a word boundary
-	afterTyping      = 260  // ms between the last character and the output
+	afterTyping      = 220  // ms between the last character and the output
 	outputLine       = 38   // ms between ordinary output lines
 	outputResult     = 260  // ms before a PASS or FAIL line, which reflects work
-	holdScreen       = 1600 // ms a finished screen stays before it clears
+	holdScreen       = 1250 // ms a finished screen stays before it clears
 )
 
 type span struct {

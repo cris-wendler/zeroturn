@@ -80,6 +80,17 @@ echo '    | jq -r .hookSpecificOutput.permissionDecisionReason'
 printf '{"session_id":"demo","hook_event_name":"PreToolUse","cwd":"%s","tool_name":"Read","tool_input":{"file_path":"%s/deploy.env"}}' "$demo/app" "$demo/app" |
 	"$zt" event --harness claude --event PreToolUse | jq -r .hookSpecificOutput.permissionDecisionReason | fold -s -w 76
 rm -f deploy.env
+echo '# the prompt guard is off by default, this session switched it on'
+python3 - <<'PYCFG'
+import json
+c = json.load(open(".zeroturn.json"))
+c["guard"]["credentials"]["prompts"] = "block"
+json.dump(c, open(".zeroturn.json", "w"), indent=2)
+PYCFG
+echo '$ zeroturn event --event UserPromptSubmit < message.json \'
+echo '    | jq -r .reason'
+printf '{"session_id":"demo","hook_event_name":"UserPromptSubmit","cwd":"%s","prompt":"deploy with AKIA%s"}' "$demo/app" "QWERTYUIOPASDFGH" |
+	"$zt" event --harness claude --event UserPromptSubmit | jq -r .reason | fold -s -w 76
 echo '---'
 echo '$ zeroturn verify'
 "$zt" verify || true

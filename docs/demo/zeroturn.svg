@@ -3,321 +3,401 @@
 <desc id="desc">A terminal types four commands. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask, with three thresholds crossed: context 82 percent over a limit of 80, five hour usage 81 percent over 75, and 2 active subagents at a limit of 2. zeroturn verify passes two checks, and zeroturn ship with dry run passes the same checks and prints READY TO SHIP. The session values are sample data.</desc>
 <style>
 text{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;font-size:16px;fill:#e6edf3;white-space:pre}
-.a{opacity:0;animation-duration:17045ms;animation-iteration-count:infinite;animation-timing-function:step-end}
+.a{opacity:0;animation-duration:17439ms;animation-iteration-count:infinite;animation-timing-function:step-end}
 .p{fill:#56d364}.w{fill:#e6edf3}.c{fill:#9da7b3}.g{fill:#56d364}.y{fill:#e3b341}.r{fill:#ff7b72}.m{fill:#9da7b3}.b{font-weight:700}
 .cmd{fill:#56d4dd}.sub{fill:#f0f6fc}.flag{fill:#d2a8ff}.str{fill:#ffa657}.op{fill:#ff7b72}.h{fill:#79c0ff}.k{fill:#79c0ff}.o{fill:#ffa657}
 .t{font-size:13px;fill:#9da7b3}.hlb{fill:#238636;fill-opacity:.28}
-@keyframes k0{0%{opacity:1}1.525%{opacity:0}100%{opacity:0}}
-@keyframes k1{0%{opacity:0}1.525%{opacity:1}1.625%{opacity:0}100%{opacity:0}}
-@keyframes k2{0%{opacity:0}1.625%{opacity:1}1.76%{opacity:0}100%{opacity:0}}
-@keyframes k3{0%{opacity:0}1.76%{opacity:1}1.93%{opacity:0}100%{opacity:0}}
-@keyframes k4{0%{opacity:0}1.93%{opacity:1}2.012%{opacity:0}100%{opacity:0}}
-@keyframes k5{0%{opacity:0}2.012%{opacity:1}2.13%{opacity:0}100%{opacity:0}}
-@keyframes k6{0%{opacity:0}2.13%{opacity:1}2.282%{opacity:0}100%{opacity:0}}
-@keyframes k7{0%{opacity:0}2.282%{opacity:1}2.347%{opacity:0}100%{opacity:0}}
-@keyframes k8{0%{opacity:0}2.347%{opacity:1}2.446%{opacity:0}100%{opacity:0}}
-@keyframes k9{0%{opacity:0}2.446%{opacity:1}2.658%{opacity:0}100%{opacity:0}}
-@keyframes k10{0%{opacity:0}2.658%{opacity:1}2.828%{opacity:0}100%{opacity:0}}
-@keyframes k11{0%{opacity:0}2.828%{opacity:1}2.91%{opacity:0}100%{opacity:0}}
-@keyframes k12{0%{opacity:0}2.91%{opacity:1}3.027%{opacity:0}100%{opacity:0}}
-@keyframes k13{0%{opacity:0}3.027%{opacity:1}3.18%{opacity:0}100%{opacity:0}}
-@keyframes k14{0%{opacity:0}3.18%{opacity:1}3.244%{opacity:0}100%{opacity:0}}
-@keyframes k15{0%{opacity:0}3.244%{opacity:1}3.344%{opacity:0}100%{opacity:0}}
-@keyframes k16{0%{opacity:0}3.344%{opacity:1}3.555%{opacity:0}100%{opacity:0}}
-@keyframes k17{0%{opacity:0}3.555%{opacity:1}3.725%{opacity:0}100%{opacity:0}}
-@keyframes k18{0%{opacity:0}3.725%{opacity:1}3.808%{opacity:0}100%{opacity:0}}
-@keyframes k19{0%{opacity:0}3.808%{opacity:1}3.925%{opacity:0}100%{opacity:0}}
-@keyframes k20{0%{opacity:0}3.925%{opacity:1}4.077%{opacity:0}100%{opacity:0}}
-@keyframes k21{0%{opacity:0}4.077%{opacity:1}4.142%{opacity:0}100%{opacity:0}}
-@keyframes k22{0%{opacity:0}4.142%{opacity:1}4.242%{opacity:0}100%{opacity:0}}
-@keyframes k23{0%{opacity:0}4.242%{opacity:1}4.377%{opacity:0}100%{opacity:0}}
-@keyframes k24{0%{opacity:0}4.377%{opacity:1}4.588%{opacity:0}100%{opacity:0}}
-@keyframes k25{0%{opacity:0}4.588%{opacity:1}4.67%{opacity:0}100%{opacity:0}}
-@keyframes k26{0%{opacity:0}4.67%{opacity:1}4.787%{opacity:0}100%{opacity:0}}
-@keyframes k27{0%{opacity:0}4.787%{opacity:1}4.94%{opacity:0}100%{opacity:0}}
-@keyframes k28{0%{opacity:0}4.94%{opacity:1}5.004%{opacity:0}100%{opacity:0}}
-@keyframes k29{0%{opacity:0}5.004%{opacity:1}5.104%{opacity:0}100%{opacity:0}}
-@keyframes k30{0%{opacity:0}5.104%{opacity:1}5.239%{opacity:0}100%{opacity:0}}
-@keyframes k31{0%{opacity:0}5.239%{opacity:1}5.409%{opacity:0}100%{opacity:0}}
-@keyframes k32{0%{opacity:0}5.409%{opacity:1}5.491%{opacity:0}100%{opacity:0}}
-@keyframes k33{0%{opacity:0}5.491%{opacity:1}5.609%{opacity:0}100%{opacity:0}}
-@keyframes k34{0%{opacity:0}5.609%{opacity:1}5.82%{opacity:0}100%{opacity:0}}
-@keyframes k35{0%{opacity:0}5.82%{opacity:1}5.884%{opacity:0}100%{opacity:0}}
-@keyframes k36{0%{opacity:0}5.884%{opacity:1}5.984%{opacity:0}100%{opacity:0}}
-@keyframes k37{0%{opacity:0}5.984%{opacity:1}6.119%{opacity:0}100%{opacity:0}}
-@keyframes k38{0%{opacity:0}6.119%{opacity:1}6.289%{opacity:0}100%{opacity:0}}
-@keyframes k39{0%{opacity:0}6.289%{opacity:1}6.371%{opacity:0}100%{opacity:0}}
-@keyframes k40{0%{opacity:0}6.371%{opacity:1}6.489%{opacity:0}100%{opacity:0}}
-@keyframes k41{0%{opacity:0}6.489%{opacity:1}6.7%{opacity:0}100%{opacity:0}}
-@keyframes k42{0%{opacity:0}6.7%{opacity:1}6.764%{opacity:0}100%{opacity:0}}
-@keyframes k43{0%{opacity:0}6.764%{opacity:1}6.976%{opacity:0}100%{opacity:0}}
-@keyframes k44{0%{opacity:0}6.976%{opacity:1}7.111%{opacity:0}100%{opacity:0}}
-@keyframes k45{0%{opacity:0}7.111%{opacity:1}7.281%{opacity:0}100%{opacity:0}}
-@keyframes k46{0%{opacity:0}7.281%{opacity:1}7.363%{opacity:0}100%{opacity:0}}
-@keyframes k47{0%{opacity:0}7.363%{opacity:1}7.48%{opacity:0}100%{opacity:0}}
-@keyframes k48{0%{opacity:0}7.48%{opacity:1}7.633%{opacity:0}100%{opacity:0}}
-@keyframes k49{0%{opacity:0}7.633%{opacity:1}7.697%{opacity:0}100%{opacity:0}}
-@keyframes k50{0%{opacity:0}7.697%{opacity:1}7.797%{opacity:0}100%{opacity:0}}
-@keyframes k51{0%{opacity:0}7.797%{opacity:1}7.932%{opacity:0}100%{opacity:0}}
-@keyframes k52{0%{opacity:0}7.932%{opacity:1}8.102%{opacity:0}100%{opacity:0}}
-@keyframes k53{0%{opacity:0}8.102%{opacity:1}8.184%{opacity:0}100%{opacity:0}}
-@keyframes k54{0%{opacity:0}8.184%{opacity:1}8.302%{opacity:0}100%{opacity:0}}
-@keyframes k55{0%{opacity:0}8.302%{opacity:1}9.827%{opacity:0}100%{opacity:0}}
-@keyframes k56{0%{opacity:0}9.827%{opacity:1}26.823%{opacity:0}100%{opacity:0}}
-@keyframes k57{0%{opacity:0}10.05%{opacity:1}26.823%{opacity:0}100%{opacity:0}}
-@keyframes k58{0%{opacity:0}10.05%{opacity:1}11.575%{opacity:0}100%{opacity:0}}
-@keyframes k59{0%{opacity:0}11.575%{opacity:1}11.675%{opacity:0}100%{opacity:0}}
-@keyframes k60{0%{opacity:0}11.675%{opacity:1}11.81%{opacity:0}100%{opacity:0}}
-@keyframes k61{0%{opacity:0}11.81%{opacity:1}11.98%{opacity:0}100%{opacity:0}}
-@keyframes k62{0%{opacity:0}11.98%{opacity:1}12.062%{opacity:0}100%{opacity:0}}
-@keyframes k63{0%{opacity:0}12.062%{opacity:1}12.18%{opacity:0}100%{opacity:0}}
-@keyframes k64{0%{opacity:0}12.18%{opacity:1}12.332%{opacity:0}100%{opacity:0}}
-@keyframes k65{0%{opacity:0}12.332%{opacity:1}12.397%{opacity:0}100%{opacity:0}}
-@keyframes k66{0%{opacity:0}12.397%{opacity:1}12.496%{opacity:0}100%{opacity:0}}
-@keyframes k67{0%{opacity:0}12.496%{opacity:1}12.708%{opacity:0}100%{opacity:0}}
-@keyframes k68{0%{opacity:0}12.708%{opacity:1}12.878%{opacity:0}100%{opacity:0}}
-@keyframes k69{0%{opacity:0}12.878%{opacity:1}12.96%{opacity:0}100%{opacity:0}}
-@keyframes k70{0%{opacity:0}12.96%{opacity:1}13.077%{opacity:0}100%{opacity:0}}
-@keyframes k71{0%{opacity:0}13.077%{opacity:1}13.23%{opacity:0}100%{opacity:0}}
-@keyframes k72{0%{opacity:0}13.23%{opacity:1}13.294%{opacity:0}100%{opacity:0}}
-@keyframes k73{0%{opacity:0}13.294%{opacity:1}13.394%{opacity:0}100%{opacity:0}}
-@keyframes k74{0%{opacity:0}13.394%{opacity:1}13.605%{opacity:0}100%{opacity:0}}
-@keyframes k75{0%{opacity:0}13.605%{opacity:1}13.775%{opacity:0}100%{opacity:0}}
-@keyframes k76{0%{opacity:0}13.775%{opacity:1}13.857%{opacity:0}100%{opacity:0}}
-@keyframes k77{0%{opacity:0}13.857%{opacity:1}13.975%{opacity:0}100%{opacity:0}}
-@keyframes k78{0%{opacity:0}13.975%{opacity:1}14.127%{opacity:0}100%{opacity:0}}
-@keyframes k79{0%{opacity:0}14.127%{opacity:1}15.653%{opacity:0}100%{opacity:0}}
-@keyframes k80{0%{opacity:0}15.653%{opacity:1}26.823%{opacity:0}100%{opacity:0}}
-@keyframes k81{0%{opacity:0}15.876%{opacity:1}26.823%{opacity:0}100%{opacity:0}}
-@keyframes k82{0%{opacity:0}16.099%{opacity:1}26.823%{opacity:0}100%{opacity:0}}
-@keyframes k83{0%{opacity:0}16.322%{opacity:1}26.823%{opacity:0}100%{opacity:0}}
-@keyframes k84{0%{opacity:0}16.544%{opacity:1}26.823%{opacity:0}100%{opacity:0}}
-@keyframes k85{0%{opacity:0}16.767%{opacity:1}26.823%{opacity:0}100%{opacity:0}}
-@keyframes k86{0%{opacity:0}16.99%{opacity:1}26.823%{opacity:0}100%{opacity:0}}
-@keyframes k87{0%{opacity:0}17.213%{opacity:1}26.823%{opacity:0}100%{opacity:0}}
-@keyframes k88{0%{opacity:0}17.436%{opacity:1}26.823%{opacity:0}100%{opacity:0}}
-@keyframes k89{0%{opacity:0}27.046%{opacity:1}54.039%{opacity:0}100%{opacity:0}}
-@keyframes k90{0%{opacity:0}27.046%{opacity:1}28.571%{opacity:0}100%{opacity:0}}
-@keyframes k91{0%{opacity:0}28.571%{opacity:1}28.671%{opacity:0}100%{opacity:0}}
-@keyframes k92{0%{opacity:0}28.671%{opacity:1}28.806%{opacity:0}100%{opacity:0}}
-@keyframes k93{0%{opacity:0}28.806%{opacity:1}28.976%{opacity:0}100%{opacity:0}}
-@keyframes k94{0%{opacity:0}28.976%{opacity:1}29.058%{opacity:0}100%{opacity:0}}
-@keyframes k95{0%{opacity:0}29.058%{opacity:1}29.176%{opacity:0}100%{opacity:0}}
-@keyframes k96{0%{opacity:0}29.176%{opacity:1}29.328%{opacity:0}100%{opacity:0}}
-@keyframes k97{0%{opacity:0}29.328%{opacity:1}29.393%{opacity:0}100%{opacity:0}}
-@keyframes k98{0%{opacity:0}29.393%{opacity:1}29.493%{opacity:0}100%{opacity:0}}
-@keyframes k99{0%{opacity:0}29.493%{opacity:1}29.704%{opacity:0}100%{opacity:0}}
-@keyframes k100{0%{opacity:0}29.704%{opacity:1}29.874%{opacity:0}100%{opacity:0}}
-@keyframes k101{0%{opacity:0}29.874%{opacity:1}29.956%{opacity:0}100%{opacity:0}}
-@keyframes k102{0%{opacity:0}29.956%{opacity:1}30.073%{opacity:0}100%{opacity:0}}
-@keyframes k103{0%{opacity:0}30.073%{opacity:1}30.226%{opacity:0}100%{opacity:0}}
-@keyframes k104{0%{opacity:0}30.226%{opacity:1}30.29%{opacity:0}100%{opacity:0}}
-@keyframes k105{0%{opacity:0}30.29%{opacity:1}30.502%{opacity:0}100%{opacity:0}}
-@keyframes k106{0%{opacity:0}30.502%{opacity:1}30.637%{opacity:0}100%{opacity:0}}
-@keyframes k107{0%{opacity:0}30.637%{opacity:1}30.807%{opacity:0}100%{opacity:0}}
-@keyframes k108{0%{opacity:0}30.807%{opacity:1}30.889%{opacity:0}100%{opacity:0}}
-@keyframes k109{0%{opacity:0}30.889%{opacity:1}31.006%{opacity:0}100%{opacity:0}}
-@keyframes k110{0%{opacity:0}31.006%{opacity:1}31.159%{opacity:0}100%{opacity:0}}
-@keyframes k111{0%{opacity:0}31.159%{opacity:1}31.223%{opacity:0}100%{opacity:0}}
-@keyframes k112{0%{opacity:0}31.223%{opacity:1}31.323%{opacity:0}100%{opacity:0}}
-@keyframes k113{0%{opacity:0}31.323%{opacity:1}31.534%{opacity:0}100%{opacity:0}}
-@keyframes k114{0%{opacity:0}31.534%{opacity:1}31.704%{opacity:0}100%{opacity:0}}
-@keyframes k115{0%{opacity:0}31.704%{opacity:1}31.786%{opacity:0}100%{opacity:0}}
-@keyframes k116{0%{opacity:0}31.786%{opacity:1}31.904%{opacity:0}100%{opacity:0}}
-@keyframes k117{0%{opacity:0}31.904%{opacity:1}32.056%{opacity:0}100%{opacity:0}}
-@keyframes k118{0%{opacity:0}32.056%{opacity:1}32.121%{opacity:0}100%{opacity:0}}
-@keyframes k119{0%{opacity:0}32.121%{opacity:1}32.221%{opacity:0}100%{opacity:0}}
-@keyframes k120{0%{opacity:0}32.221%{opacity:1}32.356%{opacity:0}100%{opacity:0}}
-@keyframes k121{0%{opacity:0}32.356%{opacity:1}32.526%{opacity:0}100%{opacity:0}}
-@keyframes k122{0%{opacity:0}32.526%{opacity:1}32.608%{opacity:0}100%{opacity:0}}
-@keyframes k123{0%{opacity:0}32.608%{opacity:1}32.725%{opacity:0}100%{opacity:0}}
-@keyframes k124{0%{opacity:0}32.725%{opacity:1}32.936%{opacity:0}100%{opacity:0}}
-@keyframes k125{0%{opacity:0}32.936%{opacity:1}33.001%{opacity:0}100%{opacity:0}}
-@keyframes k126{0%{opacity:0}33.001%{opacity:1}33.212%{opacity:0}100%{opacity:0}}
-@keyframes k127{0%{opacity:0}33.212%{opacity:1}33.347%{opacity:0}100%{opacity:0}}
-@keyframes k128{0%{opacity:0}33.347%{opacity:1}33.517%{opacity:0}100%{opacity:0}}
-@keyframes k129{0%{opacity:0}33.517%{opacity:1}33.599%{opacity:0}100%{opacity:0}}
-@keyframes k130{0%{opacity:0}33.599%{opacity:1}33.717%{opacity:0}100%{opacity:0}}
-@keyframes k131{0%{opacity:0}33.717%{opacity:1}33.869%{opacity:0}100%{opacity:0}}
-@keyframes k132{0%{opacity:0}33.869%{opacity:1}33.934%{opacity:0}100%{opacity:0}}
-@keyframes k133{0%{opacity:0}33.934%{opacity:1}34.033%{opacity:0}100%{opacity:0}}
-@keyframes k134{0%{opacity:0}34.033%{opacity:1}34.168%{opacity:0}100%{opacity:0}}
-@keyframes k135{0%{opacity:0}34.168%{opacity:1}34.339%{opacity:0}100%{opacity:0}}
-@keyframes k136{0%{opacity:0}34.339%{opacity:1}34.55%{opacity:0}100%{opacity:0}}
-@keyframes k137{0%{opacity:0}34.55%{opacity:1}34.667%{opacity:0}100%{opacity:0}}
-@keyframes k138{0%{opacity:0}34.667%{opacity:1}54.039%{opacity:0}100%{opacity:0}}
-@keyframes k139{0%{opacity:0}34.667%{opacity:1}36.192%{opacity:0}100%{opacity:0}}
-@keyframes k140{0%{opacity:0}36.192%{opacity:1}36.292%{opacity:0}100%{opacity:0}}
-@keyframes k141{0%{opacity:0}36.292%{opacity:1}36.503%{opacity:0}100%{opacity:0}}
-@keyframes k142{0%{opacity:0}36.503%{opacity:1}36.674%{opacity:0}100%{opacity:0}}
-@keyframes k143{0%{opacity:0}36.674%{opacity:1}36.756%{opacity:0}100%{opacity:0}}
-@keyframes k144{0%{opacity:0}36.756%{opacity:1}36.967%{opacity:0}100%{opacity:0}}
-@keyframes k145{0%{opacity:0}36.967%{opacity:1}37.119%{opacity:0}100%{opacity:0}}
-@keyframes k146{0%{opacity:0}37.119%{opacity:1}37.184%{opacity:0}100%{opacity:0}}
-@keyframes k147{0%{opacity:0}37.184%{opacity:1}37.395%{opacity:0}100%{opacity:0}}
-@keyframes k148{0%{opacity:0}37.395%{opacity:1}37.53%{opacity:0}100%{opacity:0}}
-@keyframes k149{0%{opacity:0}37.53%{opacity:1}37.7%{opacity:0}100%{opacity:0}}
-@keyframes k150{0%{opacity:0}37.7%{opacity:1}37.782%{opacity:0}100%{opacity:0}}
-@keyframes k151{0%{opacity:0}37.782%{opacity:1}37.9%{opacity:0}100%{opacity:0}}
-@keyframes k152{0%{opacity:0}37.9%{opacity:1}38.052%{opacity:0}100%{opacity:0}}
-@keyframes k153{0%{opacity:0}38.052%{opacity:1}38.117%{opacity:0}100%{opacity:0}}
-@keyframes k154{0%{opacity:0}38.117%{opacity:1}38.216%{opacity:0}100%{opacity:0}}
-@keyframes k155{0%{opacity:0}38.216%{opacity:1}38.351%{opacity:0}100%{opacity:0}}
-@keyframes k156{0%{opacity:0}38.351%{opacity:1}38.522%{opacity:0}100%{opacity:0}}
-@keyframes k157{0%{opacity:0}38.522%{opacity:1}38.604%{opacity:0}100%{opacity:0}}
-@keyframes k158{0%{opacity:0}38.604%{opacity:1}38.721%{opacity:0}100%{opacity:0}}
-@keyframes k159{0%{opacity:0}38.721%{opacity:1}38.874%{opacity:0}100%{opacity:0}}
-@keyframes k160{0%{opacity:0}38.874%{opacity:1}38.938%{opacity:0}100%{opacity:0}}
-@keyframes k161{0%{opacity:0}38.938%{opacity:1}39.038%{opacity:0}100%{opacity:0}}
-@keyframes k162{0%{opacity:0}39.038%{opacity:1}39.173%{opacity:0}100%{opacity:0}}
-@keyframes k163{0%{opacity:0}39.173%{opacity:1}39.343%{opacity:0}100%{opacity:0}}
-@keyframes k164{0%{opacity:0}39.343%{opacity:1}39.425%{opacity:0}100%{opacity:0}}
-@keyframes k165{0%{opacity:0}39.425%{opacity:1}39.542%{opacity:0}100%{opacity:0}}
-@keyframes k166{0%{opacity:0}39.542%{opacity:1}39.695%{opacity:0}100%{opacity:0}}
-@keyframes k167{0%{opacity:0}39.695%{opacity:1}39.759%{opacity:0}100%{opacity:0}}
-@keyframes k168{0%{opacity:0}39.759%{opacity:1}39.859%{opacity:0}100%{opacity:0}}
-@keyframes k169{0%{opacity:0}39.859%{opacity:1}39.994%{opacity:0}100%{opacity:0}}
-@keyframes k170{0%{opacity:0}39.994%{opacity:1}40.164%{opacity:0}100%{opacity:0}}
-@keyframes k171{0%{opacity:0}40.164%{opacity:1}40.246%{opacity:0}100%{opacity:0}}
-@keyframes k172{0%{opacity:0}40.246%{opacity:1}40.364%{opacity:0}100%{opacity:0}}
-@keyframes k173{0%{opacity:0}40.364%{opacity:1}40.516%{opacity:0}100%{opacity:0}}
-@keyframes k174{0%{opacity:0}40.516%{opacity:1}40.581%{opacity:0}100%{opacity:0}}
-@keyframes k175{0%{opacity:0}40.581%{opacity:1}40.681%{opacity:0}100%{opacity:0}}
-@keyframes k176{0%{opacity:0}40.681%{opacity:1}40.815%{opacity:0}100%{opacity:0}}
-@keyframes k177{0%{opacity:0}40.815%{opacity:1}40.986%{opacity:0}100%{opacity:0}}
-@keyframes k178{0%{opacity:0}40.986%{opacity:1}41.068%{opacity:0}100%{opacity:0}}
-@keyframes k179{0%{opacity:0}41.068%{opacity:1}41.185%{opacity:0}100%{opacity:0}}
-@keyframes k180{0%{opacity:0}41.185%{opacity:1}41.338%{opacity:0}100%{opacity:0}}
-@keyframes k181{0%{opacity:0}41.338%{opacity:1}41.402%{opacity:0}100%{opacity:0}}
-@keyframes k182{0%{opacity:0}41.402%{opacity:1}41.502%{opacity:0}100%{opacity:0}}
-@keyframes k183{0%{opacity:0}41.502%{opacity:1}41.637%{opacity:0}100%{opacity:0}}
-@keyframes k184{0%{opacity:0}41.637%{opacity:1}41.807%{opacity:0}100%{opacity:0}}
-@keyframes k185{0%{opacity:0}41.807%{opacity:1}41.889%{opacity:0}100%{opacity:0}}
-@keyframes k186{0%{opacity:0}41.889%{opacity:1}42.006%{opacity:0}100%{opacity:0}}
-@keyframes k187{0%{opacity:0}42.006%{opacity:1}42.159%{opacity:0}100%{opacity:0}}
-@keyframes k188{0%{opacity:0}42.159%{opacity:1}42.224%{opacity:0}100%{opacity:0}}
-@keyframes k189{0%{opacity:0}42.224%{opacity:1}42.323%{opacity:0}100%{opacity:0}}
-@keyframes k190{0%{opacity:0}42.323%{opacity:1}42.458%{opacity:0}100%{opacity:0}}
-@keyframes k191{0%{opacity:0}42.458%{opacity:1}43.984%{opacity:0}100%{opacity:0}}
-@keyframes k192{0%{opacity:0}43.984%{opacity:1}54.039%{opacity:0}100%{opacity:0}}
-@keyframes k193{0%{opacity:0}44.207%{opacity:1}54.039%{opacity:0}100%{opacity:0}}
-@keyframes k194{0%{opacity:0}44.429%{opacity:1}54.039%{opacity:0}100%{opacity:0}}
-@keyframes k195{0%{opacity:0}44.652%{opacity:1}54.039%{opacity:0}100%{opacity:0}}
-@keyframes k196{0%{opacity:0}54.039%{opacity:1}55.565%{opacity:0}100%{opacity:0}}
-@keyframes k197{0%{opacity:0}55.565%{opacity:1}55.664%{opacity:0}100%{opacity:0}}
-@keyframes k198{0%{opacity:0}55.664%{opacity:1}55.799%{opacity:0}100%{opacity:0}}
-@keyframes k199{0%{opacity:0}55.799%{opacity:1}55.969%{opacity:0}100%{opacity:0}}
-@keyframes k200{0%{opacity:0}55.969%{opacity:1}56.052%{opacity:0}100%{opacity:0}}
-@keyframes k201{0%{opacity:0}56.052%{opacity:1}56.169%{opacity:0}100%{opacity:0}}
-@keyframes k202{0%{opacity:0}56.169%{opacity:1}56.322%{opacity:0}100%{opacity:0}}
-@keyframes k203{0%{opacity:0}56.322%{opacity:1}56.386%{opacity:0}100%{opacity:0}}
-@keyframes k204{0%{opacity:0}56.386%{opacity:1}56.486%{opacity:0}100%{opacity:0}}
-@keyframes k205{0%{opacity:0}56.486%{opacity:1}56.697%{opacity:0}100%{opacity:0}}
-@keyframes k206{0%{opacity:0}56.697%{opacity:1}56.867%{opacity:0}100%{opacity:0}}
-@keyframes k207{0%{opacity:0}56.867%{opacity:1}56.949%{opacity:0}100%{opacity:0}}
-@keyframes k208{0%{opacity:0}56.949%{opacity:1}57.067%{opacity:0}100%{opacity:0}}
-@keyframes k209{0%{opacity:0}57.067%{opacity:1}57.219%{opacity:0}100%{opacity:0}}
-@keyframes k210{0%{opacity:0}57.219%{opacity:1}57.284%{opacity:0}100%{opacity:0}}
-@keyframes k211{0%{opacity:0}57.284%{opacity:1}58.809%{opacity:0}100%{opacity:0}}
-@keyframes k212{0%{opacity:0}58.809%{opacity:1}72.138%{opacity:0}100%{opacity:0}}
-@keyframes k213{0%{opacity:0}59.032%{opacity:1}72.138%{opacity:0}100%{opacity:0}}
-@keyframes k214{0%{opacity:0}59.255%{opacity:1}72.138%{opacity:0}100%{opacity:0}}
-@keyframes k215{0%{opacity:0}60.78%{opacity:1}72.138%{opacity:0}100%{opacity:0}}
-@keyframes k216{0%{opacity:0}62.306%{opacity:1}72.138%{opacity:0}100%{opacity:0}}
-@keyframes k217{0%{opacity:0}62.529%{opacity:1}72.138%{opacity:0}100%{opacity:0}}
-@keyframes k218{0%{opacity:0}62.752%{opacity:1}72.138%{opacity:0}100%{opacity:0}}
-@keyframes k219{0%{opacity:0}72.138%{opacity:1}73.664%{opacity:0}100%{opacity:0}}
-@keyframes k220{0%{opacity:0}73.664%{opacity:1}73.764%{opacity:0}100%{opacity:0}}
-@keyframes k221{0%{opacity:0}73.764%{opacity:1}73.899%{opacity:0}100%{opacity:0}}
-@keyframes k222{0%{opacity:0}73.899%{opacity:1}74.069%{opacity:0}100%{opacity:0}}
-@keyframes k223{0%{opacity:0}74.069%{opacity:1}74.151%{opacity:0}100%{opacity:0}}
-@keyframes k224{0%{opacity:0}74.151%{opacity:1}74.268%{opacity:0}100%{opacity:0}}
-@keyframes k225{0%{opacity:0}74.268%{opacity:1}74.421%{opacity:0}100%{opacity:0}}
-@keyframes k226{0%{opacity:0}74.421%{opacity:1}74.485%{opacity:0}100%{opacity:0}}
-@keyframes k227{0%{opacity:0}74.485%{opacity:1}74.585%{opacity:0}100%{opacity:0}}
-@keyframes k228{0%{opacity:0}74.585%{opacity:1}74.796%{opacity:0}100%{opacity:0}}
-@keyframes k229{0%{opacity:0}74.796%{opacity:1}74.966%{opacity:0}100%{opacity:0}}
-@keyframes k230{0%{opacity:0}74.966%{opacity:1}75.048%{opacity:0}100%{opacity:0}}
-@keyframes k231{0%{opacity:0}75.048%{opacity:1}75.166%{opacity:0}100%{opacity:0}}
-@keyframes k232{0%{opacity:0}75.166%{opacity:1}75.318%{opacity:0}100%{opacity:0}}
-@keyframes k233{0%{opacity:0}75.318%{opacity:1}75.529%{opacity:0}100%{opacity:0}}
-@keyframes k234{0%{opacity:0}75.529%{opacity:1}75.629%{opacity:0}100%{opacity:0}}
-@keyframes k235{0%{opacity:0}75.629%{opacity:1}75.764%{opacity:0}100%{opacity:0}}
-@keyframes k236{0%{opacity:0}75.764%{opacity:1}75.934%{opacity:0}100%{opacity:0}}
-@keyframes k237{0%{opacity:0}75.934%{opacity:1}76.016%{opacity:0}100%{opacity:0}}
-@keyframes k238{0%{opacity:0}76.016%{opacity:1}76.134%{opacity:0}100%{opacity:0}}
-@keyframes k239{0%{opacity:0}76.134%{opacity:1}76.286%{opacity:0}100%{opacity:0}}
-@keyframes k240{0%{opacity:0}76.286%{opacity:1}76.351%{opacity:0}100%{opacity:0}}
-@keyframes k241{0%{opacity:0}76.351%{opacity:1}76.451%{opacity:0}100%{opacity:0}}
-@keyframes k242{0%{opacity:0}76.451%{opacity:1}76.586%{opacity:0}100%{opacity:0}}
-@keyframes k243{0%{opacity:0}76.586%{opacity:1}76.797%{opacity:0}100%{opacity:0}}
-@keyframes k244{0%{opacity:0}76.797%{opacity:1}76.879%{opacity:0}100%{opacity:0}}
-@keyframes k245{0%{opacity:0}76.879%{opacity:1}76.996%{opacity:0}100%{opacity:0}}
-@keyframes k246{0%{opacity:0}76.996%{opacity:1}77.149%{opacity:0}100%{opacity:0}}
-@keyframes k247{0%{opacity:0}77.149%{opacity:1}77.213%{opacity:0}100%{opacity:0}}
-@keyframes k248{0%{opacity:0}77.213%{opacity:1}77.313%{opacity:0}100%{opacity:0}}
-@keyframes k249{0%{opacity:0}77.313%{opacity:1}77.448%{opacity:0}100%{opacity:0}}
-@keyframes k250{0%{opacity:0}77.448%{opacity:1}77.659%{opacity:0}100%{opacity:0}}
-@keyframes k251{0%{opacity:0}77.659%{opacity:1}77.741%{opacity:0}100%{opacity:0}}
-@keyframes k252{0%{opacity:0}77.741%{opacity:1}77.859%{opacity:0}100%{opacity:0}}
-@keyframes k253{0%{opacity:0}77.859%{opacity:1}78.011%{opacity:0}100%{opacity:0}}
-@keyframes k254{0%{opacity:0}78.011%{opacity:1}78.222%{opacity:0}100%{opacity:0}}
-@keyframes k255{0%{opacity:0}78.222%{opacity:1}78.322%{opacity:0}100%{opacity:0}}
-@keyframes k256{0%{opacity:0}78.322%{opacity:1}78.457%{opacity:0}100%{opacity:0}}
-@keyframes k257{0%{opacity:0}78.457%{opacity:1}78.627%{opacity:0}100%{opacity:0}}
-@keyframes k258{0%{opacity:0}78.627%{opacity:1}78.709%{opacity:0}100%{opacity:0}}
-@keyframes k259{0%{opacity:0}78.709%{opacity:1}78.827%{opacity:0}100%{opacity:0}}
-@keyframes k260{0%{opacity:0}78.827%{opacity:1}78.979%{opacity:0}100%{opacity:0}}
-@keyframes k261{0%{opacity:0}78.979%{opacity:1}79.044%{opacity:0}100%{opacity:0}}
-@keyframes k262{0%{opacity:0}79.044%{opacity:1}79.255%{opacity:0}100%{opacity:0}}
-@keyframes k263{0%{opacity:0}79.255%{opacity:1}79.39%{opacity:0}100%{opacity:0}}
-@keyframes k264{0%{opacity:0}79.39%{opacity:1}79.56%{opacity:0}100%{opacity:0}}
-@keyframes k265{0%{opacity:0}79.56%{opacity:1}79.642%{opacity:0}100%{opacity:0}}
-@keyframes k266{0%{opacity:0}79.642%{opacity:1}79.759%{opacity:0}100%{opacity:0}}
-@keyframes k267{0%{opacity:0}79.759%{opacity:1}79.912%{opacity:0}100%{opacity:0}}
-@keyframes k268{0%{opacity:0}79.912%{opacity:1}79.977%{opacity:0}100%{opacity:0}}
-@keyframes k269{0%{opacity:0}79.977%{opacity:1}80.188%{opacity:0}100%{opacity:0}}
-@keyframes k270{0%{opacity:0}80.188%{opacity:1}80.323%{opacity:0}100%{opacity:0}}
-@keyframes k271{0%{opacity:0}80.323%{opacity:1}80.493%{opacity:0}100%{opacity:0}}
-@keyframes k272{0%{opacity:0}80.493%{opacity:1}80.575%{opacity:0}100%{opacity:0}}
-@keyframes k273{0%{opacity:0}80.575%{opacity:1}80.692%{opacity:0}100%{opacity:0}}
-@keyframes k274{0%{opacity:0}80.692%{opacity:1}80.845%{opacity:0}100%{opacity:0}}
-@keyframes k275{0%{opacity:0}80.845%{opacity:1}80.909%{opacity:0}100%{opacity:0}}
-@keyframes k276{0%{opacity:0}80.909%{opacity:1}81.009%{opacity:0}100%{opacity:0}}
-@keyframes k277{0%{opacity:0}81.009%{opacity:1}81.22%{opacity:0}100%{opacity:0}}
-@keyframes k278{0%{opacity:0}81.22%{opacity:1}81.39%{opacity:0}100%{opacity:0}}
-@keyframes k279{0%{opacity:0}81.39%{opacity:1}81.473%{opacity:0}100%{opacity:0}}
-@keyframes k280{0%{opacity:0}81.473%{opacity:1}81.59%{opacity:0}100%{opacity:0}}
-@keyframes k281{0%{opacity:0}81.59%{opacity:1}81.742%{opacity:0}100%{opacity:0}}
-@keyframes k282{0%{opacity:0}81.742%{opacity:1}81.807%{opacity:0}100%{opacity:0}}
-@keyframes k283{0%{opacity:0}81.807%{opacity:1}81.907%{opacity:0}100%{opacity:0}}
-@keyframes k284{0%{opacity:0}81.907%{opacity:1}82.042%{opacity:0}100%{opacity:0}}
-@keyframes k285{0%{opacity:0}82.042%{opacity:1}82.212%{opacity:0}100%{opacity:0}}
-@keyframes k286{0%{opacity:0}82.212%{opacity:1}82.423%{opacity:0}100%{opacity:0}}
-@keyframes k287{0%{opacity:0}82.423%{opacity:1}82.54%{opacity:0}100%{opacity:0}}
-@keyframes k288{0%{opacity:0}82.54%{opacity:1}82.693%{opacity:0}100%{opacity:0}}
-@keyframes k289{0%{opacity:0}82.693%{opacity:1}82.757%{opacity:0}100%{opacity:0}}
-@keyframes k290{0%{opacity:0}82.757%{opacity:1}82.857%{opacity:0}100%{opacity:0}}
-@keyframes k291{0%{opacity:0}82.857%{opacity:1}82.992%{opacity:0}100%{opacity:0}}
-@keyframes k292{0%{opacity:0}82.992%{opacity:1}83.162%{opacity:0}100%{opacity:0}}
-@keyframes k293{0%{opacity:0}83.162%{opacity:1}83.244%{opacity:0}100%{opacity:0}}
-@keyframes k294{0%{opacity:0}83.244%{opacity:1}83.362%{opacity:0}100%{opacity:0}}
-@keyframes k295{0%{opacity:0}83.362%{opacity:1}84.887%{opacity:0}100%{opacity:0}}
-@keyframes k296{0%{opacity:0}84.887%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k297{0%{opacity:0}85.11%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k298{0%{opacity:0}85.333%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k299{0%{opacity:0}85.556%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k300{0%{opacity:0}85.779%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k301{0%{opacity:0}86.002%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k302{0%{opacity:0}86.225%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k303{0%{opacity:0}86.448%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k304{0%{opacity:0}87.973%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k305{0%{opacity:0}89.498%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k306{0%{opacity:0}89.721%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k307{0%{opacity:0}89.944%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k308{0%{opacity:0}90.167%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k309{0%{opacity:0}90.39%{opacity:1}100%{opacity:0}100%{opacity:0}}
-@keyframes k310{0%{opacity:0}90.613%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k0{0%{opacity:1}1.147%{opacity:0}100%{opacity:0}}
+@keyframes k1{0%{opacity:0}1.147%{opacity:1}1.244%{opacity:0}100%{opacity:0}}
+@keyframes k2{0%{opacity:0}1.244%{opacity:1}1.376%{opacity:0}100%{opacity:0}}
+@keyframes k3{0%{opacity:0}1.376%{opacity:1}1.543%{opacity:0}100%{opacity:0}}
+@keyframes k4{0%{opacity:0}1.543%{opacity:1}1.623%{opacity:0}100%{opacity:0}}
+@keyframes k5{0%{opacity:0}1.623%{opacity:1}1.737%{opacity:0}100%{opacity:0}}
+@keyframes k6{0%{opacity:0}1.737%{opacity:1}1.887%{opacity:0}100%{opacity:0}}
+@keyframes k7{0%{opacity:0}1.887%{opacity:1}1.95%{opacity:0}100%{opacity:0}}
+@keyframes k8{0%{opacity:0}1.95%{opacity:1}2.047%{opacity:0}100%{opacity:0}}
+@keyframes k9{0%{opacity:0}2.047%{opacity:1}2.254%{opacity:0}100%{opacity:0}}
+@keyframes k10{0%{opacity:0}2.254%{opacity:1}2.42%{opacity:0}100%{opacity:0}}
+@keyframes k11{0%{opacity:0}2.42%{opacity:1}2.5%{opacity:0}100%{opacity:0}}
+@keyframes k12{0%{opacity:0}2.5%{opacity:1}2.615%{opacity:0}100%{opacity:0}}
+@keyframes k13{0%{opacity:0}2.615%{opacity:1}2.764%{opacity:0}100%{opacity:0}}
+@keyframes k14{0%{opacity:0}2.764%{opacity:1}2.827%{opacity:0}100%{opacity:0}}
+@keyframes k15{0%{opacity:0}2.827%{opacity:1}2.924%{opacity:0}100%{opacity:0}}
+@keyframes k16{0%{opacity:0}2.924%{opacity:1}3.131%{opacity:0}100%{opacity:0}}
+@keyframes k17{0%{opacity:0}3.131%{opacity:1}3.297%{opacity:0}100%{opacity:0}}
+@keyframes k18{0%{opacity:0}3.297%{opacity:1}3.377%{opacity:0}100%{opacity:0}}
+@keyframes k19{0%{opacity:0}3.377%{opacity:1}3.492%{opacity:0}100%{opacity:0}}
+@keyframes k20{0%{opacity:0}3.492%{opacity:1}3.641%{opacity:0}100%{opacity:0}}
+@keyframes k21{0%{opacity:0}3.641%{opacity:1}3.704%{opacity:0}100%{opacity:0}}
+@keyframes k22{0%{opacity:0}3.704%{opacity:1}3.802%{opacity:0}100%{opacity:0}}
+@keyframes k23{0%{opacity:0}3.802%{opacity:1}3.934%{opacity:0}100%{opacity:0}}
+@keyframes k24{0%{opacity:0}3.934%{opacity:1}4.14%{opacity:0}100%{opacity:0}}
+@keyframes k25{0%{opacity:0}4.14%{opacity:1}4.22%{opacity:0}100%{opacity:0}}
+@keyframes k26{0%{opacity:0}4.22%{opacity:1}4.335%{opacity:0}100%{opacity:0}}
+@keyframes k27{0%{opacity:0}4.335%{opacity:1}4.484%{opacity:0}100%{opacity:0}}
+@keyframes k28{0%{opacity:0}4.484%{opacity:1}4.547%{opacity:0}100%{opacity:0}}
+@keyframes k29{0%{opacity:0}4.547%{opacity:1}4.645%{opacity:0}100%{opacity:0}}
+@keyframes k30{0%{opacity:0}4.645%{opacity:1}4.777%{opacity:0}100%{opacity:0}}
+@keyframes k31{0%{opacity:0}4.777%{opacity:1}4.943%{opacity:0}100%{opacity:0}}
+@keyframes k32{0%{opacity:0}4.943%{opacity:1}5.023%{opacity:0}100%{opacity:0}}
+@keyframes k33{0%{opacity:0}5.023%{opacity:1}5.138%{opacity:0}100%{opacity:0}}
+@keyframes k34{0%{opacity:0}5.138%{opacity:1}5.344%{opacity:0}100%{opacity:0}}
+@keyframes k35{0%{opacity:0}5.344%{opacity:1}5.407%{opacity:0}100%{opacity:0}}
+@keyframes k36{0%{opacity:0}5.407%{opacity:1}5.505%{opacity:0}100%{opacity:0}}
+@keyframes k37{0%{opacity:0}5.505%{opacity:1}5.637%{opacity:0}100%{opacity:0}}
+@keyframes k38{0%{opacity:0}5.637%{opacity:1}5.803%{opacity:0}100%{opacity:0}}
+@keyframes k39{0%{opacity:0}5.803%{opacity:1}5.883%{opacity:0}100%{opacity:0}}
+@keyframes k40{0%{opacity:0}5.883%{opacity:1}5.998%{opacity:0}100%{opacity:0}}
+@keyframes k41{0%{opacity:0}5.998%{opacity:1}6.204%{opacity:0}100%{opacity:0}}
+@keyframes k42{0%{opacity:0}6.204%{opacity:1}6.268%{opacity:0}100%{opacity:0}}
+@keyframes k43{0%{opacity:0}6.268%{opacity:1}6.474%{opacity:0}100%{opacity:0}}
+@keyframes k44{0%{opacity:0}6.474%{opacity:1}6.606%{opacity:0}100%{opacity:0}}
+@keyframes k45{0%{opacity:0}6.606%{opacity:1}6.772%{opacity:0}100%{opacity:0}}
+@keyframes k46{0%{opacity:0}6.772%{opacity:1}6.852%{opacity:0}100%{opacity:0}}
+@keyframes k47{0%{opacity:0}6.852%{opacity:1}6.967%{opacity:0}100%{opacity:0}}
+@keyframes k48{0%{opacity:0}6.967%{opacity:1}7.116%{opacity:0}100%{opacity:0}}
+@keyframes k49{0%{opacity:0}7.116%{opacity:1}7.179%{opacity:0}100%{opacity:0}}
+@keyframes k50{0%{opacity:0}7.179%{opacity:1}7.277%{opacity:0}100%{opacity:0}}
+@keyframes k51{0%{opacity:0}7.277%{opacity:1}7.409%{opacity:0}100%{opacity:0}}
+@keyframes k52{0%{opacity:0}7.409%{opacity:1}7.575%{opacity:0}100%{opacity:0}}
+@keyframes k53{0%{opacity:0}7.575%{opacity:1}7.655%{opacity:0}100%{opacity:0}}
+@keyframes k54{0%{opacity:0}7.655%{opacity:1}7.77%{opacity:0}100%{opacity:0}}
+@keyframes k55{0%{opacity:0}7.77%{opacity:1}9.031%{opacity:0}100%{opacity:0}}
+@keyframes k56{0%{opacity:0}9.031%{opacity:1}23.063%{opacity:0}100%{opacity:0}}
+@keyframes k57{0%{opacity:0}9.249%{opacity:1}23.063%{opacity:0}100%{opacity:0}}
+@keyframes k58{0%{opacity:0}9.249%{opacity:1}10.396%{opacity:0}100%{opacity:0}}
+@keyframes k59{0%{opacity:0}10.396%{opacity:1}10.494%{opacity:0}100%{opacity:0}}
+@keyframes k60{0%{opacity:0}10.494%{opacity:1}10.626%{opacity:0}100%{opacity:0}}
+@keyframes k61{0%{opacity:0}10.626%{opacity:1}10.792%{opacity:0}100%{opacity:0}}
+@keyframes k62{0%{opacity:0}10.792%{opacity:1}10.872%{opacity:0}100%{opacity:0}}
+@keyframes k63{0%{opacity:0}10.872%{opacity:1}10.987%{opacity:0}100%{opacity:0}}
+@keyframes k64{0%{opacity:0}10.987%{opacity:1}11.136%{opacity:0}100%{opacity:0}}
+@keyframes k65{0%{opacity:0}11.136%{opacity:1}11.199%{opacity:0}100%{opacity:0}}
+@keyframes k66{0%{opacity:0}11.199%{opacity:1}11.297%{opacity:0}100%{opacity:0}}
+@keyframes k67{0%{opacity:0}11.297%{opacity:1}11.503%{opacity:0}100%{opacity:0}}
+@keyframes k68{0%{opacity:0}11.503%{opacity:1}11.669%{opacity:0}100%{opacity:0}}
+@keyframes k69{0%{opacity:0}11.669%{opacity:1}11.75%{opacity:0}100%{opacity:0}}
+@keyframes k70{0%{opacity:0}11.75%{opacity:1}11.864%{opacity:0}100%{opacity:0}}
+@keyframes k71{0%{opacity:0}11.864%{opacity:1}12.013%{opacity:0}100%{opacity:0}}
+@keyframes k72{0%{opacity:0}12.013%{opacity:1}12.076%{opacity:0}100%{opacity:0}}
+@keyframes k73{0%{opacity:0}12.076%{opacity:1}12.174%{opacity:0}100%{opacity:0}}
+@keyframes k74{0%{opacity:0}12.174%{opacity:1}12.38%{opacity:0}100%{opacity:0}}
+@keyframes k75{0%{opacity:0}12.38%{opacity:1}12.547%{opacity:0}100%{opacity:0}}
+@keyframes k76{0%{opacity:0}12.547%{opacity:1}12.627%{opacity:0}100%{opacity:0}}
+@keyframes k77{0%{opacity:0}12.627%{opacity:1}12.742%{opacity:0}100%{opacity:0}}
+@keyframes k78{0%{opacity:0}12.742%{opacity:1}12.891%{opacity:0}100%{opacity:0}}
+@keyframes k79{0%{opacity:0}12.891%{opacity:1}14.152%{opacity:0}100%{opacity:0}}
+@keyframes k80{0%{opacity:0}14.152%{opacity:1}23.063%{opacity:0}100%{opacity:0}}
+@keyframes k81{0%{opacity:0}14.37%{opacity:1}23.063%{opacity:0}100%{opacity:0}}
+@keyframes k82{0%{opacity:0}14.588%{opacity:1}23.063%{opacity:0}100%{opacity:0}}
+@keyframes k83{0%{opacity:0}14.806%{opacity:1}23.063%{opacity:0}100%{opacity:0}}
+@keyframes k84{0%{opacity:0}15.024%{opacity:1}23.063%{opacity:0}100%{opacity:0}}
+@keyframes k85{0%{opacity:0}15.242%{opacity:1}23.063%{opacity:0}100%{opacity:0}}
+@keyframes k86{0%{opacity:0}15.46%{opacity:1}23.063%{opacity:0}100%{opacity:0}}
+@keyframes k87{0%{opacity:0}15.678%{opacity:1}23.063%{opacity:0}100%{opacity:0}}
+@keyframes k88{0%{opacity:0}15.895%{opacity:1}23.063%{opacity:0}100%{opacity:0}}
+@keyframes k89{0%{opacity:0}23.281%{opacity:1}60.239%{opacity:0}100%{opacity:0}}
+@keyframes k90{0%{opacity:0}23.281%{opacity:1}24.428%{opacity:0}100%{opacity:0}}
+@keyframes k91{0%{opacity:0}24.428%{opacity:1}24.525%{opacity:0}100%{opacity:0}}
+@keyframes k92{0%{opacity:0}24.525%{opacity:1}24.657%{opacity:0}100%{opacity:0}}
+@keyframes k93{0%{opacity:0}24.657%{opacity:1}24.824%{opacity:0}100%{opacity:0}}
+@keyframes k94{0%{opacity:0}24.824%{opacity:1}24.904%{opacity:0}100%{opacity:0}}
+@keyframes k95{0%{opacity:0}24.904%{opacity:1}25.019%{opacity:0}100%{opacity:0}}
+@keyframes k96{0%{opacity:0}25.019%{opacity:1}25.168%{opacity:0}100%{opacity:0}}
+@keyframes k97{0%{opacity:0}25.168%{opacity:1}25.231%{opacity:0}100%{opacity:0}}
+@keyframes k98{0%{opacity:0}25.231%{opacity:1}25.328%{opacity:0}100%{opacity:0}}
+@keyframes k99{0%{opacity:0}25.328%{opacity:1}25.535%{opacity:0}100%{opacity:0}}
+@keyframes k100{0%{opacity:0}25.535%{opacity:1}25.701%{opacity:0}100%{opacity:0}}
+@keyframes k101{0%{opacity:0}25.701%{opacity:1}25.781%{opacity:0}100%{opacity:0}}
+@keyframes k102{0%{opacity:0}25.781%{opacity:1}25.896%{opacity:0}100%{opacity:0}}
+@keyframes k103{0%{opacity:0}25.896%{opacity:1}26.045%{opacity:0}100%{opacity:0}}
+@keyframes k104{0%{opacity:0}26.045%{opacity:1}26.108%{opacity:0}100%{opacity:0}}
+@keyframes k105{0%{opacity:0}26.108%{opacity:1}26.315%{opacity:0}100%{opacity:0}}
+@keyframes k106{0%{opacity:0}26.315%{opacity:1}26.446%{opacity:0}100%{opacity:0}}
+@keyframes k107{0%{opacity:0}26.446%{opacity:1}26.613%{opacity:0}100%{opacity:0}}
+@keyframes k108{0%{opacity:0}26.613%{opacity:1}26.693%{opacity:0}100%{opacity:0}}
+@keyframes k109{0%{opacity:0}26.693%{opacity:1}26.808%{opacity:0}100%{opacity:0}}
+@keyframes k110{0%{opacity:0}26.808%{opacity:1}26.957%{opacity:0}100%{opacity:0}}
+@keyframes k111{0%{opacity:0}26.957%{opacity:1}27.02%{opacity:0}100%{opacity:0}}
+@keyframes k112{0%{opacity:0}27.02%{opacity:1}27.117%{opacity:0}100%{opacity:0}}
+@keyframes k113{0%{opacity:0}27.117%{opacity:1}27.324%{opacity:0}100%{opacity:0}}
+@keyframes k114{0%{opacity:0}27.324%{opacity:1}27.49%{opacity:0}100%{opacity:0}}
+@keyframes k115{0%{opacity:0}27.49%{opacity:1}27.57%{opacity:0}100%{opacity:0}}
+@keyframes k116{0%{opacity:0}27.57%{opacity:1}27.685%{opacity:0}100%{opacity:0}}
+@keyframes k117{0%{opacity:0}27.685%{opacity:1}27.834%{opacity:0}100%{opacity:0}}
+@keyframes k118{0%{opacity:0}27.834%{opacity:1}27.897%{opacity:0}100%{opacity:0}}
+@keyframes k119{0%{opacity:0}27.897%{opacity:1}27.995%{opacity:0}100%{opacity:0}}
+@keyframes k120{0%{opacity:0}27.995%{opacity:1}28.127%{opacity:0}100%{opacity:0}}
+@keyframes k121{0%{opacity:0}28.127%{opacity:1}28.293%{opacity:0}100%{opacity:0}}
+@keyframes k122{0%{opacity:0}28.293%{opacity:1}28.373%{opacity:0}100%{opacity:0}}
+@keyframes k123{0%{opacity:0}28.373%{opacity:1}28.488%{opacity:0}100%{opacity:0}}
+@keyframes k124{0%{opacity:0}28.488%{opacity:1}28.694%{opacity:0}100%{opacity:0}}
+@keyframes k125{0%{opacity:0}28.694%{opacity:1}28.757%{opacity:0}100%{opacity:0}}
+@keyframes k126{0%{opacity:0}28.757%{opacity:1}28.964%{opacity:0}100%{opacity:0}}
+@keyframes k127{0%{opacity:0}28.964%{opacity:1}29.096%{opacity:0}100%{opacity:0}}
+@keyframes k128{0%{opacity:0}29.096%{opacity:1}29.262%{opacity:0}100%{opacity:0}}
+@keyframes k129{0%{opacity:0}29.262%{opacity:1}29.342%{opacity:0}100%{opacity:0}}
+@keyframes k130{0%{opacity:0}29.342%{opacity:1}29.457%{opacity:0}100%{opacity:0}}
+@keyframes k131{0%{opacity:0}29.457%{opacity:1}29.606%{opacity:0}100%{opacity:0}}
+@keyframes k132{0%{opacity:0}29.606%{opacity:1}29.669%{opacity:0}100%{opacity:0}}
+@keyframes k133{0%{opacity:0}29.669%{opacity:1}29.767%{opacity:0}100%{opacity:0}}
+@keyframes k134{0%{opacity:0}29.767%{opacity:1}29.899%{opacity:0}100%{opacity:0}}
+@keyframes k135{0%{opacity:0}29.899%{opacity:1}30.065%{opacity:0}100%{opacity:0}}
+@keyframes k136{0%{opacity:0}30.065%{opacity:1}30.271%{opacity:0}100%{opacity:0}}
+@keyframes k137{0%{opacity:0}30.271%{opacity:1}30.386%{opacity:0}100%{opacity:0}}
+@keyframes k138{0%{opacity:0}30.386%{opacity:1}60.239%{opacity:0}100%{opacity:0}}
+@keyframes k139{0%{opacity:0}30.386%{opacity:1}31.533%{opacity:0}100%{opacity:0}}
+@keyframes k140{0%{opacity:0}31.533%{opacity:1}31.63%{opacity:0}100%{opacity:0}}
+@keyframes k141{0%{opacity:0}31.63%{opacity:1}31.837%{opacity:0}100%{opacity:0}}
+@keyframes k142{0%{opacity:0}31.837%{opacity:1}32.003%{opacity:0}100%{opacity:0}}
+@keyframes k143{0%{opacity:0}32.003%{opacity:1}32.083%{opacity:0}100%{opacity:0}}
+@keyframes k144{0%{opacity:0}32.083%{opacity:1}32.29%{opacity:0}100%{opacity:0}}
+@keyframes k145{0%{opacity:0}32.29%{opacity:1}32.439%{opacity:0}100%{opacity:0}}
+@keyframes k146{0%{opacity:0}32.439%{opacity:1}32.502%{opacity:0}100%{opacity:0}}
+@keyframes k147{0%{opacity:0}32.502%{opacity:1}32.708%{opacity:0}100%{opacity:0}}
+@keyframes k148{0%{opacity:0}32.708%{opacity:1}32.84%{opacity:0}100%{opacity:0}}
+@keyframes k149{0%{opacity:0}32.84%{opacity:1}33.006%{opacity:0}100%{opacity:0}}
+@keyframes k150{0%{opacity:0}33.006%{opacity:1}33.087%{opacity:0}100%{opacity:0}}
+@keyframes k151{0%{opacity:0}33.087%{opacity:1}33.201%{opacity:0}100%{opacity:0}}
+@keyframes k152{0%{opacity:0}33.201%{opacity:1}33.351%{opacity:0}100%{opacity:0}}
+@keyframes k153{0%{opacity:0}33.351%{opacity:1}33.414%{opacity:0}100%{opacity:0}}
+@keyframes k154{0%{opacity:0}33.414%{opacity:1}33.511%{opacity:0}100%{opacity:0}}
+@keyframes k155{0%{opacity:0}33.511%{opacity:1}33.643%{opacity:0}100%{opacity:0}}
+@keyframes k156{0%{opacity:0}33.643%{opacity:1}33.809%{opacity:0}100%{opacity:0}}
+@keyframes k157{0%{opacity:0}33.809%{opacity:1}33.89%{opacity:0}100%{opacity:0}}
+@keyframes k158{0%{opacity:0}33.89%{opacity:1}34.004%{opacity:0}100%{opacity:0}}
+@keyframes k159{0%{opacity:0}34.004%{opacity:1}34.153%{opacity:0}100%{opacity:0}}
+@keyframes k160{0%{opacity:0}34.153%{opacity:1}34.216%{opacity:0}100%{opacity:0}}
+@keyframes k161{0%{opacity:0}34.216%{opacity:1}34.314%{opacity:0}100%{opacity:0}}
+@keyframes k162{0%{opacity:0}34.314%{opacity:1}34.446%{opacity:0}100%{opacity:0}}
+@keyframes k163{0%{opacity:0}34.446%{opacity:1}34.612%{opacity:0}100%{opacity:0}}
+@keyframes k164{0%{opacity:0}34.612%{opacity:1}34.692%{opacity:0}100%{opacity:0}}
+@keyframes k165{0%{opacity:0}34.692%{opacity:1}34.807%{opacity:0}100%{opacity:0}}
+@keyframes k166{0%{opacity:0}34.807%{opacity:1}34.956%{opacity:0}100%{opacity:0}}
+@keyframes k167{0%{opacity:0}34.956%{opacity:1}35.019%{opacity:0}100%{opacity:0}}
+@keyframes k168{0%{opacity:0}35.019%{opacity:1}35.117%{opacity:0}100%{opacity:0}}
+@keyframes k169{0%{opacity:0}35.117%{opacity:1}35.249%{opacity:0}100%{opacity:0}}
+@keyframes k170{0%{opacity:0}35.249%{opacity:1}35.415%{opacity:0}100%{opacity:0}}
+@keyframes k171{0%{opacity:0}35.415%{opacity:1}35.495%{opacity:0}100%{opacity:0}}
+@keyframes k172{0%{opacity:0}35.495%{opacity:1}35.61%{opacity:0}100%{opacity:0}}
+@keyframes k173{0%{opacity:0}35.61%{opacity:1}35.759%{opacity:0}100%{opacity:0}}
+@keyframes k174{0%{opacity:0}35.759%{opacity:1}35.822%{opacity:0}100%{opacity:0}}
+@keyframes k175{0%{opacity:0}35.822%{opacity:1}35.919%{opacity:0}100%{opacity:0}}
+@keyframes k176{0%{opacity:0}35.919%{opacity:1}36.051%{opacity:0}100%{opacity:0}}
+@keyframes k177{0%{opacity:0}36.051%{opacity:1}36.218%{opacity:0}100%{opacity:0}}
+@keyframes k178{0%{opacity:0}36.218%{opacity:1}36.298%{opacity:0}100%{opacity:0}}
+@keyframes k179{0%{opacity:0}36.298%{opacity:1}36.413%{opacity:0}100%{opacity:0}}
+@keyframes k180{0%{opacity:0}36.413%{opacity:1}36.562%{opacity:0}100%{opacity:0}}
+@keyframes k181{0%{opacity:0}36.562%{opacity:1}36.625%{opacity:0}100%{opacity:0}}
+@keyframes k182{0%{opacity:0}36.625%{opacity:1}36.722%{opacity:0}100%{opacity:0}}
+@keyframes k183{0%{opacity:0}36.722%{opacity:1}36.854%{opacity:0}100%{opacity:0}}
+@keyframes k184{0%{opacity:0}36.854%{opacity:1}37.02%{opacity:0}100%{opacity:0}}
+@keyframes k185{0%{opacity:0}37.02%{opacity:1}37.101%{opacity:0}100%{opacity:0}}
+@keyframes k186{0%{opacity:0}37.101%{opacity:1}37.215%{opacity:0}100%{opacity:0}}
+@keyframes k187{0%{opacity:0}37.215%{opacity:1}37.365%{opacity:0}100%{opacity:0}}
+@keyframes k188{0%{opacity:0}37.365%{opacity:1}37.428%{opacity:0}100%{opacity:0}}
+@keyframes k189{0%{opacity:0}37.428%{opacity:1}37.525%{opacity:0}100%{opacity:0}}
+@keyframes k190{0%{opacity:0}37.525%{opacity:1}37.657%{opacity:0}100%{opacity:0}}
+@keyframes k191{0%{opacity:0}37.657%{opacity:1}38.919%{opacity:0}100%{opacity:0}}
+@keyframes k192{0%{opacity:0}38.919%{opacity:1}60.239%{opacity:0}100%{opacity:0}}
+@keyframes k193{0%{opacity:0}39.136%{opacity:1}60.239%{opacity:0}100%{opacity:0}}
+@keyframes k194{0%{opacity:0}39.354%{opacity:1}60.239%{opacity:0}100%{opacity:0}}
+@keyframes k195{0%{opacity:0}39.572%{opacity:1}60.239%{opacity:0}100%{opacity:0}}
+@keyframes k196{0%{opacity:0}39.79%{opacity:1}60.239%{opacity:0}100%{opacity:0}}
+@keyframes k197{0%{opacity:0}39.79%{opacity:1}40.937%{opacity:0}100%{opacity:0}}
+@keyframes k198{0%{opacity:0}40.937%{opacity:1}41.034%{opacity:0}100%{opacity:0}}
+@keyframes k199{0%{opacity:0}41.034%{opacity:1}41.166%{opacity:0}100%{opacity:0}}
+@keyframes k200{0%{opacity:0}41.166%{opacity:1}41.333%{opacity:0}100%{opacity:0}}
+@keyframes k201{0%{opacity:0}41.333%{opacity:1}41.413%{opacity:0}100%{opacity:0}}
+@keyframes k202{0%{opacity:0}41.413%{opacity:1}41.528%{opacity:0}100%{opacity:0}}
+@keyframes k203{0%{opacity:0}41.528%{opacity:1}41.677%{opacity:0}100%{opacity:0}}
+@keyframes k204{0%{opacity:0}41.677%{opacity:1}41.74%{opacity:0}100%{opacity:0}}
+@keyframes k205{0%{opacity:0}41.74%{opacity:1}41.837%{opacity:0}100%{opacity:0}}
+@keyframes k206{0%{opacity:0}41.837%{opacity:1}42.044%{opacity:0}100%{opacity:0}}
+@keyframes k207{0%{opacity:0}42.044%{opacity:1}42.21%{opacity:0}100%{opacity:0}}
+@keyframes k208{0%{opacity:0}42.21%{opacity:1}42.29%{opacity:0}100%{opacity:0}}
+@keyframes k209{0%{opacity:0}42.29%{opacity:1}42.405%{opacity:0}100%{opacity:0}}
+@keyframes k210{0%{opacity:0}42.405%{opacity:1}42.554%{opacity:0}100%{opacity:0}}
+@keyframes k211{0%{opacity:0}42.554%{opacity:1}42.617%{opacity:0}100%{opacity:0}}
+@keyframes k212{0%{opacity:0}42.617%{opacity:1}42.824%{opacity:0}100%{opacity:0}}
+@keyframes k213{0%{opacity:0}42.824%{opacity:1}42.955%{opacity:0}100%{opacity:0}}
+@keyframes k214{0%{opacity:0}42.955%{opacity:1}43.122%{opacity:0}100%{opacity:0}}
+@keyframes k215{0%{opacity:0}43.122%{opacity:1}43.202%{opacity:0}100%{opacity:0}}
+@keyframes k216{0%{opacity:0}43.202%{opacity:1}43.317%{opacity:0}100%{opacity:0}}
+@keyframes k217{0%{opacity:0}43.317%{opacity:1}43.466%{opacity:0}100%{opacity:0}}
+@keyframes k218{0%{opacity:0}43.466%{opacity:1}43.529%{opacity:0}100%{opacity:0}}
+@keyframes k219{0%{opacity:0}43.529%{opacity:1}43.626%{opacity:0}100%{opacity:0}}
+@keyframes k220{0%{opacity:0}43.626%{opacity:1}43.833%{opacity:0}100%{opacity:0}}
+@keyframes k221{0%{opacity:0}43.833%{opacity:1}43.999%{opacity:0}100%{opacity:0}}
+@keyframes k222{0%{opacity:0}43.999%{opacity:1}44.079%{opacity:0}100%{opacity:0}}
+@keyframes k223{0%{opacity:0}44.079%{opacity:1}44.194%{opacity:0}100%{opacity:0}}
+@keyframes k224{0%{opacity:0}44.194%{opacity:1}44.343%{opacity:0}100%{opacity:0}}
+@keyframes k225{0%{opacity:0}44.343%{opacity:1}44.406%{opacity:0}100%{opacity:0}}
+@keyframes k226{0%{opacity:0}44.406%{opacity:1}44.504%{opacity:0}100%{opacity:0}}
+@keyframes k227{0%{opacity:0}44.504%{opacity:1}44.636%{opacity:0}100%{opacity:0}}
+@keyframes k228{0%{opacity:0}44.636%{opacity:1}44.802%{opacity:0}100%{opacity:0}}
+@keyframes k229{0%{opacity:0}44.802%{opacity:1}44.882%{opacity:0}100%{opacity:0}}
+@keyframes k230{0%{opacity:0}44.882%{opacity:1}44.997%{opacity:0}100%{opacity:0}}
+@keyframes k231{0%{opacity:0}44.997%{opacity:1}45.146%{opacity:0}100%{opacity:0}}
+@keyframes k232{0%{opacity:0}45.146%{opacity:1}45.209%{opacity:0}100%{opacity:0}}
+@keyframes k233{0%{opacity:0}45.209%{opacity:1}45.306%{opacity:0}100%{opacity:0}}
+@keyframes k234{0%{opacity:0}45.306%{opacity:1}45.438%{opacity:0}100%{opacity:0}}
+@keyframes k235{0%{opacity:0}45.438%{opacity:1}45.605%{opacity:0}100%{opacity:0}}
+@keyframes k236{0%{opacity:0}45.605%{opacity:1}45.685%{opacity:0}100%{opacity:0}}
+@keyframes k237{0%{opacity:0}45.685%{opacity:1}45.891%{opacity:0}100%{opacity:0}}
+@keyframes k238{0%{opacity:0}45.891%{opacity:1}46.04%{opacity:0}100%{opacity:0}}
+@keyframes k239{0%{opacity:0}46.04%{opacity:1}46.247%{opacity:0}100%{opacity:0}}
+@keyframes k240{0%{opacity:0}46.247%{opacity:1}46.344%{opacity:0}100%{opacity:0}}
+@keyframes k241{0%{opacity:0}46.344%{opacity:1}46.476%{opacity:0}100%{opacity:0}}
+@keyframes k242{0%{opacity:0}46.476%{opacity:1}46.643%{opacity:0}100%{opacity:0}}
+@keyframes k243{0%{opacity:0}46.643%{opacity:1}46.723%{opacity:0}100%{opacity:0}}
+@keyframes k244{0%{opacity:0}46.723%{opacity:1}46.838%{opacity:0}100%{opacity:0}}
+@keyframes k245{0%{opacity:0}46.838%{opacity:1}46.987%{opacity:0}100%{opacity:0}}
+@keyframes k246{0%{opacity:0}46.987%{opacity:1}47.05%{opacity:0}100%{opacity:0}}
+@keyframes k247{0%{opacity:0}47.05%{opacity:1}47.147%{opacity:0}100%{opacity:0}}
+@keyframes k248{0%{opacity:0}47.147%{opacity:1}47.279%{opacity:0}100%{opacity:0}}
+@keyframes k249{0%{opacity:0}47.279%{opacity:1}47.445%{opacity:0}100%{opacity:0}}
+@keyframes k250{0%{opacity:0}47.445%{opacity:1}47.526%{opacity:0}100%{opacity:0}}
+@keyframes k251{0%{opacity:0}47.526%{opacity:1}47.64%{opacity:0}100%{opacity:0}}
+@keyframes k252{0%{opacity:0}47.64%{opacity:1}47.847%{opacity:0}100%{opacity:0}}
+@keyframes k253{0%{opacity:0}47.847%{opacity:1}47.91%{opacity:0}100%{opacity:0}}
+@keyframes k254{0%{opacity:0}47.91%{opacity:1}60.239%{opacity:0}100%{opacity:0}}
+@keyframes k255{0%{opacity:0}47.91%{opacity:1}49.057%{opacity:0}100%{opacity:0}}
+@keyframes k256{0%{opacity:0}49.057%{opacity:1}49.154%{opacity:0}100%{opacity:0}}
+@keyframes k257{0%{opacity:0}49.154%{opacity:1}49.361%{opacity:0}100%{opacity:0}}
+@keyframes k258{0%{opacity:0}49.361%{opacity:1}49.527%{opacity:0}100%{opacity:0}}
+@keyframes k259{0%{opacity:0}49.527%{opacity:1}49.607%{opacity:0}100%{opacity:0}}
+@keyframes k260{0%{opacity:0}49.607%{opacity:1}49.814%{opacity:0}100%{opacity:0}}
+@keyframes k261{0%{opacity:0}49.814%{opacity:1}49.963%{opacity:0}100%{opacity:0}}
+@keyframes k262{0%{opacity:0}49.963%{opacity:1}50.026%{opacity:0}100%{opacity:0}}
+@keyframes k263{0%{opacity:0}50.026%{opacity:1}50.232%{opacity:0}100%{opacity:0}}
+@keyframes k264{0%{opacity:0}50.232%{opacity:1}50.364%{opacity:0}100%{opacity:0}}
+@keyframes k265{0%{opacity:0}50.364%{opacity:1}50.53%{opacity:0}100%{opacity:0}}
+@keyframes k266{0%{opacity:0}50.53%{opacity:1}50.611%{opacity:0}100%{opacity:0}}
+@keyframes k267{0%{opacity:0}50.611%{opacity:1}50.725%{opacity:0}100%{opacity:0}}
+@keyframes k268{0%{opacity:0}50.725%{opacity:1}50.874%{opacity:0}100%{opacity:0}}
+@keyframes k269{0%{opacity:0}50.874%{opacity:1}50.938%{opacity:0}100%{opacity:0}}
+@keyframes k270{0%{opacity:0}50.938%{opacity:1}52.199%{opacity:0}100%{opacity:0}}
+@keyframes k271{0%{opacity:0}52.199%{opacity:1}60.239%{opacity:0}100%{opacity:0}}
+@keyframes k272{0%{opacity:0}52.417%{opacity:1}60.239%{opacity:0}100%{opacity:0}}
+@keyframes k273{0%{opacity:0}52.635%{opacity:1}60.239%{opacity:0}100%{opacity:0}}
+@keyframes k274{0%{opacity:0}52.853%{opacity:1}60.239%{opacity:0}100%{opacity:0}}
+@keyframes k275{0%{opacity:0}53.071%{opacity:1}60.239%{opacity:0}100%{opacity:0}}
+@keyframes k276{0%{opacity:0}60.239%{opacity:1}61.385%{opacity:0}100%{opacity:0}}
+@keyframes k277{0%{opacity:0}61.385%{opacity:1}61.483%{opacity:0}100%{opacity:0}}
+@keyframes k278{0%{opacity:0}61.483%{opacity:1}61.615%{opacity:0}100%{opacity:0}}
+@keyframes k279{0%{opacity:0}61.615%{opacity:1}61.781%{opacity:0}100%{opacity:0}}
+@keyframes k280{0%{opacity:0}61.781%{opacity:1}61.861%{opacity:0}100%{opacity:0}}
+@keyframes k281{0%{opacity:0}61.861%{opacity:1}61.976%{opacity:0}100%{opacity:0}}
+@keyframes k282{0%{opacity:0}61.976%{opacity:1}62.125%{opacity:0}100%{opacity:0}}
+@keyframes k283{0%{opacity:0}62.125%{opacity:1}62.188%{opacity:0}100%{opacity:0}}
+@keyframes k284{0%{opacity:0}62.188%{opacity:1}62.286%{opacity:0}100%{opacity:0}}
+@keyframes k285{0%{opacity:0}62.286%{opacity:1}62.492%{opacity:0}100%{opacity:0}}
+@keyframes k286{0%{opacity:0}62.492%{opacity:1}62.658%{opacity:0}100%{opacity:0}}
+@keyframes k287{0%{opacity:0}62.658%{opacity:1}62.739%{opacity:0}100%{opacity:0}}
+@keyframes k288{0%{opacity:0}62.739%{opacity:1}62.853%{opacity:0}100%{opacity:0}}
+@keyframes k289{0%{opacity:0}62.853%{opacity:1}63.002%{opacity:0}100%{opacity:0}}
+@keyframes k290{0%{opacity:0}63.002%{opacity:1}63.066%{opacity:0}100%{opacity:0}}
+@keyframes k291{0%{opacity:0}63.066%{opacity:1}64.327%{opacity:0}100%{opacity:0}}
+@keyframes k292{0%{opacity:0}64.327%{opacity:1}75.348%{opacity:0}100%{opacity:0}}
+@keyframes k293{0%{opacity:0}64.545%{opacity:1}75.348%{opacity:0}100%{opacity:0}}
+@keyframes k294{0%{opacity:0}64.763%{opacity:1}75.348%{opacity:0}100%{opacity:0}}
+@keyframes k295{0%{opacity:0}66.254%{opacity:1}75.348%{opacity:0}100%{opacity:0}}
+@keyframes k296{0%{opacity:0}67.745%{opacity:1}75.348%{opacity:0}100%{opacity:0}}
+@keyframes k297{0%{opacity:0}67.963%{opacity:1}75.348%{opacity:0}100%{opacity:0}}
+@keyframes k298{0%{opacity:0}68.181%{opacity:1}75.348%{opacity:0}100%{opacity:0}}
+@keyframes k299{0%{opacity:0}75.348%{opacity:1}76.495%{opacity:0}100%{opacity:0}}
+@keyframes k300{0%{opacity:0}76.495%{opacity:1}76.593%{opacity:0}100%{opacity:0}}
+@keyframes k301{0%{opacity:0}76.593%{opacity:1}76.725%{opacity:0}100%{opacity:0}}
+@keyframes k302{0%{opacity:0}76.725%{opacity:1}76.891%{opacity:0}100%{opacity:0}}
+@keyframes k303{0%{opacity:0}76.891%{opacity:1}76.971%{opacity:0}100%{opacity:0}}
+@keyframes k304{0%{opacity:0}76.971%{opacity:1}77.086%{opacity:0}100%{opacity:0}}
+@keyframes k305{0%{opacity:0}77.086%{opacity:1}77.235%{opacity:0}100%{opacity:0}}
+@keyframes k306{0%{opacity:0}77.235%{opacity:1}77.298%{opacity:0}100%{opacity:0}}
+@keyframes k307{0%{opacity:0}77.298%{opacity:1}77.395%{opacity:0}100%{opacity:0}}
+@keyframes k308{0%{opacity:0}77.395%{opacity:1}77.602%{opacity:0}100%{opacity:0}}
+@keyframes k309{0%{opacity:0}77.602%{opacity:1}77.768%{opacity:0}100%{opacity:0}}
+@keyframes k310{0%{opacity:0}77.768%{opacity:1}77.849%{opacity:0}100%{opacity:0}}
+@keyframes k311{0%{opacity:0}77.849%{opacity:1}77.963%{opacity:0}100%{opacity:0}}
+@keyframes k312{0%{opacity:0}77.963%{opacity:1}78.112%{opacity:0}100%{opacity:0}}
+@keyframes k313{0%{opacity:0}78.112%{opacity:1}78.319%{opacity:0}100%{opacity:0}}
+@keyframes k314{0%{opacity:0}78.319%{opacity:1}78.416%{opacity:0}100%{opacity:0}}
+@keyframes k315{0%{opacity:0}78.416%{opacity:1}78.548%{opacity:0}100%{opacity:0}}
+@keyframes k316{0%{opacity:0}78.548%{opacity:1}78.714%{opacity:0}100%{opacity:0}}
+@keyframes k317{0%{opacity:0}78.714%{opacity:1}78.795%{opacity:0}100%{opacity:0}}
+@keyframes k318{0%{opacity:0}78.795%{opacity:1}78.909%{opacity:0}100%{opacity:0}}
+@keyframes k319{0%{opacity:0}78.909%{opacity:1}79.058%{opacity:0}100%{opacity:0}}
+@keyframes k320{0%{opacity:0}79.058%{opacity:1}79.122%{opacity:0}100%{opacity:0}}
+@keyframes k321{0%{opacity:0}79.122%{opacity:1}79.219%{opacity:0}100%{opacity:0}}
+@keyframes k322{0%{opacity:0}79.219%{opacity:1}79.351%{opacity:0}100%{opacity:0}}
+@keyframes k323{0%{opacity:0}79.351%{opacity:1}79.557%{opacity:0}100%{opacity:0}}
+@keyframes k324{0%{opacity:0}79.557%{opacity:1}79.638%{opacity:0}100%{opacity:0}}
+@keyframes k325{0%{opacity:0}79.638%{opacity:1}79.752%{opacity:0}100%{opacity:0}}
+@keyframes k326{0%{opacity:0}79.752%{opacity:1}79.901%{opacity:0}100%{opacity:0}}
+@keyframes k327{0%{opacity:0}79.901%{opacity:1}79.964%{opacity:0}100%{opacity:0}}
+@keyframes k328{0%{opacity:0}79.964%{opacity:1}80.062%{opacity:0}100%{opacity:0}}
+@keyframes k329{0%{opacity:0}80.062%{opacity:1}80.194%{opacity:0}100%{opacity:0}}
+@keyframes k330{0%{opacity:0}80.194%{opacity:1}80.4%{opacity:0}100%{opacity:0}}
+@keyframes k331{0%{opacity:0}80.4%{opacity:1}80.481%{opacity:0}100%{opacity:0}}
+@keyframes k332{0%{opacity:0}80.481%{opacity:1}80.595%{opacity:0}100%{opacity:0}}
+@keyframes k333{0%{opacity:0}80.595%{opacity:1}80.744%{opacity:0}100%{opacity:0}}
+@keyframes k334{0%{opacity:0}80.744%{opacity:1}80.951%{opacity:0}100%{opacity:0}}
+@keyframes k335{0%{opacity:0}80.951%{opacity:1}81.048%{opacity:0}100%{opacity:0}}
+@keyframes k336{0%{opacity:0}81.048%{opacity:1}81.18%{opacity:0}100%{opacity:0}}
+@keyframes k337{0%{opacity:0}81.18%{opacity:1}81.346%{opacity:0}100%{opacity:0}}
+@keyframes k338{0%{opacity:0}81.346%{opacity:1}81.427%{opacity:0}100%{opacity:0}}
+@keyframes k339{0%{opacity:0}81.427%{opacity:1}81.541%{opacity:0}100%{opacity:0}}
+@keyframes k340{0%{opacity:0}81.541%{opacity:1}81.69%{opacity:0}100%{opacity:0}}
+@keyframes k341{0%{opacity:0}81.69%{opacity:1}81.754%{opacity:0}100%{opacity:0}}
+@keyframes k342{0%{opacity:0}81.754%{opacity:1}81.96%{opacity:0}100%{opacity:0}}
+@keyframes k343{0%{opacity:0}81.96%{opacity:1}82.092%{opacity:0}100%{opacity:0}}
+@keyframes k344{0%{opacity:0}82.092%{opacity:1}82.258%{opacity:0}100%{opacity:0}}
+@keyframes k345{0%{opacity:0}82.258%{opacity:1}82.338%{opacity:0}100%{opacity:0}}
+@keyframes k346{0%{opacity:0}82.338%{opacity:1}82.453%{opacity:0}100%{opacity:0}}
+@keyframes k347{0%{opacity:0}82.453%{opacity:1}82.602%{opacity:0}100%{opacity:0}}
+@keyframes k348{0%{opacity:0}82.602%{opacity:1}82.665%{opacity:0}100%{opacity:0}}
+@keyframes k349{0%{opacity:0}82.665%{opacity:1}82.872%{opacity:0}100%{opacity:0}}
+@keyframes k350{0%{opacity:0}82.872%{opacity:1}83.004%{opacity:0}100%{opacity:0}}
+@keyframes k351{0%{opacity:0}83.004%{opacity:1}83.17%{opacity:0}100%{opacity:0}}
+@keyframes k352{0%{opacity:0}83.17%{opacity:1}83.25%{opacity:0}100%{opacity:0}}
+@keyframes k353{0%{opacity:0}83.25%{opacity:1}83.365%{opacity:0}100%{opacity:0}}
+@keyframes k354{0%{opacity:0}83.365%{opacity:1}83.514%{opacity:0}100%{opacity:0}}
+@keyframes k355{0%{opacity:0}83.514%{opacity:1}83.577%{opacity:0}100%{opacity:0}}
+@keyframes k356{0%{opacity:0}83.577%{opacity:1}83.675%{opacity:0}100%{opacity:0}}
+@keyframes k357{0%{opacity:0}83.675%{opacity:1}83.881%{opacity:0}100%{opacity:0}}
+@keyframes k358{0%{opacity:0}83.881%{opacity:1}84.047%{opacity:0}100%{opacity:0}}
+@keyframes k359{0%{opacity:0}84.047%{opacity:1}84.128%{opacity:0}100%{opacity:0}}
+@keyframes k360{0%{opacity:0}84.128%{opacity:1}84.242%{opacity:0}100%{opacity:0}}
+@keyframes k361{0%{opacity:0}84.242%{opacity:1}84.391%{opacity:0}100%{opacity:0}}
+@keyframes k362{0%{opacity:0}84.391%{opacity:1}84.454%{opacity:0}100%{opacity:0}}
+@keyframes k363{0%{opacity:0}84.454%{opacity:1}84.552%{opacity:0}100%{opacity:0}}
+@keyframes k364{0%{opacity:0}84.552%{opacity:1}84.684%{opacity:0}100%{opacity:0}}
+@keyframes k365{0%{opacity:0}84.684%{opacity:1}84.85%{opacity:0}100%{opacity:0}}
+@keyframes k366{0%{opacity:0}84.85%{opacity:1}85.056%{opacity:0}100%{opacity:0}}
+@keyframes k367{0%{opacity:0}85.056%{opacity:1}85.171%{opacity:0}100%{opacity:0}}
+@keyframes k368{0%{opacity:0}85.171%{opacity:1}85.32%{opacity:0}100%{opacity:0}}
+@keyframes k369{0%{opacity:0}85.32%{opacity:1}85.383%{opacity:0}100%{opacity:0}}
+@keyframes k370{0%{opacity:0}85.383%{opacity:1}85.481%{opacity:0}100%{opacity:0}}
+@keyframes k371{0%{opacity:0}85.481%{opacity:1}85.613%{opacity:0}100%{opacity:0}}
+@keyframes k372{0%{opacity:0}85.613%{opacity:1}85.779%{opacity:0}100%{opacity:0}}
+@keyframes k373{0%{opacity:0}85.779%{opacity:1}85.859%{opacity:0}100%{opacity:0}}
+@keyframes k374{0%{opacity:0}85.859%{opacity:1}85.974%{opacity:0}100%{opacity:0}}
+@keyframes k375{0%{opacity:0}85.974%{opacity:1}87.236%{opacity:0}100%{opacity:0}}
+@keyframes k376{0%{opacity:0}87.236%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k377{0%{opacity:0}87.453%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k378{0%{opacity:0}87.671%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k379{0%{opacity:0}87.889%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k380{0%{opacity:0}88.107%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k381{0%{opacity:0}88.325%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k382{0%{opacity:0}88.543%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k383{0%{opacity:0}88.761%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k384{0%{opacity:0}90.252%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k385{0%{opacity:0}91.743%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k386{0%{opacity:0}91.961%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k387{0%{opacity:0}92.178%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k388{0%{opacity:0}92.396%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k389{0%{opacity:0}92.614%{opacity:1}100%{opacity:0}100%{opacity:0}}
+@keyframes k390{0%{opacity:0}92.832%{opacity:1}100%{opacity:0}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.a{animation:none}.f{opacity:1}}
 </style>
 <rect x="0.5" y="0.5" width="811" height="420" rx="10" fill="#0d1117" stroke="#30363d"/>
@@ -521,119 +601,199 @@ text{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberatio
 <g class="a" style="animation-name:k193"><text x="20" y="141.0"><tspan class="y">Reading this file would put a credential into the conversation. deploy.env </tspan></text></g>
 <g class="a" style="animation-name:k194"><text x="20" y="164.0"><tspan class="y">line 2 looks like aws access key id. Approving means the value is shared </tspan></text></g>
 <g class="a" style="animation-name:k195"><text x="20" y="187.0">and should be rotated.</text></g>
-<g class="a" style="animation-name:k196"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k197"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">z</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k198"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">ze</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k199"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zer</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k200"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zero</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k201"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerot</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k202"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerotu</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k203"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerotur</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k204"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k205"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k206"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">v</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k207"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ve</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k208"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ver</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k209"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">veri</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k210"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">verif</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k211"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">verify</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k212"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">verify</tspan></text></g>
-<g class="a" style="animation-name:k213"><text x="20" y="95.0"><tspan class="h b">ZEROTURN VERIFY</tspan></text></g>
-<g class="a" style="animation-name:k214"><text x="20" y="118.0"></text></g>
-<g class="a" style="animation-name:k215"><text x="20" y="141.0"><tspan class="g b">PASS</tspan>  vet        0.3s</text></g>
-<g class="a" style="animation-name:k216"><text x="20" y="164.0"><tspan class="g b">PASS</tspan>  test       0.3s</text></g>
-<g class="a" style="animation-name:k217"><text x="20" y="187.0"></text></g>
-<g class="a" style="animation-name:k218"><text x="20" y="210.0"><tspan class="g">Result: 2 checks passed in 0.6s</tspan></text></g>
-<g class="a" style="animation-name:k219"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k220"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">z</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k221"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">ze</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k222"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zer</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k223"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zero</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k224"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerot</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k225"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerotu</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k226"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerotur</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k227"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k228"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k229"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">s</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k230"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">sh</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k231"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">shi</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k232"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k233"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k234"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">-</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k235"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k236"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--m</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k237"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--me</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k238"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--mes</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k239"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--mess</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k240"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--messa</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k241"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--messag</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k242"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k243"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k244"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k245"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;d</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k246"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;do</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k247"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;doc</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k248"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k249"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs:</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k250"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: </tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k251"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: a</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k252"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: ad</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k253"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k254"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add </tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k255"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add r</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k256"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add re</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k257"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add rel</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k258"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add rele</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k259"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add relea</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k260"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add releas</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k261"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k262"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release </tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k263"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release n</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k264"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release no</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k265"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release not</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k266"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release note</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k267"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k268"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k269"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k270"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">-</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k271"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k272"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--f</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k273"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--fi</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k274"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--fil</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k275"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--file</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k276"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k277"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k278"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">N</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k279"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NO</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k280"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOT</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k281"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTE</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k282"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k283"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k284"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.m</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k285"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k286"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k287"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">-</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k288"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k289"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--d</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k290"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dr</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k291"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dry</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k292"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dry-</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k293"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dry-r</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k294"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dry-ru</tspan><tspan class="c">█</tspan></text></g>
-<g class="a" style="animation-name:k295"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dry-run</tspan><tspan class="c">█</tspan></text></g>
-<g class="a f" style="animation-name:k296"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dry-run</tspan></text></g>
-<g class="a f" style="animation-name:k297"><text x="20" y="95.0"><tspan class="h b">ZEROTURN SHIP</tspan></text></g>
-<g class="a f" style="animation-name:k298"><text x="20" y="118.0"><tspan class="k">files:</tspan></text></g>
-<g class="a f" style="animation-name:k299"><text x="20" y="141.0">  NOTES.md</text></g>
-<g class="a f" style="animation-name:k300"><text x="20" y="164.0"><tspan class="k">message:</tspan>  <tspan class="w">docs: add release notes</tspan></text></g>
-<g class="a f" style="animation-name:k301"><text x="20" y="187.0"><tspan class="k">branch:</tspan>   <tspan class="w">docs-update</tspan></text></g>
-<g class="a f" style="animation-name:k302"><text x="20" y="210.0"><tspan class="k">remote:</tspan>   <tspan class="w">origin  ../remote.git</tspan></text></g>
-<g class="a f" style="animation-name:k303"><text x="20" y="233.0"></text></g>
-<g class="a f" style="animation-name:k304"><text x="20" y="256.0"><tspan class="g b">PASS</tspan>  vet        0.3s</text></g>
-<g class="a f" style="animation-name:k305"><text x="20" y="279.0"><tspan class="g b">PASS</tspan>  test       0.3s</text></g>
-<g class="a f" style="animation-name:k306"><text x="20" y="302.0"></text></g>
-<g class="a f" style="animation-name:k307"><text x="20" y="325.0"><tspan class="g">Result: 2 checks passed in 0.6s</tspan></text></g>
-<g class="a f" style="animation-name:k308"><text x="20" y="348.0"></text></g>
-<g class="a f" style="animation-name:k309"><rect class="hlb" x="14" y="353.0" width="137.4" height="23" rx="4"/><text x="20" y="371.0"><tspan class="g b hl">READY TO SHIP</tspan></text></g>
-<g class="a f" style="animation-name:k310"><text x="20" y="394.0">Dry run finished. Nothing was staged, committed, or pushed.</text></g>
+<g class="a" style="animation-name:k196"><text x="20" y="210.0"><tspan class="m"># the prompt guard is off by default, this session switched it on</tspan></text></g>
+<g class="a" style="animation-name:k197"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k198"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">z</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k199"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">ze</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k200"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zer</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k201"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zero</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k202"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerot</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k203"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerotu</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k204"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerotur</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k205"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k206"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k207"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">e</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k208"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ev</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k209"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">eve</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k210"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">even</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k211"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k212"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k213"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">-</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k214"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k215"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--e</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k216"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--ev</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k217"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--eve</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k218"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--even</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k219"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k220"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k221"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">U</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k222"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">Us</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k223"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">Use</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k224"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">User</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k225"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserP</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k226"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPr</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k227"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPro</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k228"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserProm</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k229"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromp</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k230"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPrompt</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k231"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptS</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k232"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSu</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k233"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSub</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k234"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubm</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k235"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmi</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k236"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k237"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k238"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k239"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k240"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">m</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k241"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">me</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k242"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">mes</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k243"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">mess</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k244"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">messa</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k245"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">messag</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k246"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">message</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k247"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">message.</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k248"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">message.j</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k249"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">message.js</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k250"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">message.jso</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k251"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">message.json</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k252"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">message.json</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k253"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">message.json</tspan> <tspan class="w">\</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k254"><text x="20" y="233.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">event</tspan> <tspan class="flag">--event</tspan> <tspan class="w">UserPromptSubmit</tspan> <tspan class="op">&lt;</tspan> <tspan class="w">message.json</tspan> <tspan class="w">\</tspan></text></g>
+<g class="a" style="animation-name:k255"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k256"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k257"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k258"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">j</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k259"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">jq</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k260"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">jq</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k261"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">jq</tspan> <tspan class="w">-</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k262"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">jq</tspan> <tspan class="w">-r</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k263"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">jq</tspan> <tspan class="w">-r</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k264"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">jq</tspan> <tspan class="w">-r</tspan> <tspan class="w">.</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k265"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">jq</tspan> <tspan class="w">-r</tspan> <tspan class="w">.r</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k266"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">jq</tspan> <tspan class="w">-r</tspan> <tspan class="w">.re</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k267"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">jq</tspan> <tspan class="w">-r</tspan> <tspan class="w">.rea</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k268"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">jq</tspan> <tspan class="w">-r</tspan> <tspan class="w">.reas</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k269"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">jq</tspan> <tspan class="w">-r</tspan> <tspan class="w">.reaso</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k270"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">jq</tspan> <tspan class="w">-r</tspan> <tspan class="w">.reason</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k271"><text x="20" y="256.0"><tspan class="c">&gt; </tspan><tspan class="cmd b">|</tspan> <tspan class="sub b">jq</tspan> <tspan class="w">-r</tspan> <tspan class="w">.reason</tspan></text></g>
+<g class="a" style="animation-name:k272"><text x="20" y="279.0"><tspan class="y">Your message was not sent. It contains what looks like aws access key id, </tspan></text></g>
+<g class="a" style="animation-name:k273"><text x="20" y="302.0">and sending it would mean rotating the value. Remove it and send the </text></g>
+<g class="a" style="animation-name:k274"><text x="20" y="325.0">message again. Turn this check off with zeroturn policy set </text></g>
+<g class="a" style="animation-name:k275"><text x="20" y="348.0">guard.credentials.prompts off.</text></g>
+<g class="a" style="animation-name:k276"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k277"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">z</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k278"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">ze</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k279"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zer</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k280"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zero</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k281"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerot</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k282"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerotu</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k283"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerotur</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k284"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k285"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k286"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">v</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k287"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ve</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k288"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ver</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k289"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">veri</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k290"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">verif</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k291"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">verify</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k292"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">verify</tspan></text></g>
+<g class="a" style="animation-name:k293"><text x="20" y="95.0"><tspan class="h b">ZEROTURN VERIFY</tspan></text></g>
+<g class="a" style="animation-name:k294"><text x="20" y="118.0"></text></g>
+<g class="a" style="animation-name:k295"><text x="20" y="141.0"><tspan class="g b">PASS</tspan>  vet        0.3s</text></g>
+<g class="a" style="animation-name:k296"><text x="20" y="164.0"><tspan class="g b">PASS</tspan>  test       0.3s</text></g>
+<g class="a" style="animation-name:k297"><text x="20" y="187.0"></text></g>
+<g class="a" style="animation-name:k298"><text x="20" y="210.0"><tspan class="g">Result: 2 checks passed in 0.7s</tspan></text></g>
+<g class="a" style="animation-name:k299"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k300"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">z</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k301"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">ze</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k302"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zer</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k303"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zero</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k304"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerot</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k305"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerotu</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k306"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zerotur</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k307"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k308"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k309"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">s</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k310"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">sh</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k311"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">shi</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k312"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k313"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k314"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">-</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k315"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k316"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--m</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k317"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--me</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k318"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--mes</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k319"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--mess</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k320"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--messa</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k321"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--messag</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k322"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k323"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k324"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k325"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;d</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k326"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;do</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k327"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;doc</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k328"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k329"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs:</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k330"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: </tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k331"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: a</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k332"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: ad</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k333"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k334"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add </tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k335"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add r</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k336"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add re</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k337"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add rel</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k338"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add rele</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k339"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add relea</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k340"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add releas</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k341"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k342"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release </tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k343"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release n</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k344"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release no</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k345"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release not</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k346"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release note</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k347"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k348"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k349"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k350"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">-</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k351"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k352"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--f</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k353"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--fi</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k354"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--fil</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k355"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--file</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k356"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k357"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k358"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">N</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k359"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NO</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k360"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOT</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k361"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTE</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k362"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k363"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k364"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.m</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k365"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k366"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k367"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">-</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k368"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k369"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--d</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k370"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dr</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k371"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dry</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k372"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dry-</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k373"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dry-r</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k374"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dry-ru</tspan><tspan class="c">█</tspan></text></g>
+<g class="a" style="animation-name:k375"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dry-run</tspan><tspan class="c">█</tspan></text></g>
+<g class="a f" style="animation-name:k376"><text x="20" y="72.0"><tspan class="p">$ </tspan><tspan class="cmd b">zeroturn</tspan> <tspan class="sub b">ship</tspan> <tspan class="flag">--message</tspan> <tspan class="str">&quot;docs: add release notes&quot;</tspan> <tspan class="flag">--files</tspan> <tspan class="w">NOTES.md</tspan> <tspan class="flag">--dry-run</tspan></text></g>
+<g class="a f" style="animation-name:k377"><text x="20" y="95.0"><tspan class="h b">ZEROTURN SHIP</tspan></text></g>
+<g class="a f" style="animation-name:k378"><text x="20" y="118.0"><tspan class="k">files:</tspan></text></g>
+<g class="a f" style="animation-name:k379"><text x="20" y="141.0">  NOTES.md</text></g>
+<g class="a f" style="animation-name:k380"><text x="20" y="164.0"><tspan class="k">message:</tspan>  <tspan class="w">docs: add release notes</tspan></text></g>
+<g class="a f" style="animation-name:k381"><text x="20" y="187.0"><tspan class="k">branch:</tspan>   <tspan class="w">docs-update</tspan></text></g>
+<g class="a f" style="animation-name:k382"><text x="20" y="210.0"><tspan class="k">remote:</tspan>   <tspan class="w">origin  ../remote.git</tspan></text></g>
+<g class="a f" style="animation-name:k383"><text x="20" y="233.0"></text></g>
+<g class="a f" style="animation-name:k384"><text x="20" y="256.0"><tspan class="g b">PASS</tspan>  vet        0.3s</text></g>
+<g class="a f" style="animation-name:k385"><text x="20" y="279.0"><tspan class="g b">PASS</tspan>  test       0.3s</text></g>
+<g class="a f" style="animation-name:k386"><text x="20" y="302.0"></text></g>
+<g class="a f" style="animation-name:k387"><text x="20" y="325.0"><tspan class="g">Result: 2 checks passed in 0.6s</tspan></text></g>
+<g class="a f" style="animation-name:k388"><text x="20" y="348.0"></text></g>
+<g class="a f" style="animation-name:k389"><rect class="hlb" x="14" y="353.0" width="137.4" height="23" rx="4"/><text x="20" y="371.0"><tspan class="g b hl">READY TO SHIP</tspan></text></g>
+<g class="a f" style="animation-name:k390"><text x="20" y="394.0">Dry run finished. Nothing was staged, committed, or pushed.</text></g>
 </svg>

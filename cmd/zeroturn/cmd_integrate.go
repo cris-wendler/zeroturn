@@ -223,11 +223,16 @@ var claudeHooks = []claudeHook{
 	{"SessionEnd", "", "marks the end of the session"},
 }
 
+// zeroturnCommand quotes the path with plain quotation marks rather than
+// Go quoting. The settings file is JSON, and its encoder already escapes
+// the backslashes in a Windows path. Quoting them a second time stored
+// every separator doubled.
 func zeroturnCommand(event string) string {
+	quoted := `"` + selfPath() + `"`
 	if event == "" {
-		return fmt.Sprintf("%q status --stdin --harness claude", selfPath())
+		return quoted + " status --stdin --harness claude"
 	}
-	return fmt.Sprintf("%q event --harness claude --event %s", selfPath(), event)
+	return quoted + " event --harness claude --event " + event
 }
 
 // owned reports whether a settings entry was written by ZeroTurn. The test

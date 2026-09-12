@@ -317,7 +317,7 @@ func compatLive(ctx context.Context) []check {
 					"hooks": []interface{}{
 						map[string]interface{}{
 							"type":    "command",
-							"command": fmt.Sprintf("%q event --harness claude --event PreToolUse", selfPath()),
+							"command": `"` + selfPath() + `" event --harness claude --event PreToolUse`,
 							"timeout": 10,
 						},
 					},

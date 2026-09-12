@@ -85,10 +85,13 @@ func applyTo(s *state.Session, e events.Event) {
 	}
 }
 
-// maxScan bounds the work done while a developer waits. A file larger
-// than this is left alone, which is stated in the documentation rather
-// than hidden, because it is a limit of the check.
-const maxScan = 4 << 20
+// maxScan bounds the work done while a developer waits. Credentials live
+// in small files: an environment file, a key, a configuration file. A
+// file above this size is almost always data or a log, and scanning one
+// would hold up the read for close to a second in the worst case. The
+// limit is stated in the documentation rather than hidden, because it is
+// a limit of the check.
+const maxScan = 1 << 20
 
 // credentialGate scans the file a read tool is about to open. It reads
 // the file, never the prompt, and reports the file, the line, and the

@@ -18,6 +18,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -87,6 +88,8 @@ func main() {
 		}
 	}
 
+	parallel := measureParallel(bin, env, root, 20)
+
 	info, err := os.Stat(bin)
 	size := "unknown"
 	if err == nil {
@@ -103,6 +106,41 @@ func main() {
 		fmt.Printf("| %s | %s | %s | %s | %s |\n", m.name,
 			ms(m.duration[len(m.duration)/2]), ms(m.duration[0]), ms(m.duration[len(m.duration)-1]), m.note)
 	}
+	fmt.Printf("\n20 events started at the same moment, as hooks do when a turn ends: %s in total, %s each.\n",
+		ms(parallel), ms(parallel/20))
+}
+
+// measureParallel starts several events at once, which is what happens
+// when a turn ends and the status line, the stop hook, and a subagent
+// event fire together. It measures the time until the last one exits.
+func measureParallel(bin string, env []string, root string, n int) time.Duration {
+	m := &measurement{
+		args:  []string{"event", "--harness", "claude", "--event", "SubagentStop"},
+		stdin: stopEvent(root),
+	}
+	run(bin, m, env, root)
+	var wg sync.WaitGroup
+	start := time.Now()
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			run(bin, m, env, root)
+		}()
+	}
+	wg.Wait()
+	return time.Since(start)
+}
+
+func stopEvent(root string) []byte {
+	b, err := json.Marshal(map[string]interface{}{
+		"session_id": "bench", "hook_event_name": "SubagentStop", "cwd": root, "agent_id": "a1",
+	})
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "the stop event could not be built:", err)
+		os.Exit(1)
+	}
+	return b
 }
 
 // gateEvent is built with the JSON encoder, because a Windows path

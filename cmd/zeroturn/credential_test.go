@@ -17,8 +17,13 @@ const awsKey = "AKIA" + "QWERTYUIOPASDFGH"
 
 func readEvent(t *testing.T, work, path string) string {
 	t.Helper()
+	return readEventFor(t, work, path, "s")
+}
+
+func readEventFor(t *testing.T, work, path, session string) string {
+	t.Helper()
 	b, err := json.Marshal(map[string]interface{}{
-		"session_id": "s", "hook_event_name": "PreToolUse", "cwd": work,
+		"session_id": session, "hook_event_name": "PreToolUse", "cwd": work,
 		"tool_name": "Read", "tool_input": map[string]interface{}{"file_path": path},
 	})
 	if err != nil {
@@ -29,7 +34,12 @@ func readEvent(t *testing.T, work, path string) string {
 
 func readGate(t *testing.T, work, path string) result {
 	t.Helper()
-	return run(t, work, readEvent(t, work, path), "event", "--harness", "claude", "--event", "PreToolUse")
+	return readGateFor(t, work, path, "s")
+}
+
+func readGateFor(t *testing.T, work, path, session string) result {
+	t.Helper()
+	return run(t, work, readEventFor(t, work, path, session), "event", "--harness", "claude", "--event", "PreToolUse")
 }
 
 func TestCredentialGateAsksBeforeAFileIsRead(t *testing.T) {

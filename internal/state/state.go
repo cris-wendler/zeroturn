@@ -157,6 +157,10 @@ const lockStale = 10 * time.Second
 func (s *Store) Lock() (func(), error) {
 	p := filepath.Join(s.dir, "state.lock")
 	deadline := time.Now().Add(5 * time.Second)
+	// The wait starts short and grows. A hook holds the lock for well
+	// under a millisecond, so a fixed wait of tens of milliseconds spent
+	// most of its time asleep while the lock was already free.
+	wait := 200 * time.Microsecond
 	for {
 		f, err := os.OpenFile(p, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 		if err == nil {
@@ -171,7 +175,13 @@ func (s *Store) Lock() (func(), error) {
 		if time.Now().After(deadline) {
 			return nil, ErrLocked
 		}
-		time.Sleep(25 * time.Millisecond)
+		time.Sleep(wait)
+		// The wait is capped low. One hook holds the lock for about a
+		// millisecond, so a longer wait leaves a free lock unused while
+		// every other hook is still asleep.
+		if wait < 2*time.Millisecond {
+			wait *= 2
+		}
 	}
 }
 

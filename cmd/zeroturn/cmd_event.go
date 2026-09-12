@@ -81,6 +81,11 @@ func applyTo(s *state.Session, e events.Event) {
 			s.AddActive(e.AgentID)
 		case events.TypeSubagentStop:
 			s.RemoveActive(e.AgentID)
+		case events.TypeSessionStop, events.TypeSessionEnd:
+			// A subagent still counted as running when a turn ends never
+			// reported stopping. Clearing here keeps a later count honest
+			// rather than asking about subagents that are long gone.
+			s.ClearActive()
 		}
 	}
 }

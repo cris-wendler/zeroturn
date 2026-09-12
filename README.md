@@ -336,7 +336,7 @@ Before contributing, check that the feature is not already there and search the 
 > ZeroTurn shows and gates what the harness reports. It cannot see usage the harness does not send, and it does not promise to remove session limits.
 
 - Session values appear only when the harness sends them. Some accounts receive no usage window data.
-- Subagent counts cover only subagents started while ZeroTurn was installed.
+- Subagent counts cover only subagents started while ZeroTurn was installed. One that never reports stopping is cleared when the turn ends.
 - The background task count is as current as the last `Stop` event.
 - The interactive approval prompt for Confirm mode has not yet been observed.
 - The test suite runs on Linux, macOS, and Windows in continuous integration. On Windows, tests that need a POSIX shell are skipped. The harness integration has been used on macOS only.

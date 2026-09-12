@@ -135,7 +135,7 @@ To hear less about context, raise the thresholds, for example `zeroturn policy s
 
 ## Values the harness does not provide
 
-The number of active subagents and the number started in the session are not in any payload. ZeroTurn counts them from `SubagentStart` and `SubagentStop`, so they cover only subagents started while the integration was installed, and a stop that never arrives leaves a subagent counted as active until the session ends.
+The number of active subagents and the number started in the session are not in any payload. ZeroTurn counts them from `SubagentStart` and `SubagentStop`, so they cover only subagents started while the integration was installed. A stop that never arrives, because the session was interrupted, is cleared at the end of the turn: a subagent cannot outlive the turn that started it. The totals and the peak are kept, since they are the record of what happened.
 
 Background task counts come from the `background_tasks` array on `Stop` and `SubagentStop`. Only the number of entries is used, because each entry carries a description that could repeat your request. The count is as current as the last of those events.
 

@@ -7,8 +7,9 @@ import (
 )
 
 // ContractVersion covers the command surface, the event shape, the JSON
-// output, and the exit codes together.
-const ContractVersion = "1.0.0"
+// output, and the exit codes together. 1.1.0 added the file.read event
+// and the credential guard, which take nothing away from 1.0.0.
+const ContractVersion = "1.1.0"
 
 // ClaudeTestedVersion is the harness release on which allow and deny were
 // observed end to end. Other releases may work, and are reported as
@@ -54,14 +55,14 @@ func Describe(version string) Doc {
 			"verify", "ship", "capabilities", "doctor", "version", "event",
 		},
 		EventTypes: []string{
-			events.TypeStatus, events.TypeSubagentPre, events.TypeSubagentStrt,
+			events.TypeStatus, events.TypeSubagentPre, events.TypeFileRead, events.TypeSubagentStrt,
 			events.TypeSubagentStop, events.TypeSessionStop, events.TypeSessionEnd,
 		},
 		Harnesses: []Harness{
 			{
 				Name: "claude", Status: "supported",
 				TestedVersions:  []string{ClaudeTestedVersion},
-				Events:          []string{"statusLine", "PreToolUse(Agent)", "SubagentStart", "SubagentStop", "Stop", "SessionEnd"},
+				Events:          []string{"statusLine", "PreToolUse(Agent)", "PreToolUse(Read)", "SubagentStart", "SubagentStop", "Stop", "SessionEnd"},
 				GateSupported:   true,
 				StatusSupported: true,
 				Notes:           "Context and usage windows come from the status line payload. Subagent counts are maintained by ZeroTurn from hook events and are not supplied by the harness.",

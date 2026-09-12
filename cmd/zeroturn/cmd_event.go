@@ -5,7 +5,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/cris-wendler/zeroturn/internal/config"
+	"github.com/cris-wendler/zeroturn/internal/security"
 
 	"github.com/cris-wendler/zeroturn/internal/events"
 	"github.com/cris-wendler/zeroturn/internal/git"
@@ -79,6 +85,62 @@ func applyTo(s *state.Session, e events.Event) {
 	}
 }
 
+// maxScan bounds the work done while a developer waits. A file larger
+// than this is left alone, which is stated in the documentation rather
+// than hidden, because it is a limit of the check.
+const maxScan = 4 << 20
+
+// credentialGate scans the file a read tool is about to open. It reads
+// the file, never the prompt, and reports the file, the line, and the
+// category, never the value.
+func credentialGate(st *state.Store, e events.Event) error {
+	if e.FilePath == "" {
+		return nil
+	}
+	cfg := sessionConfig(st, e.CWD)
+	if cfg.Guard.Credentials.Mode == config.CredentialOff {
+		return nil
+	}
+	info, err := os.Stat(e.FilePath)
+	if err != nil || info.IsDir() || info.Size() > maxScan {
+		return nil
+	}
+	content, err := ioutil.ReadFile(e.FilePath)
+	if err != nil {
+		return nil
+	}
+	name := filepath.Base(e.FilePath)
+	if root, ok := git.FindRoot(filepath.Dir(e.FilePath)); ok {
+		if rel, rerr := filepath.Rel(root, e.FilePath); rerr == nil && !strings.HasPrefix(rel, "..") {
+			name = filepath.ToSlash(rel)
+		}
+	}
+	findings, serr := security.ScanBytes(name, content)
+	if serr != nil || len(findings) == 0 {
+		return nil
+	}
+
+	decision, reason := policy.CredentialDecision(cfg.Guard.Credentials.Mode, name, findings[0].Line, security.Categories(findings))
+	if decision == policy.DecisionAllow {
+		return nil
+	}
+	st.Update(e.SessionID, repoHashFor(e.CWD), func(s *state.Session) { s.CredentialWarnings++ })
+	return printDecision(decision, reason)
+}
+
+func printDecision(decision, reason string) error {
+	var out decisionOutput
+	out.HookSpecificOutput.HookEventName = "PreToolUse"
+	out.HookSpecificOutput.PermissionDecision = decision
+	out.HookSpecificOutput.PermissionDecisionReason = reason
+	b, err := json.Marshal(out)
+	if err != nil {
+		return nil
+	}
+	fmt.Println(string(b))
+	return nil
+}
+
 // decisionOutput is the Claude Code permission response shape.
 type decisionOutput struct {
 	HookSpecificOutput struct {
@@ -119,6 +181,10 @@ func cmdEvent(ctx context.Context, args []string) error {
 		return nil
 	}
 
+	if e.Type == events.TypeFileRead {
+		return credentialGate(st, e)
+	}
+
 	if e.Type != events.TypeSubagentPre {
 		if _, uerr := applyEvent(st, e); uerr != nil {
 			return nil
@@ -152,14 +218,5 @@ func cmdEvent(ctx context.Context, args []string) error {
 		return nil
 	}
 
-	var out decisionOutput
-	out.HookSpecificOutput.HookEventName = "PreToolUse"
-	out.HookSpecificOutput.PermissionDecision = res.Decision
-	out.HookSpecificOutput.PermissionDecisionReason = res.Reason
-	b, merr := json.Marshal(out)
-	if merr != nil {
-		return nil
-	}
-	fmt.Println(string(b))
-	return nil
+	return printDecision(res.Decision, res.Reason)
 }

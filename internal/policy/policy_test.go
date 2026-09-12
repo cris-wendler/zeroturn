@@ -182,3 +182,41 @@ func BenchmarkEvaluate(b *testing.B) {
 		}
 	}
 }
+
+func TestCredentialDecision(t *testing.T) {
+	cases := []struct {
+		mode       string
+		categories []string
+		want       string
+	}{
+		{config.CredentialAsk, []string{"aws access key id"}, DecisionAsk},
+		{config.CredentialDeny, []string{"aws access key id"}, DecisionDeny},
+		{config.CredentialOff, []string{"aws access key id"}, DecisionAllow},
+		{config.CredentialAsk, nil, DecisionAllow},
+	}
+	for _, c := range cases {
+		got, reason := CredentialDecision(c.mode, "deploy.env", 2, c.categories)
+		if got != c.want {
+			t.Errorf("%s with %v: got %s, want %s", c.mode, c.categories, got, c.want)
+			continue
+		}
+		if c.want == DecisionAllow {
+			if reason != "" {
+				t.Errorf("%s: allow carried a reason %q", c.mode, reason)
+			}
+			continue
+		}
+		for _, want := range []string{"deploy.env", "line 2", "aws access key id", "rotated"} {
+			if !strings.Contains(reason, want) {
+				t.Errorf("%s: reason %q lacks %q", c.mode, reason, want)
+			}
+		}
+	}
+}
+
+func TestCredentialDecisionSummarisesSeveralCategories(t *testing.T) {
+	_, reason := CredentialDecision(config.CredentialAsk, "f", 1, []string{"private key", "github token", "slack token"})
+	if !strings.Contains(reason, "private key and 2 more") {
+		t.Fatalf("reason %q", reason)
+	}
+}

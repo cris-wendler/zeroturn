@@ -105,16 +105,27 @@ func TestIntegrateInstallReinstallRemove(t *testing.T) {
 	}
 	after := readJSON(t, settingsFile(work))
 	got := zeroturnHooks(after)
-	for _, ev := range claudeHookEvents {
-		if got[ev] != 1 {
-			t.Errorf("%s: %d ZeroTurn hooks", ev, got[ev])
+	want := map[string]int{}
+	for _, h := range claudeHooks {
+		want[h.Event]++
+	}
+	for ev, n := range want {
+		if got[ev] != n {
+			t.Errorf("%s: %d ZeroTurn hooks, want %d", ev, got[ev], n)
 		}
 	}
+	matchers := map[string]bool{}
 	for _, e := range after["hooks"].(map[string]interface{})["PreToolUse"].([]interface{}) {
 		m := e.(map[string]interface{})
-		if owned(m["hooks"].([]interface{})[0].(map[string]interface{})["command"].(string)) && m["matcher"] != "Agent" {
-			t.Errorf("gate matcher is %v, want exactly Agent", m["matcher"])
+		if owned(m["hooks"].([]interface{})[0].(map[string]interface{})["command"].(string)) {
+			matcher, _ := m["matcher"].(string)
+			matchers[matcher] = true
 		}
+	}
+	// Exact tool names only. A pattern would fire for tools ZeroTurn does
+	// not gate.
+	if !matchers["Agent"] || !matchers["Read"] || len(matchers) != 2 {
+		t.Errorf("PreToolUse matchers are %v, want exactly Agent and Read", matchers)
 	}
 	for _, k := range []string{"permissions", "env", "model"} {
 		if !reflect.DeepEqual(after[k], original[k]) {

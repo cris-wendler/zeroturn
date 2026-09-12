@@ -102,6 +102,23 @@
               "minimum": 1
             }
           }
+        },
+        "credentials": {
+          "type": "object",
+          "required": [
+            "mode"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "enum": [
+                "off",
+                "ask",
+                "deny"
+              ],
+              "description": "What happens when the model asks to read a file holding something shaped like a credential. ask is the default. A file written before this setting existed reads as ask."
+            }
+          }
         }
       }
     },

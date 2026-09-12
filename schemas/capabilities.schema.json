@@ -57,6 +57,7 @@
         "enum": [
           "status",
           "subagent.pre",
+          "file.read",
           "subagent.start",
           "subagent.stop",
           "session.stop",

@@ -58,7 +58,7 @@ type claudePlan struct {
 	Exists         bool
 	AddStatusLine  bool
 	KeepStatusLine string
-	AddHooks       []string
+	AddHooks       []claudeHook
 	KeepHooks      int
 	AlreadyOwned   []string
 	Notes          []string
@@ -140,7 +140,23 @@ func claudeSettingsPath(ctx context.Context, userWide bool) (string, error) {
 	return filepath.Join(repo.Root, ".claude", "settings.local.json"), nil
 }
 
-var claudeHookEvents = []string{"PreToolUse", "SubagentStart", "SubagentStop", "Stop", "SessionEnd"}
+// claudeHook is one settings entry ZeroTurn owns. Matchers are exact
+// tool names, never patterns, so a hook fires for the tool it names and
+// for nothing else.
+type claudeHook struct {
+	Event   string
+	Matcher string
+	Purpose string
+}
+
+var claudeHooks = []claudeHook{
+	{"PreToolUse", "Agent", "the subagent gate"},
+	{"PreToolUse", "Read", "the credential guard, before a file is read"},
+	{"SubagentStart", "", "counts a subagent as started"},
+	{"SubagentStop", "", "counts it as stopped"},
+	{"Stop", "", "reads how many background tasks are running"},
+	{"SessionEnd", "", "marks the end of the session"},
+}
 
 func zeroturnCommand(event string) string {
 	if event == "" {
@@ -200,19 +216,25 @@ func integrateClaude(ctx context.Context, mode string, userWide, replaceStatus b
 		}
 	}
 
-	for _, ev := range claudeHookEvents {
+	counted := map[string]bool{}
+	for _, h := range claudeHooks {
 		found := false
-		for _, entry := range hooks[ev] {
-			if entryOwnedByZeroTurn(entry) {
+		for _, entry := range hooks[h.Event] {
+			if entryOwnedByZeroTurn(entry, h.Matcher) {
 				found = true
-			} else {
+				continue
+			}
+			// Entries not owned by ZeroTurn are counted once per event,
+			// however many ZeroTurn entries that event holds.
+			if !counted[h.Event] && !entryOwnedByZeroTurn(entry, "") {
 				plan.KeepHooks++
 			}
 		}
+		counted[h.Event] = true
 		if found {
-			plan.AlreadyOwned = append(plan.AlreadyOwned, ev)
+			plan.AlreadyOwned = append(plan.AlreadyOwned, h.Event+" "+h.Matcher)
 		} else {
-			plan.AddHooks = append(plan.AddHooks, ev)
+			plan.AddHooks = append(plan.AddHooks, h)
 		}
 	}
 	if !userWide && !gitIgnored(ctx, path) {
@@ -246,9 +268,15 @@ func integrateClaude(ctx context.Context, mode string, userWide, replaceStatus b
 	return applyClaudeInstall(path, top, order, hooks, backupDir, plan, replaceStatus)
 }
 
-func entryOwnedByZeroTurn(raw json.RawMessage) bool {
+// entryOwnedByZeroTurn reports whether this entry is one ZeroTurn wrote.
+// A matcher narrows the test to the entry for one tool; an empty matcher
+// matches any ZeroTurn entry.
+func entryOwnedByZeroTurn(raw json.RawMessage, matcher string) bool {
 	var e hookEntry
 	if json.Unmarshal(raw, &e) != nil {
+		return false
+	}
+	if matcher != "" && e.Matcher != matcher {
 		return false
 	}
 	for _, h := range e.Hooks {
@@ -313,12 +341,12 @@ func printClaudePlan(p claudePlan, top map[string]json.RawMessage, order []strin
 	if p.AddStatusLine {
 		fmt.Printf("  statusLine    %s\n", zeroturnCommand(""))
 	}
-	for _, ev := range p.AddHooks {
-		matcher := ""
-		if ev == "PreToolUse" {
-			matcher = " (matcher Agent, exact)"
+	for _, h := range p.AddHooks {
+		suffix := ""
+		if h.Matcher != "" {
+			suffix = fmt.Sprintf("  (matcher %s, exact, %s)", h.Matcher, h.Purpose)
 		}
-		fmt.Printf("  hooks.%-14s %s%s\n", ev, zeroturnCommand(ev), matcher)
+		fmt.Printf("  hooks.%-14s %s%s\n", h.Event, zeroturnCommand(h.Event), suffix)
 	}
 	if !p.AddStatusLine && len(p.AddHooks) == 0 {
 		fmt.Println("  nothing, the integration is already installed")
@@ -350,6 +378,7 @@ func printClaudePlan(p claudePlan, top map[string]json.RawMessage, order []strin
 	}
 	fmt.Println("\ncompatibility:")
 	fmt.Println("  The subagent gate uses PreToolUse with the exact matcher Agent.")
+	fmt.Println("  The credential guard uses PreToolUse with the exact matcher Read, and scans only that file.")
 	fmt.Println("  Subagent counts come from ZeroTurn's own events, not from the harness.")
 	for _, n := range p.Notes {
 		fmt.Printf("  %s\n", n)
@@ -382,13 +411,11 @@ func applyClaudeInstall(path string, top map[string]json.RawMessage, order []str
 		}
 	}
 
-	for _, ev := range p.AddHooks {
-		entry := hookEntry{Hooks: []hookInner{{Type: "command", Command: zeroturnCommand(ev), Timeout: 10}}}
-		if ev == "PreToolUse" {
-			entry.Matcher = "Agent"
-		}
+	for _, h := range p.AddHooks {
+		entry := hookEntry{Matcher: h.Matcher,
+			Hooks: []hookInner{{Type: "command", Command: zeroturnCommand(h.Event), Timeout: 10}}}
 		b, _ := json.Marshal(entry)
-		hooks[ev] = append(hooks[ev], json.RawMessage(b))
+		hooks[h.Event] = append(hooks[h.Event], json.RawMessage(b))
 	}
 	if len(hooks) > 0 {
 		b, _ := json.Marshal(hooks)

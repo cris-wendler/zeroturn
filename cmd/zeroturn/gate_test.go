@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -109,7 +110,10 @@ func TestNoPrivateContentStored(t *testing.T) {
 	gate(t, work, "s")
 	run(t, work, claudeEvent(t, "claude/stop.json", work, "s", nil), "event", "--harness", "claude", "--event", "Stop")
 
-	forbidden := []string{"Read every file", "billing/", "sk-live", "transcript", "Done.", work, filepath.Base(filepath.Dir(work))}
+	// Paths are checked in full. A bare directory name would be too
+	// short to be meaningful: a runner named one "002", which also
+	// appears inside a timestamp, and the test failed for no reason.
+	forbidden := []string{"Read every file", "billing/", "sk-live", "transcript", "Done.", work, filepath.Dir(work)}
 	filepath.Walk(os.Getenv("ZEROTURN_STATE_DIR"), func(p string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
@@ -122,6 +126,20 @@ func TestNoPrivateContentStored(t *testing.T) {
 		}
 		return nil
 	})
+
+	// The repository is identified by a hash of its path, so the record
+	// can be tied to a repository without holding where it is.
+	sessions, err := filepath.Glob(filepath.Join(os.Getenv("ZEROTURN_STATE_DIR"), "sessions", "*.json"))
+	if err != nil || len(sessions) == 0 {
+		t.Fatalf("no session record was written: %v", err)
+	}
+	b, _ := ioutil.ReadFile(sessions[0])
+	var record struct {
+		RepoHash string `json:"repoHash"`
+	}
+	if json.Unmarshal(b, &record) != nil || len(record.RepoHash) != 16 {
+		t.Fatalf("repository hash %q, want 16 characters", record.RepoHash)
+	}
 }
 
 func TestStatusLineRendersFixture(t *testing.T) {

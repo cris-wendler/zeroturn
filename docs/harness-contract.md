@@ -48,6 +48,8 @@ The adapter sends one document that follows [normalized-event.schema.json](../sc
 | `session.stop` | A turn has ended, carrying the number of background tasks still running |
 | `session.end` | The session has ended |
 
+There is no event for a prompt. The prompt guard exists only on the Claude path, through `zeroturn event --harness claude --event UserPromptSubmit`, and an adapter never sends message text to ZeroTurn.
+
 Rules for the adapter:
 
 - Send only the fields in the schema. ZeroTurn's decoder declares no others, so anything else is discarded, but sending it means the adapter has read it.

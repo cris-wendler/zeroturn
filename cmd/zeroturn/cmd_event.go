@@ -128,6 +128,41 @@ func credentialGate(st *state.Store, e events.Event) error {
 	return printDecision(decision, reason)
 }
 
+// promptGate scans the message a developer is about to send. The text
+// is held in memory for the length of the scan and is never stored,
+// logged, or included in the reason. The guard is off unless the
+// developer switched it on.
+func promptGate(st *state.Store, e events.Event) error {
+	if e.Prompt == "" {
+		return nil
+	}
+	cfg := sessionConfig(st, e.CWD)
+	findings, err := security.ScanBytes("message", []byte(e.Prompt))
+	if err != nil || len(findings) == 0 {
+		return nil
+	}
+	block, reason := policy.PromptCredentialDecision(cfg.Guard.Credentials.Prompts, security.Categories(findings))
+	if !block {
+		return nil
+	}
+	st.Update(e.SessionID, repoHashFor(e.CWD), func(s *state.Session) { s.CredentialWarnings++ })
+
+	b, merr := json.Marshal(promptDecision{Decision: "block", Reason: reason})
+	if merr != nil {
+		return nil
+	}
+	fmt.Println(string(b))
+	return nil
+}
+
+// promptDecision is the UserPromptSubmit response shape. The harness
+// offers no way to ask about a message, so the only answers are block
+// and silence.
+type promptDecision struct {
+	Decision string `json:"decision"`
+	Reason   string `json:"reason"`
+}
+
 func printDecision(decision, reason string) error {
 	var out decisionOutput
 	out.HookSpecificOutput.HookEventName = "PreToolUse"
@@ -183,6 +218,9 @@ func cmdEvent(ctx context.Context, args []string) error {
 
 	if e.Type == events.TypeFileRead {
 		return credentialGate(st, e)
+	}
+	if e.Type == events.TypePromptSubmit {
+		return promptGate(st, e)
 	}
 
 	if e.Type != events.TypeSubagentPre {

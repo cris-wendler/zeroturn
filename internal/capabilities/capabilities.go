@@ -62,7 +62,7 @@ func Describe(version string) Doc {
 			{
 				Name: "claude", Status: "supported",
 				TestedVersions:  []string{ClaudeTestedVersion},
-				Events:          []string{"statusLine", "PreToolUse(Agent)", "PreToolUse(Read)", "SubagentStart", "SubagentStop", "Stop", "SessionEnd"},
+				Events:          []string{"statusLine", "PreToolUse(Agent)", "PreToolUse(Read)", "UserPromptSubmit when the prompt guard is on", "SubagentStart", "SubagentStop", "Stop", "SessionEnd"},
 				GateSupported:   true,
 				StatusSupported: true,
 				Notes:           "Context and usage windows come from the status line payload. Subagent counts are maintained by ZeroTurn from hook events and are not supplied by the harness.",

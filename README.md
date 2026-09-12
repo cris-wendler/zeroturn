@@ -181,7 +181,7 @@ zeroturn doctor                    # check the installation
 > [!TIP]
 > Start a new coding session after `--apply`. The settings are read when a session starts, so a running session does not pick them up.
 
-`init` proposes validation steps only for scripts that exist in the project. The file it writes looks like this:
+`init` proposes validation steps only for commands the project actually declares, and only when the executable is installed. It recognises Go, JavaScript and TypeScript through `package.json` scripts, Python with pytest, ruff, mypy, poetry and uv, Rust, Maven and Gradle, .NET, Ruby, and a `Makefile`, which it reads for the targets it declares rather than guessing. The file it writes looks like this:
 
 ```json
 {

@@ -45,7 +45,7 @@ This deletes ZeroTurn's own commands and nothing else. If you added a command of
 
 Both matchers contain only letters, so Claude Code compares them as exact strings rather than regular expressions. `PreToolUse` fires for no other tool on ZeroTurn's behalf.
 
-No `UserPromptSubmit` hook is installed. ZeroTurn does not inspect, block, or rewrite prompts, and it does not add warnings to model requests.
+A `UserPromptSubmit` hook is installed only when the prompt guard is switched on with `zeroturn policy set guard.credentials.prompts block`. With the guard off, which is the default, the hook is not in the settings file at all, so ZeroTurn is never in the path of a message. ZeroTurn never rewrites a prompt and never adds text to model context, in either case.
 
 ## Why the gate uses PreToolUse
 
@@ -63,6 +63,19 @@ For the `Read` tool, ZeroTurn reads one field of `tool_input`, `file_path`, open
 | Mode `off`, file missing, a directory, or larger than 4 MB | Nothing is printed |
 
 The file content is scanned in memory and never stored. Only a count of warnings is recorded.
+
+## The prompt guard
+
+Off by default. When it is on, `UserPromptSubmit` hands ZeroTurn the message text before it is sent.
+
+| Result | Response |
+| --- | --- |
+| No credential found | Nothing is printed, and the message is sent |
+| Found | `{"decision":"block","reason":"..."}`, and the harness stops the message |
+
+The harness offers no way to ask about a message, so the only answers are block and silence. A blocked message is erased by the harness rather than returned, which `zeroturn policy set guard.credentials.prompts block` states before it asks for confirmation.
+
+The message is held in memory for the length of the scan. It is never stored, logged, or included in the reason, and a test walks the records to confirm it.
 
 ## Decisions
 

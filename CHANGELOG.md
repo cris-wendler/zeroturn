@@ -18,6 +18,8 @@ First prototype. Nothing has been released yet.
 - Before the model reads a file, that file is scanned and the harness asks, or denies, when it holds something shaped like a credential. Modes: `ask`, the default, `deny`, and `off`.
 - The message names the file, the line, and the category, never the value.
 
+- Optional prompt guard, off by default: with `guard.credentials.prompts` set to `block`, a message carrying a credential is stopped before it is sent. The hook is installed only when the guard is on.
+
 **Direct Lane**
 
 - `zeroturn verify` runs approved commands as argument arrays, without a shell, keeping full logs and printing a redacted excerpt.

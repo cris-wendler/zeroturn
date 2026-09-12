@@ -1,0 +1,94 @@
+# How this was built
+
+A record of the decisions behind ZeroTurn, written for someone reviewing the work rather than installing the tool. Everything here is checkable against the repository.
+
+## The question came before the code
+
+The first work was not a prototype. It was a search for a reason not to build this.
+
+Sixteen maintained projects were examined: usage reporters, status lines, context guards, budget gates, Git safety wrappers, and local validation runners. Each one was recorded with its purpose, maintainer activity, license, install method, overlap, and difference, in [product-boundary.md](product-boundary.md), with the date each claim was checked.
+
+Six stop conditions were written down first, and a decision to abandon the project was the expected outcome if any of them held:
+
+| Condition | What the research found |
+| --- | --- |
+| A maintained project already does this | No. The three functions exist in three separate categories, and nothing spans them |
+| The distinction is only wording | No. The gate input, the delegation specific trigger, and the locally maintained subagent counts are checkable in code |
+| The feature set cannot stay coherent | The reservation was recorded rather than dismissed, and the pairing was kept on the condition that either half can be removed |
+| The platform interfaces are missing | Present for Claude Code, absent for Copilot, so Copilot support was cut rather than faked |
+| Subagent control cannot be tested | Unknown at the time, and therefore the next thing tested |
+| The name has a material conflict | The `zt` alias was dropped because it matches an unrelated company's naming |
+
+The honest result of that research was that most of the idea already existed. The status line is a crowded category, and the local Git and validation commands are conveniences a developer already has. One thing was missing everywhere: asking before delegation, using session pressure as the input.
+
+## The differentiator was proven before the rest was written
+
+Everything depended on one unknown: whether a hook can stop a subagent, and whether the harness honours the answer.
+
+That was tested with one real session, against a temporary settings file, before the remaining code existed. The findings changed the design:
+
+- `SubagentStart` cannot block. It accepts only text added to model context, which this project refuses to use.
+- `PreToolUse` with the tool name `Agent` can allow, ask, or deny, and the harness honours a denial.
+- The payload carries the subagent's prompt, which ZeroTurn therefore never binds to a variable.
+
+The test is part of the product: `zeroturn doctor --compat --live` repeats it on any machine, in a throwaway repository, and reports what happened. If it had failed, the honest outcome would have been to keep only the observation mode and say so.
+
+## The constraints were chosen, and kept
+
+One executable, the Go standard library only, no daemon, no network, no model calls, no database.
+
+Those constraints cost something, and the cost was paid rather than avoided:
+
+| Needed | Usual answer | What was done |
+| --- | --- | --- |
+| Validate JSON against published schemas | A schema library | A small validator in `internal/jsonschema`, which reports any keyword it cannot check rather than skipping it |
+| An animated terminal recording | A recording tool | `docs/demo/render`, which turns a real transcript into an animated SVG with CSS keyframes |
+| Release archives for five platforms | A release tool | `scripts/build-release.sh`, twenty lines around `go build` |
+| Enforce the writing rules | A prose linter | `scripts/lint-copy.sh`, which fails the build on a banned phrase |
+
+`docs/dependency-licenses.md` has one row: the Go standard library.
+
+## Refusals are part of the design
+
+A list of things this project will not do is kept in [decisions.md](decisions.md) and in the contributing guide: no model calls, no transcript reading, no telemetry, no output compression, no automatic compaction or clearing, no shell strings in configuration, no automatic force pushing or rebasing, no credential bypass, no silent changes to global settings.
+
+Two refusals shaped the code more than any feature:
+
+- **Never read private content.** The event decoder declares only permitted fields, so anything else the harness sends cannot be bound to a variable. When the credential guard needed a file path, exactly one field was added, and the reason is recorded.
+- **Never claim enforcement that was not observed.** Confirm mode is documented as accepted by the harness but not seen end to end, because nobody has watched the approval prompt appear.
+
+## Evidence, not assertions
+
+| Claim | Where it is checked |
+| --- | --- |
+| It behaves as documented | 172 tests, run on Linux with Go 1.17 and the current release, macOS, and Windows |
+| Output matches the published contract | `conformance/`, which runs the real executable against eight schemas |
+| It is fast enough to sit in a hook | [benchmarks.md](benchmarks.md): status line 7.5 ms, gate 7.7 ms, measured over 50 runs |
+| It does what the documents say | [dogfood.md](dogfood.md): twelve behaviors demonstrated against this repository |
+| It keeps nothing private | Tests that walk the state directory after each kind of event |
+
+## The tests found real defects
+
+These were found by the project's own tests and continuous integration, not by a user:
+
+- The status line started a Git process on every repaint, which the specification forbids.
+- A `.zeroturn.json` committed with Strict mode could deny subagents on a machine where nobody had approved it.
+- `ship` read relative paths from the repository root rather than the working directory, accepted a mistyped path as an intentional deletion, and staged a symbolic link's target instead of the link.
+- File names with non ASCII characters could be reported as unrelated staged files.
+- `doctor --compat --live` could never have passed, because its temporary folder was not a repository and its session had no context value.
+- A test that checked for private paths matched a two character directory name and failed for no reason on one runner.
+
+The performance work came from measurement as well: the first numbers were 31 ms and 53 ms, and two changes brought both to about 8 ms.
+
+## What is still unproven
+
+Written in the README, not buried:
+
+- The interactive approval prompt for Confirm mode has not been observed.
+- The integration has been used on macOS only, although the tests run on three systems.
+- The credential guards match high confidence patterns, so they reduce a common mistake rather than eliminate a class of them.
+- Whether the gate is useful in daily work is unknown until it has been used in daily work.
+
+## How decisions are recorded
+
+Seventeen entries in [decisions.md](decisions.md), each with the decision, the evidence, and the consequence. They include the ones that cut scope: `sync` dropped, Copilot deferred, goreleaser refused, and the license text left untouched. A decision that turns out to be wrong is meant to be replaced there, with its reason, rather than quietly reversed.

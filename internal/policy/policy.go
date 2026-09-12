@@ -146,6 +146,34 @@ func Evaluate(c config.Config, s state.Session) Result {
 	return r
 }
 
+// CredentialDecision reports what to do when a file the model is about
+// to read holds something shaped like a credential. The reason names the
+// file, the line, and the category, and never the value, because a
+// warning that repeats the secret has moved it rather than contained it.
+func CredentialDecision(mode, file string, line int, categories []string) (decision, reason string) {
+	if len(categories) == 0 {
+		return DecisionAllow, ""
+	}
+	switch mode {
+	case config.CredentialAsk:
+		decision = DecisionAsk
+	case config.CredentialDeny:
+		decision = DecisionDeny
+	default:
+		return DecisionAllow, ""
+	}
+	what := categories[0]
+	if len(categories) > 1 {
+		what = fmt.Sprintf("%s and %d more", what, len(categories)-1)
+	}
+	head := "Reading this file would put a credential into the conversation."
+	if decision == DecisionDeny {
+		head = "ZeroTurn denied reading this file, because it holds a credential."
+	}
+	return decision, fmt.Sprintf("%s %s line %d looks like %s. Approving means the value is shared and should be rotated.",
+		head, file, line, what)
+}
+
 // Reason builds the short message shown in the harness permission prompt.
 // It names at most two triggers so the prompt stays readable, and it never
 // carries the full policy or the session report into model context.

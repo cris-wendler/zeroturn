@@ -4,24 +4,108 @@
   "title": "ZeroTurn normalized event",
   "description": "What an adapter sends to zeroturn event --harness normalized on standard input. One event per invocation. Anything not listed here is refused, which keeps private content out of ZeroTurn.",
   "type": "object",
-  "required": ["contract", "harness", "type", "sessionId"],
+  "required": [
+    "contract",
+    "harness",
+    "type",
+    "sessionId"
+  ],
   "additionalProperties": false,
   "properties": {
-    "contract": {"const": "zeroturn.event/1", "description": "The contract this event follows. A different value is refused."},
-    "harness": {"type": "string", "minLength": 1, "description": "Short name of the coding harness, for example claude."},
-    "harnessVersion": {"type": "string"},
-    "type": {"enum": ["status", "subagent.pre", "subagent.start", "subagent.stop", "session.stop", "session.end"]},
-    "sessionId": {"type": "string", "description": "Identifier of the session the harness reports."},
-    "cwd": {"type": "string", "description": "Working directory of the session, used to find the repository and its configuration."},
-    "model": {"type": "string", "description": "Model label as the harness shows it."},
-    "contextPercent": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
-    "contextWindowSize": {"type": ["integer", "null"], "minimum": 0},
-    "fiveHourPercent": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
-    "sevenDayPercent": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
-    "durationMs": {"type": ["integer", "null"], "minimum": 0},
-    "agentId": {"type": "string", "description": "Identifier of the subagent, on subagent.start and subagent.stop."},
-    "agentType": {"type": "string"},
-    "backgroundTasks": {"type": ["integer", "null"], "minimum": 0, "description": "How many background tasks are running. The count only, never their descriptions."},
-    "endReason": {"type": "string"}
+    "contract": {
+      "const": "zeroturn.event/1",
+      "description": "The contract this event follows. A different value is refused."
+    },
+    "harness": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Short name of the coding harness, for example claude."
+    },
+    "harnessVersion": {
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "status",
+        "subagent.pre",
+        "file.read",
+        "subagent.start",
+        "subagent.stop",
+        "session.stop",
+        "session.end"
+      ]
+    },
+    "sessionId": {
+      "type": "string",
+      "description": "Identifier of the session the harness reports."
+    },
+    "cwd": {
+      "type": "string",
+      "description": "Working directory of the session, used to find the repository and its configuration."
+    },
+    "model": {
+      "type": "string",
+      "description": "Model label as the harness shows it."
+    },
+    "contextPercent": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "contextWindowSize": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "fiveHourPercent": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "sevenDayPercent": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "durationMs": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "agentId": {
+      "type": "string",
+      "description": "Identifier of the subagent, on subagent.start and subagent.stop."
+    },
+    "agentType": {
+      "type": "string"
+    },
+    "backgroundTasks": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "How many background tasks are running. The count only, never their descriptions."
+    },
+    "endReason": {
+      "type": "string"
+    },
+    "filePath": {
+      "type": "string",
+      "description": "On file.read, the file a read tool is about to open. The only tool argument ZeroTurn reads."
+    }
   }
 }

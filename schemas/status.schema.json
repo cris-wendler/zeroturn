@@ -126,6 +126,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "credentialWarnings": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },

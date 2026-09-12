@@ -22,6 +22,7 @@ const Contract = "zeroturn.event/1"
 const (
 	TypeStatus       = "status"
 	TypeSubagentPre  = "subagent.pre"
+	TypeFileRead     = "file.read"
 	TypeSubagentStop = "subagent.stop"
 	TypeSubagentStrt = "subagent.start"
 	TypeSessionStop  = "session.stop"
@@ -49,6 +50,11 @@ type Event struct {
 
 	AgentID   string
 	AgentType string
+
+	// FilePath is the file a read tool is about to open. It is the one
+	// tool argument ZeroTurn binds, so that a credential can be found
+	// before its content reaches the model.
+	FilePath string
 
 	BackgroundTasks *int
 
@@ -91,6 +97,13 @@ type claudePayload struct {
 	Cost *struct {
 		TotalDurationMS *int64 `json:"total_duration_ms"`
 	} `json:"cost"`
+
+	// ToolInput is declared with one field. The subagent prompt, the
+	// command, the replacement text, and everything else a tool carries
+	// have no field here and are therefore never bound to a variable.
+	ToolInput *struct {
+		FilePath string `json:"file_path"`
+	} `json:"tool_input"`
 
 	// BackgroundTasks is counted, never inspected. Entries carry a
 	// description that could echo user intent, so only the length is used.
@@ -163,10 +176,17 @@ func ParseClaude(r io.Reader, eventName string) (Event, error) {
 	case "", "statusline", "StatusLine":
 		e.Type = TypeStatus
 	case "PreToolUse":
-		if p.ToolName != "Agent" {
+		switch p.ToolName {
+		case "Agent":
+			e.Type = TypeSubagentPre
+		case "Read":
+			e.Type = TypeFileRead
+			if p.ToolInput != nil {
+				e.FilePath = p.ToolInput.FilePath
+			}
+		default:
 			return Event{}, errUnsupportedTool{p.ToolName}
 		}
-		e.Type = TypeSubagentPre
 	case "SubagentStart":
 		e.Type = TypeSubagentStrt
 	case "SubagentStop":
@@ -209,6 +229,7 @@ type Normalized struct {
 	SevenDayPct     *float64 `json:"sevenDayPercent,omitempty"`
 	DurationMS      *int64   `json:"durationMs,omitempty"`
 	AgentID         string   `json:"agentId,omitempty"`
+	FilePath        string   `json:"filePath,omitempty"`
 	AgentType       string   `json:"agentType,omitempty"`
 	BackgroundTasks *int     `json:"backgroundTasks,omitempty"`
 	EndReason       string   `json:"endReason,omitempty"`
@@ -231,7 +252,7 @@ func ParseNormalized(r io.Reader) (Event, error) {
 		return Event{}, ContractError{Got: n.Contract, Want: Contract}
 	}
 	switch n.Type {
-	case TypeStatus, TypeSubagentPre, TypeSubagentStrt, TypeSubagentStop, TypeSessionStop, TypeSessionEnd:
+	case TypeStatus, TypeSubagentPre, TypeFileRead, TypeSubagentStrt, TypeSubagentStop, TypeSessionStop, TypeSessionEnd:
 	default:
 		return Event{}, errors.New("event type " + n.Type + " is not part of the ZeroTurn contract")
 	}
@@ -243,7 +264,7 @@ func ParseNormalized(r io.Reader) (Event, error) {
 		Type: n.Type, SessionID: n.SessionID, CWD: n.CWD, Model: n.Model,
 		ContextPct: n.ContextPct, ContextSize: n.ContextSize,
 		FiveHourPct: n.FiveHourPct, SevenDayPct: n.SevenDayPct,
-		DurationMS: n.DurationMS, AgentID: n.AgentID, AgentType: n.AgentType,
+		DurationMS: n.DurationMS, AgentID: n.AgentID, AgentType: n.AgentType, FilePath: n.FilePath,
 		BackgroundTasks: n.BackgroundTasks, EndReason: n.EndReason,
 	}, nil
 }

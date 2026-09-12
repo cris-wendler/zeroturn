@@ -82,6 +82,33 @@ A value the harness did not send is left out. It is never shown as zero.
 
 The status line and the gate each take about 8 ms on the machine they were measured on, including process start, and neither makes a network request or starts a background process. The method and the numbers are in [docs/benchmarks.md](docs/benchmarks.md).
 
+## Credential guard
+
+Before the model reads a file, ZeroTurn scans that file. If it holds something shaped like a credential, the harness asks you first:
+
+```text
+Reading this file would put a credential into the conversation. deploy.env line 2 looks like
+an aws access key id. Approving means the value is shared and should be rotated.
+```
+
+You decide. Approving reads the file as usual; declining means the value never leaves your machine, and there is nothing to rotate.
+
+| Setting | Behavior |
+| --- | --- |
+| `ask` | The default. The harness asks before that file is read |
+| `deny` | The read is refused |
+| `off` | No scanning |
+
+```sh
+zeroturn policy set guard.credentials.mode deny
+```
+
+> [!IMPORTANT]
+> This reads the file the model was about to open, and only that file. It never reads your prompts. The message names the file, the line, and the kind of credential, never the value.
+
+> [!NOTE]
+> It looks for high confidence patterns, so it catches a common mistake rather than every possible one. A file larger than 4 MB is skipped, and a credential in an unusual format can pass. It is a guard, not a guarantee.
+
 ## Direct Lane
 
 **`zeroturn verify`** runs the checks listed in `.zeroturn.json` directly, without a shell and without a model turn. It prints one line per step and keeps the full output under `.git/zeroturn/logs/`.
@@ -281,7 +308,7 @@ Planned:
 - `go install` and a Homebrew formula after the first public release, following [docs/going-public.md](docs/going-public.md)
 - a Copilot adapter once Copilot exposes session values to hooks
 
-Considered, not decided: a warning before a credential reaches the model, using the detection that `ship` already performs. The two possible forms, and what each would cost, are in [docs/decisions.md](docs/decisions.md).
+Considered, not decided: warning about a credential you type or paste yourself, which would mean ZeroTurn reading prompts. The trade off is in [docs/decisions.md](docs/decisions.md).
 
 Not planned: `zeroturn sync`. The reasoning is in [docs/decisions.md](docs/decisions.md). The research behind the product boundary is in [docs/product-boundary.md](docs/product-boundary.md).
 

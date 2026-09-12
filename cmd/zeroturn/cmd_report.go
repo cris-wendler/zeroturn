@@ -22,17 +22,18 @@ const reportUsage = `zeroturn report <window>
 const provenance = "Based only on events observed locally by ZeroTurn on this machine."
 
 type reportJSON struct {
-	Window            string    `json:"window"`
-	Sessions          int       `json:"sessionsObserved"`
-	PeakContext       *float64  `json:"peakContextPercent,omitempty"`
-	SubagentStarts    int       `json:"subagentsStarted"`
-	HighestActive     int       `json:"highestActiveSubagents"`
-	ConfirmRequests   int       `json:"confirmationRequests"`
-	DeniedStarts      int       `json:"deniedSubagentStarts"`
-	DirectValidations int       `json:"directValidations"`
-	DirectGitOps      int       `json:"directGitOperations"`
-	GeneratedAt       time.Time `json:"generatedAt"`
-	Provenance        string    `json:"provenance"`
+	Window             string    `json:"window"`
+	Sessions           int       `json:"sessionsObserved"`
+	PeakContext        *float64  `json:"peakContextPercent,omitempty"`
+	SubagentStarts     int       `json:"subagentsStarted"`
+	HighestActive      int       `json:"highestActiveSubagents"`
+	CredentialWarnings int       `json:"credentialWarnings"`
+	ConfirmRequests    int       `json:"confirmationRequests"`
+	DeniedStarts       int       `json:"deniedSubagentStarts"`
+	DirectValidations  int       `json:"directValidations"`
+	DirectGitOps       int       `json:"directGitOperations"`
+	GeneratedAt        time.Time `json:"generatedAt"`
+	Provenance         string    `json:"provenance"`
 }
 
 func cmdReport(ctx context.Context, args []string) error {
@@ -103,6 +104,7 @@ func cmdReport(ctx context.Context, args []string) error {
 		[2]string{"Subagents started", fmt.Sprintf("%d", r.SubagentStarts)},
 		[2]string{"Highest active subagents", fmt.Sprintf("%d", r.HighestActive)},
 		[2]string{"Confirmation requests", fmt.Sprintf("%d", r.ConfirmRequests)},
+		[2]string{"Credential warnings", fmt.Sprintf("%d", r.CredentialWarnings)},
 		[2]string{"Denied subagent starts", fmt.Sprintf("%d", r.DeniedStarts)},
 		[2]string{"Direct validations", fmt.Sprintf("%d", r.DirectValidations)},
 		[2]string{"Direct Git operations", fmt.Sprintf("%d", r.DirectGitOps)},
@@ -125,6 +127,7 @@ func summarise(window string, sessions []state.Session) reportJSON {
 		if s.PeakActive > r.HighestActive {
 			r.HighestActive = s.PeakActive
 		}
+		r.CredentialWarnings += s.CredentialWarnings
 		r.ConfirmRequests += s.ConfirmRequests
 		r.DeniedStarts += s.DeniedStarts
 		r.DirectValidations += s.DirectValidations

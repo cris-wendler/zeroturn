@@ -1,6 +1,6 @@
 # Harness contract
 
-This is what ZeroTurn promises to an adapter, and what an adapter must do in return. The version is `zeroturn.event/1` for events and `1.0.0` for the command surface, the JSON output, and the exit codes together. `zeroturn capabilities --json` reports both.
+This is what ZeroTurn promises to an adapter, and what an adapter must do in return. The version is `zeroturn.event/1` for events and `1.1.0` for the command surface, the JSON output, and the exit codes together. `zeroturn capabilities --json` reports both.
 
 The schemas named here are in [schemas/](../schemas), and [conformance/](../conformance) checks that ZeroTurn's own output follows them.
 
@@ -42,6 +42,7 @@ The adapter sends one document that follows [normalized-event.schema.json](../sc
 | --- | --- |
 | `status` | The harness reports session values, typically to draw a status line |
 | `subagent.pre` | A subagent is proposed and the harness can still allow, ask, or deny |
+| `file.read` | A file is about to be read into the conversation, carrying `filePath` |
 | `subagent.start` | A subagent has started |
 | `subagent.stop` | A subagent has finished |
 | `session.stop` | A turn has ended, carrying the number of background tasks still running |
@@ -50,14 +51,14 @@ The adapter sends one document that follows [normalized-event.schema.json](../sc
 Rules for the adapter:
 
 - Send only the fields in the schema. ZeroTurn's decoder declares no others, so anything else is discarded, but sending it means the adapter has read it.
-- Never send prompts, responses, transcripts, file contents, diffs, credentials, or environment values. The gate makes its decision from measurements alone.
+- Never send prompts, responses, transcripts, file contents, diffs, credentials, or environment values. The gate makes its decision from measurements alone. The one exception is `filePath` on `file.read`, which is a path, not content: ZeroTurn opens that file itself and reports only the file, the line, and the category of what it finds.
 - A measurement the harness did not report is left out, or sent as `null`. It is never sent as zero. Zero means the measurement was zero.
 - `sessionId` must be stable for the life of a session. Counts belong to it.
 - `agentId` on `subagent.start` and `subagent.stop` lets ZeroTurn tell subagents apart, so a repeated or out of order stop cannot drive the active count below the truth.
 
 ## Permission decisions
 
-For `subagent.pre` only, ZeroTurn may answer on standard output with a document following [decision.schema.json](../schemas/decision.schema.json):
+For `subagent.pre` and `file.read`, ZeroTurn may answer on standard output with a document following [decision.schema.json](../schemas/decision.schema.json):
 
 ```json
 {"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"New subagent requires approval. Context is 82% and five hour usage is 81%."}}
@@ -117,6 +118,7 @@ Read `zeroturn capabilities --json`, which follows [capabilities.schema.json](..
 ## Versions and compatibility
 
 - `contract` in an event names the event contract. A different value is refused with a message that names the one this build speaks, and the event is ignored. The adapter sees exit 0 and a line on standard error.
+- `contractVersion` is `1.1.0`. Version 1.1.0 added the `file.read` event and the credential guard, and took nothing away from 1.0.0.
 - `contractVersion` follows semantic versioning. A new field, event type, or command raises the minor version. Changing the meaning of an exit code, removing a field, or changing a decision shape raises the major version.
 - ZeroTurn does not refuse a harness version it has not been tested against. It says so instead: `zeroturn policy set guard.mode strict` reports when the installed harness differs from the tested one.
 - An adapter should send the harness version it is running against, so a report can say what was observed.

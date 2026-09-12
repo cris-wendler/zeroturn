@@ -173,3 +173,41 @@ func TestNormalizedAccepted(t *testing.T) {
 		t.Errorf("harness = %q type = %q", e.Harness, e.Type)
 	}
 }
+
+func TestParseClaudeFileRead(t *testing.T) {
+	e, err := ParseClaude(strings.NewReader(fixture(t, "claude/pretooluse-read.json")), "PreToolUse")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e.Type != TypeFileRead {
+		t.Fatalf("type %q", e.Type)
+	}
+	if e.FilePath != "/fixture/repo/deploy.env" {
+		t.Fatalf("file path %q", e.FilePath)
+	}
+}
+
+// The read payload carries a limit and a transcript path. Neither is
+// declared, so neither can reach the rest of ZeroTurn.
+func TestFileReadEventCarriesOnlyThePath(t *testing.T) {
+	e, err := ParseClaude(strings.NewReader(fixture(t, "claude/pretooluse-read.json")), "PreToolUse")
+	if err != nil {
+		t.Fatal(err)
+	}
+	blob, err := json.Marshal(e)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, forbidden := range []string{"transcript", "limit", "toolu_fixture_read"} {
+		if strings.Contains(string(blob), forbidden) {
+			t.Errorf("the event retained %q", forbidden)
+		}
+	}
+}
+
+func TestPreToolUseForAnotherToolIsUnsupported(t *testing.T) {
+	_, err := ParseClaude(strings.NewReader(`{"hook_event_name":"PreToolUse","tool_name":"Grep"}`), "PreToolUse")
+	if !IsUnsupportedTool(err) {
+		t.Fatalf("err %v", err)
+	}
+}

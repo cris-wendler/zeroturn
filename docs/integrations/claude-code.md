@@ -37,18 +37,32 @@ This deletes ZeroTurn's own commands and nothing else. If you added a command of
 | --- | --- |
 | `statusLine` | Renders the session line from the status line payload |
 | `hooks.PreToolUse`, matcher `Agent` | The subagent gate |
+| `hooks.PreToolUse`, matcher `Read` | The credential guard, before a file is read |
 | `hooks.SubagentStart` | Counts a subagent as started and active |
 | `hooks.SubagentStop` | Counts it as stopped |
 | `hooks.Stop` | Reads how many background tasks are still running |
 | `hooks.SessionEnd` | Marks the end of the session |
 
-The matcher `Agent` contains only letters, so Claude Code compares it as an exact string rather than a regular expression. `PreToolUse` fires for no other tool on ZeroTurn's behalf.
+Both matchers contain only letters, so Claude Code compares them as exact strings rather than regular expressions. `PreToolUse` fires for no other tool on ZeroTurn's behalf.
 
 No `UserPromptSubmit` hook is installed. ZeroTurn does not inspect, block, or rewrite prompts, and it does not add warnings to model requests.
 
 ## Why the gate uses PreToolUse
 
 `SubagentStart` fires after the decision to start a subagent and cannot block it. Its only response is text added to the model's context, which ZeroTurn does not use. `PreToolUse` on the `Agent` tool is the one interface that can allow, ask, or deny before the subagent exists. ZeroTurn gates there and counts in `SubagentStart` and `SubagentStop`.
+
+## The credential guard
+
+For the `Read` tool, ZeroTurn reads one field of `tool_input`, `file_path`, opens that file, and scans it for credentials. Nothing else from `tool_input` is declared, so the subagent prompt, commands, and replacement text are still never bound to a variable.
+
+| Result | Response |
+| --- | --- |
+| No credential found | Nothing is printed, and the read proceeds |
+| Found, mode `ask` | `ask`, with the file, the line, and the category |
+| Found, mode `deny` | `deny`, with the same message |
+| Mode `off`, file missing, a directory, or larger than 4 MB | Nothing is printed |
+
+The file content is scanned in memory and never stored. Only a count of warnings is recorded.
 
 ## Decisions
 

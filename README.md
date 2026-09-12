@@ -8,7 +8,7 @@ ZeroTurn shows context, usage windows, session duration, and subagent activity w
 
 ZeroTurn works with coding harnesses. It is not another coding harness.
 
-![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask because context, five hour usage, and active subagents are past their thresholds. zeroturn verify passes two checks, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
+![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask because context, five hour usage, and active subagents are past their thresholds. The credential guard then stops a file that holds an aws access key id from being read. zeroturn verify passes two checks, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
 
 > [!NOTE]
 > The recording is real output from the executable, made with [docs/demo/record.sh](docs/demo/record.sh) against a sample project. The session values are sample data, not a real account. The last word of the status line says what happens to the next subagent. Here it is `ask`, so the harness asks you before starting another one, with a short reason such as "New subagent requires approval. Context is 82% and five hour usage is 81%."
@@ -29,13 +29,20 @@ thresholds crossed:
   fiveHour         Five hour usage is 81% (limit 75)
   activeSubagents  2 subagents are active (limit 2)
 
+# the model asks to read a file that holds a key
+$ zeroturn event --event PreToolUse < read.json \
+    | jq -r .hookSpecificOutput.permissionDecisionReason
+Reading this file would put a credential into the conversation. deploy.env 
+line 2 looks like aws access key id. Approving means the value is shared 
+and should be rotated.
+
 $ zeroturn verify
 ZEROTURN VERIFY
 
-PASS  vet        0.2s
-PASS  test       0.2s
+PASS  vet        0.3s
+PASS  test       0.3s
 
-Result: 2 checks passed in 0.4s
+Result: 2 checks passed in 0.6s
 
 $ zeroturn ship --message "docs: add release notes" --files NOTES.md --dry-run
 ZEROTURN SHIP
@@ -45,10 +52,10 @@ message:  docs: add release notes
 branch:   docs-update
 remote:   origin  ../remote.git
 
-PASS  vet        0.2s
-PASS  test       0.2s
+PASS  vet        0.3s
+PASS  test       0.3s
 
-Result: 2 checks passed in 0.4s
+Result: 2 checks passed in 0.6s
 
 READY TO SHIP
 Dry run finished. Nothing was staged, committed, or pushed.
@@ -83,6 +90,8 @@ A value the harness did not send is left out. It is never shown as zero.
 The status line and the gate each take about 8 ms on the machine they were measured on, including process start, and neither makes a network request or starts a background process. The method and the numbers are in [docs/benchmarks.md](docs/benchmarks.md).
 
 ## Credential guard
+
+![Two guards. Files the model reads, on by default: before a file is opened ZeroTurn scans it and the harness asks you, with modes ask, deny, and off. Messages you send, off by default: switch it on and a message holding a key is stopped before it is sent, which means ZeroTurn reads your messages in that repository in memory, and a stopped message is erased. Both checks run on your machine, nothing is stored, and the explanation names the file, the line, and the kind, never the value.](docs/img/credential-guard.svg)
 
 Before the model reads a file, ZeroTurn scans that file. If it holds something shaped like a credential, the harness asks you first:
 

@@ -60,7 +60,7 @@ For the `Read` tool, ZeroTurn reads one field of `tool_input`, `file_path`, open
 | No credential found | Nothing is printed, and the read proceeds |
 | Found, mode `ask` | `ask`, with the file, the line, and the category |
 | Found, mode `deny` | `deny`, with the same message |
-| Mode `off`, file missing, a directory, or larger than 4 MB | Nothing is printed |
+| Mode `off`, file missing, a directory, or larger than 1 MB | Nothing is printed |
 
 The file content is scanned in memory and never stored. Only a count of warnings is recorded.
 

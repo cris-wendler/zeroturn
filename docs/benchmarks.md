@@ -50,6 +50,19 @@ Before the lock was changed, the same test took 89 ms, and sixty writers inside 
 
 They move with the load on the machine. The table above was taken on an idle machine. The same commands measured while the test suite was running gave 10.0 ms for the status line and 11.2 ms for the gate, against 7.5 and 7.7 when idle. Treat the figures as the shape of the cost, a few milliseconds of process start plus a small file read and write, rather than as a guarantee.
 
+## Scanning a file for credentials
+
+The credential guard runs while a developer waits for a file to be read, so the cost of scanning matters.
+
+| Content | Rate | A 1 MB file |
+| --- | --- | --- |
+| Ordinary source, no anchor words | 27 MB/s | 37 ms |
+| Full of words like password and key, none of them credentials | 3.7 MB/s | 270 ms |
+
+Each detector carries literal anchor strings, and a line holding none of them is never handed to a regular expression. Before that, every detector ran its expression on every line: 0.5 MB/s, which would have held a read for eight seconds on a large file. Combining the detectors into one expression made it worse, not better, because the engine handles a large alternation with captures poorly.
+
+Files over 1 MB are not scanned. Credentials live in small files, and the guard is not worth a wait of a second on a log.
+
 ## Against the targets
 
 | Target | Result |

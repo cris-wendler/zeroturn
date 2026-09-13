@@ -65,10 +65,38 @@ type Session struct {
 	// and never anything from the subagent prompt.
 	LastDecision string `json:"lastDecision,omitempty"`
 
+	// GateOutcomes records what the gate asked and what followed. It
+	// holds measurements and threshold names, never anything a person
+	// wrote, and it is what zeroturn policy tune reads.
+	GateOutcomes []GateOutcome `json:"gateOutcomes,omitempty"`
+	// PendingAsk is the position of an ask whose outcome is not known
+	// yet, counted from one so that zero means none.
+	PendingAsk int `json:"pendingAsk,omitempty"`
+
 	// activeIDs tracks which subagent identifiers are open so that a
 	// repeated or out of order stop event cannot drive the count negative.
 	ActiveIDs []string `json:"activeAgentIds,omitempty"`
 }
+
+// GateOutcome is one decision the gate made and what happened next. A
+// subagent starting after an ask means the developer approved it.
+type GateOutcome struct {
+	Decision string    `json:"decision"`
+	At       time.Time `json:"at"`
+	Approved bool      `json:"approved"`
+	Triggers []string  `json:"triggers,omitempty"`
+
+	ContextPct      *float64 `json:"contextPercent,omitempty"`
+	FiveHourPct     *float64 `json:"fiveHourPercent,omitempty"`
+	SevenDayPct     *float64 `json:"sevenDayPercent,omitempty"`
+	DurationMinutes *int     `json:"durationMinutes,omitempty"`
+	ActiveSubagents int      `json:"activeSubagents,omitempty"`
+	SubagentStarts  int      `json:"subagentStarts,omitempty"`
+}
+
+// maxOutcomes bounds what one session keeps. Tuning needs a sample, not
+// a history, and a record has to stay small.
+const maxOutcomes = 20
 
 type Store struct{ dir string }
 
@@ -392,6 +420,38 @@ func (s *Session) AddActive(agentID string) {
 // turn ends never reported stopping, usually because the session was
 // interrupted. Starts, stops, and the peak are left alone: they are the
 // record of what happened.
+// RecordGate stores one decision, with the measurements behind it, and
+// marks it as waiting to see whether a subagent follows.
+func (s *Session) RecordGate(decision string, triggers []string) {
+	o := GateOutcome{
+		Decision: decision, At: time.Now().UTC(), Triggers: triggers,
+		ContextPct: s.ContextPct, FiveHourPct: s.FiveHourPct, SevenDayPct: s.SevenDayPct,
+		ActiveSubagents: s.ActiveSubagents, SubagentStarts: s.SubagentStarts,
+	}
+	if s.DurationMS != nil {
+		minutes := int(*s.DurationMS / 60000)
+		o.DurationMinutes = &minutes
+	}
+	s.GateOutcomes = append(s.GateOutcomes, o)
+	if len(s.GateOutcomes) > maxOutcomes {
+		s.GateOutcomes = s.GateOutcomes[len(s.GateOutcomes)-maxOutcomes:]
+	}
+	// A denial cannot be approved, so only an ask waits for an outcome.
+	s.PendingAsk = 0
+	if decision == "ask" {
+		s.PendingAsk = len(s.GateOutcomes)
+	}
+}
+
+// ResolveGate marks the waiting ask as approved, which is what a
+// subagent starting after one means.
+func (s *Session) ResolveGate() {
+	if s.PendingAsk > 0 && s.PendingAsk <= len(s.GateOutcomes) {
+		s.GateOutcomes[s.PendingAsk-1].Approved = true
+	}
+	s.PendingAsk = 0
+}
+
 func (s *Session) ClearActive() {
 	s.ActiveIDs = nil
 	s.ActiveSubagents = 0

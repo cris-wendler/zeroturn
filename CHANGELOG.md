@@ -23,6 +23,10 @@ First prototype. Nothing has been released yet.
 
 - Optional prompt guard, off by default: with `guard.credentials.prompts` set to `block`, a message carrying a credential is stopped before it is sent. The hook is installed only when the guard is on.
 
+**Learning from its own decisions**
+
+- `zeroturn policy tune` proposes thresholds from what the gate asked and whether a subagent followed, which is how approval is inferred. Counts and measurements only, five observations before it says anything, and it never changes a setting.
+
 **Direct Lane**
 
 - `init` recognises Python, Maven, Gradle, .NET and Ruby projects as well as Go, JavaScript and Rust, and reads a Makefile for the targets it declares.

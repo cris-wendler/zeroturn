@@ -25,6 +25,21 @@ const policyUsage = `zeroturn policy <subcommand>
   tune    Suggest thresholds from what the gate asked and what you did
 `
 
+const policyResetUsage = `zeroturn policy reset
+
+Restore the default guard thresholds in .zeroturn.json. The validation
+steps and the Git settings are left as they are.
+`
+
+const policySetUsage = `zeroturn policy set <key> <value>
+
+Change one guard threshold in .zeroturn.json, after showing what it will
+write. Run zeroturn policy show to list the keys and their values.
+
+Turning on strict mode asks for confirmation, states what can be
+blocked, and records the approval on this machine only.
+`
+
 func cmdPolicy(ctx context.Context, args []string) error {
 	if len(args) == 0 {
 		fmt.Fprint(os.Stderr, policyUsage)
@@ -32,6 +47,11 @@ func cmdPolicy(ctx context.Context, args []string) error {
 			"no subcommand was given", "run zeroturn policy show")
 	}
 	switch args[0] {
+	case "--help", "-h", "help":
+		// The subcommand is read before any flag parser runs, so a
+		// request for help is answered here.
+		fmt.Print(policyUsage)
+		return errHelp
 	case "show":
 		return policyShow(ctx, args[1:])
 	case "check":
@@ -53,8 +73,8 @@ func cmdPolicy(ctx context.Context, args []string) error {
 func policyShow(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("policy show", flag.ContinueOnError)
 	asJSON := fs.Bool("json", false, "print machine readable output")
-	if err := fs.Parse(args); err != nil {
-		return output.Errorf(output.ExitInvalidUsage, "zeroturn could not read the flags", err.Error(), "run zeroturn policy show --help")
+	if err := parseFlags(fs, args, policyUsage, "policy"); err != nil {
+		return err
 	}
 	repo, err := openRepo(ctx)
 	if err != nil {
@@ -112,8 +132,8 @@ func modeDescription(mode string) string {
 func policyCheck(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("policy check", flag.ContinueOnError)
 	asJSON := fs.Bool("json", false, "print machine readable output")
-	if err := fs.Parse(args); err != nil {
-		return output.Errorf(output.ExitInvalidUsage, "zeroturn could not read the flags", err.Error(), "run zeroturn policy check --help")
+	if err := parseFlags(fs, args, policyUsage, "policy"); err != nil {
+		return err
 	}
 	repo, err := openRepo(ctx)
 	if err != nil {
@@ -156,6 +176,10 @@ func policyCheck(ctx context.Context, args []string) error {
 }
 
 func policySet(ctx context.Context, args []string) error {
+	if len(args) == 1 && (args[0] == "--help" || args[0] == "-h") {
+		fmt.Print(policySetUsage)
+		return errHelp
+	}
 	if len(args) != 2 {
 		return output.Errorf(output.ExitInvalidUsage,
 			"zeroturn policy set changed nothing",
@@ -413,6 +437,17 @@ func applyPolicyKey(c *config.Config, key, value string) error {
 }
 
 func policyReset(ctx context.Context, args []string) error {
+	// This command writes, and it took no notice of its arguments, so
+	// asking it for help restored the defaults instead of explaining
+	// itself. Anything that is not understood stops it now.
+	for _, a := range args {
+		if a == "--help" || a == "-h" {
+			fmt.Print(policyResetUsage)
+			return errHelp
+		}
+		return output.Errorf(output.ExitInvalidUsage, "zeroturn policy reset changed nothing",
+			"it accepts no arguments and got "+a, "run zeroturn policy reset")
+	}
 	repo, err := openRepo(ctx)
 	if err != nil {
 		return err

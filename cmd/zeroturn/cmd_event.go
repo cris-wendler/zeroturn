@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -205,12 +206,33 @@ type decisionOutput struct {
 // cmdEvent is the adapter entry point. It fails open: any problem leaves
 // the harness to its normal behaviour rather than blocking a developer
 // because ZeroTurn had trouble.
+const eventUsage = `zeroturn event --harness <name> --event <name>
+
+The entry point a harness hook calls. It reads one event on standard
+input and writes a decision on standard output when there is one.
+
+It exits 0 whatever happens, because a guard that fails must never stop
+a session. A malformed event, an unreadable state directory, or a broken
+configuration all end in silence.
+`
+
 func cmdEvent(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("event", flag.ContinueOnError)
+	fs.SetOutput(ioutil.Discard)
+	fs.Usage = func() {}
 	fs.SetOutput(os.Stderr)
 	harness := fs.String("harness", "claude", "harness sending the event: claude, or normalized for other adapters")
 	name := fs.String("event", "", "harness event name, for example PreToolUse")
 	if err := fs.Parse(args); err != nil {
+		// A person running this by hand deserves an answer. Every other
+		// failure is silent and exits 0, because a gate that fails must
+		// not stop a session.
+		if errors.Is(err, flag.ErrHelp) {
+			fmt.Print(eventUsage)
+			fs.SetOutput(os.Stdout)
+			fmt.Println("Flags:")
+			fs.PrintDefaults()
+		}
 		return nil
 	}
 

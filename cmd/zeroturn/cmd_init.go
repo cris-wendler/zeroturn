@@ -27,13 +27,19 @@ type detected struct {
 	MissingExec []string
 }
 
+const initUsage = `zeroturn init [--force] [--yes]
+
+Write .zeroturn.json for this repository. The validation steps are
+proposed from what the project declares, never guessed, and the file is
+shown before it is written.
+`
+
 func cmdInit(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("init", flag.ContinueOnError)
-	fs.SetOutput(os.Stderr)
 	force := fs.Bool("force", false, "replace an existing "+config.FileName)
 	yes := fs.Bool("yes", false, "write the proposed configuration without asking")
-	if err := fs.Parse(args); err != nil {
-		return output.Errorf(output.ExitInvalidUsage, "zeroturn could not read the flags", err.Error(), "run zeroturn init --help")
+	if err := parseFlags(fs, args, initUsage, "init"); err != nil {
+		return err
 	}
 
 	repo, err := openRepo(ctx)

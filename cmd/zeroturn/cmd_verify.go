@@ -14,13 +14,21 @@ import (
 	"github.com/cris-wendler/zeroturn/internal/verify"
 )
 
+const verifyUsage = `zeroturn verify [--json] [--approve]
+
+Run the validation steps this repository declares, directly, in order,
+stopping at the first failure.
+
+The commands are approved once per repository on this machine. Nothing
+runs until they have been reviewed.
+`
+
 func cmdVerify(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("verify", flag.ContinueOnError)
-	fs.SetOutput(os.Stderr)
 	asJSON := fs.Bool("json", false, "print machine readable output")
 	approve := fs.Bool("approve", false, "review and approve the configured commands for this repository")
-	if err := fs.Parse(args); err != nil {
-		return output.Errorf(output.ExitInvalidUsage, "zeroturn could not read the flags", err.Error(), "run zeroturn verify --help")
+	if err := parseFlags(fs, args, verifyUsage, "verify"); err != nil {
+		return err
 	}
 
 	repo, err := openRepo(ctx)

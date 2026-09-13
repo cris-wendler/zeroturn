@@ -42,14 +42,19 @@ func cmdReport(ctx context.Context, args []string) error {
 		return output.Errorf(output.ExitInvalidUsage, "zeroturn report printed nothing",
 			"no window was given", "run zeroturn report current")
 	}
+	// The window is read before the flags, so a request for help never
+	// reaches the flag parser and has to be answered here.
+	if args[0] == "--help" || args[0] == "-h" || args[0] == "help" {
+		fmt.Print(reportUsage)
+		return errHelp
+	}
 	window := args[0]
 	fs := flag.NewFlagSet("report", flag.ContinueOnError)
-	fs.SetOutput(os.Stderr)
 	asJSON := fs.Bool("json", false, "print machine readable output")
 	all := fs.Bool("all", false, "with purge, delete every ZeroTurn session record")
 	retention := fs.Int("retention-days", state.DefaultRetentionDays, "with purge, keep records newer than this many days")
-	if err := fs.Parse(args[1:]); err != nil {
-		return output.Errorf(output.ExitInvalidUsage, "zeroturn could not read the flags", err.Error(), "run zeroturn report --help")
+	if err := parseFlags(fs, args[1:], reportUsage, "report"); err != nil {
+		return err
 	}
 
 	st, err := openStore()

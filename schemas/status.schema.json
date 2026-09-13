@@ -78,6 +78,18 @@
         "fiveHourResetsAt": {
           "type": "integer"
         },
+        "fiveHourBasePercent": {
+          "type": "number",
+          "description": "The first five hour reading seen in the window that is running now. The rate of use is measured from it."
+        },
+        "fiveHourBaseAt": {
+          "type": "string",
+          "description": "When that first reading was taken."
+        },
+        "fiveHourBaseReset": {
+          "type": "integer",
+          "description": "The reset time the baseline was taken under. A different fiveHourResetsAt means a new window and an unusable baseline."
+        },
         "sevenDayPercent": {
           "type": "number"
         },
@@ -201,6 +213,7 @@
           "enum": [
             "context",
             "fiveHour",
+            "projection",
             "sevenDay",
             "duration",
             "activeSubagents",

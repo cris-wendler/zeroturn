@@ -27,6 +27,12 @@ const (
 // Prompt guard settings. Off is the default, because reading messages
 // is a promise this project otherwise does not make, and because a
 // blocked message is erased by the harness.
+// Projection settings for the five hour window.
+const (
+	ProjectionOn  = "on"
+	ProjectionOff = "off"
+)
+
 const (
 	PromptsOff   = "off"
 	PromptsBlock = "block"
@@ -78,6 +84,10 @@ type Context struct {
 type Limits struct {
 	FiveHourWarn int `json:"fiveHourWarn"`
 	SevenDayWarn int `json:"sevenDayWarn"`
+	// Projection asks when the rate of use will exhaust the five hour
+	// window before it resets, whatever the reading is now. A heavy
+	// session that will still finish inside the window stays quiet.
+	Projection string `json:"projection"`
 }
 
 type Session struct {
@@ -111,7 +121,7 @@ func Default() Config {
 		Guard: Guard{
 			Mode:        ModeObserve,
 			Context:     Context{Warn: 70, Confirm: 80, Critical: 90},
-			Limits:      Limits{FiveHourWarn: 75, SevenDayWarn: 75},
+			Limits:      Limits{FiveHourWarn: 75, SevenDayWarn: 75, Projection: ProjectionOn},
 			Session:     Session{DurationWarnMinutes: 240, ActiveSubagentsWarn: 2, SubagentStartsWarn: 4},
 			Credentials: Credentials{Mode: CredentialAsk, Prompts: PromptsOff},
 		},
@@ -148,6 +158,9 @@ func Load(repoRoot string) (Config, error) {
 	}
 	if c.Guard.Credentials.Prompts == "" {
 		c.Guard.Credentials.Prompts = PromptsOff
+	}
+	if c.Guard.Limits.Projection == "" {
+		c.Guard.Limits.Projection = ProjectionOn
 	}
 	if err := c.Validate(); err != nil {
 		return Config{}, err
@@ -224,6 +237,12 @@ func (c Config) Validate() error {
 	default:
 		return ValidationError{"guard.credentials.mode", "value " + quote(c.Guard.Credentials.Mode) + " is not a credential guard mode",
 			"use off, ask, or deny"}
+	}
+	switch c.Guard.Limits.Projection {
+	case ProjectionOn, ProjectionOff:
+	default:
+		return ValidationError{"guard.limits.projection", "value " + quote(c.Guard.Limits.Projection) + " is not a projection setting",
+			"use on, or off"}
 	}
 	switch c.Guard.Credentials.Prompts {
 	case PromptsOff, PromptsBlock:

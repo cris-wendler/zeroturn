@@ -76,6 +76,7 @@
           "enum": [
             "context",
             "fiveHour",
+            "projection",
             "sevenDay",
             "duration",
             "activeSubagents",

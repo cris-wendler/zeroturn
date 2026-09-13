@@ -7,7 +7,9 @@ package policy
 
 import (
 	"fmt"
+	"math"
 	"sort"
+	"time"
 
 	"github.com/cris-wendler/zeroturn/internal/config"
 	"github.com/cris-wendler/zeroturn/internal/state"
@@ -57,8 +59,60 @@ func rank(level string) int {
 	return 0
 }
 
+// Projection is what the rate of use implies about a window that has not
+// filled yet.
+type Projection struct {
+	// RatePerHour is how many percentage points of the window are being
+	// used in an hour, measured from the first reading of this window.
+	RatePerHour float64
+	// HoursLeft is the time until the window resets.
+	HoursLeft float64
+	// Percent is where the window lands at this rate when it resets.
+	Percent float64
+}
+
+// minRateSpan is how long a session has to run before a rate means
+// anything. A burst in the first minutes of a window would otherwise
+// project into the hundreds.
+const minRateSpan = 15 * time.Minute
+
+// Project reports where the five hour window lands at the current rate of
+// use, and whether that rate can be measured at all. It answers a
+// different question from a threshold: not how full the window is, but
+// whether it will still be there when the work needs it.
+func Project(s state.Session, now time.Time) (Projection, bool) {
+	if s.FiveHourPct == nil || s.FiveHourBasePct == nil || s.FiveHourBaseAt == nil || s.FiveHourResetsAt == nil {
+		return Projection{}, false
+	}
+	// A baseline taken under a different reset time belongs to a window
+	// that has already ended.
+	if s.FiveHourBaseReset == nil || *s.FiveHourBaseReset != *s.FiveHourResetsAt {
+		return Projection{}, false
+	}
+	span := now.Sub(*s.FiveHourBaseAt)
+	if span < minRateSpan {
+		return Projection{}, false
+	}
+	left := time.Unix(*s.FiveHourResetsAt, 0).Sub(now)
+	if left <= 0 || left > 5*time.Hour {
+		return Projection{}, false
+	}
+	rate := (*s.FiveHourPct - *s.FiveHourBasePct) / span.Hours()
+	if rate <= 0 {
+		return Projection{}, false
+	}
+	hoursLeft := left.Hours()
+	return Projection{RatePerHour: rate, HoursLeft: hoursLeft, Percent: *s.FiveHourPct + rate*hoursLeft}, true
+}
+
 // Evaluate reports the condition of a session without changing anything.
 func Evaluate(c config.Config, s state.Session) Result {
+	return EvaluateAt(c, s, time.Now())
+}
+
+// EvaluateAt is Evaluate with the current time supplied, which the
+// projection needs and which tests need to control.
+func EvaluateAt(c config.Config, s state.Session, now time.Time) Result {
 	var t []Trigger
 
 	if s.ContextPct != nil {
@@ -76,11 +130,23 @@ func Evaluate(c config.Config, s state.Session) Result {
 		}
 	}
 
+	crossed := false
 	if s.FiveHourPct != nil {
 		v := *s.FiveHourPct
 		if v >= float64(c.Guard.Limits.FiveHourWarn) {
+			crossed = true
 			t = append(t, Trigger{"fiveHour", v, float64(c.Guard.Limits.FiveHourWarn), LevelConfirm,
 				fmt.Sprintf("Five hour usage is %.0f%%", v), true})
+		}
+	}
+	// The threshold above asks how full the window is. This asks where the
+	// window is heading: a heavy session that will still finish inside it
+	// says nothing, and a moderate one burning faster than the clock does.
+	if !crossed && c.Guard.Limits.Projection == config.ProjectionOn {
+		if p, ok := Project(s, now); ok && p.Percent >= 100 {
+			t = append(t, Trigger{"projection", p.Percent, 100, LevelConfirm,
+				fmt.Sprintf("Five hour usage is %.0f%% and rising %.0f%% an hour, with %s left before it resets",
+					*s.FiveHourPct, p.RatePerHour, HumanMinutes(math.Round(p.HoursLeft*60))), true})
 		}
 	}
 	if s.SevenDayPct != nil {

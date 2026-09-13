@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/cris-wendler/zeroturn/internal/config"
 	"github.com/cris-wendler/zeroturn/internal/security"
@@ -55,6 +56,7 @@ func applyTo(s *state.Session, e events.Event) {
 		if e.FiveHourPct != nil {
 			v := *e.FiveHourPct
 			s.FiveHourPct = &v
+			s.SampleFiveHour(v, e.FiveHourResetsAt, time.Now())
 		}
 		if e.FiveHourResetsAt != nil {
 			v := *e.FiveHourResetsAt

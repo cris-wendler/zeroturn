@@ -208,3 +208,18 @@ Decision: the claim is corrected in [product-boundary.md](product-boundary.md) w
 Still unverified, and therefore still not claimed: the schema of a `.github/hooks` file, whether a hook defined as a command receives the same input as an extension callback and may answer with a permission decision, and whether usage values reach a hook at all rather than only the account interface and the event stream.
 
 The lesson worth keeping: a capability check has a shelf life. This one was three days old. Anything the scope depends on should be re-read from the installed software before it is repeated.
+
+## 20. The gate asks about the rate of use, not only the level
+
+Date: 2026-09-12
+
+Finding: a fixed percentage is a poor question. Seventy five percent of the five hour window is fine at the end of the window and a problem at the start of it, and the two cases are indistinguishable to a threshold. A developer already sees the percentage in the harness; repeating it in a gate adds nothing they did not know.
+
+Decision: the gate also measures how fast the window is being used. The first five hour reading of the window is kept, with the time it was taken and the reset time it was taken under. The rate is the rise since then per hour, and the projection is where the window lands when it resets. When that is one hundred percent or more, the gate asks, whatever the reading is now. A heavy session that will still finish inside the window says nothing.
+
+Consequence: three fields were added to the session record, which moves the contract version to 1.2.0, all measurements, none of them anything a person wrote. The setting is `guard.limits.projection`, on by default, and `off` restores the old behavior exactly. The projection is skipped once the fixed threshold has already fired, so a gate never states the same thing twice.
+
+The guards on the estimate matter more than the estimate. A rate is ignored when it has been measured over less than fifteen minutes, when the baseline was taken under a different reset time, when usage is not rising, and when the reset time has passed. A baseline is also replaced when a reading falls below it, because a window that rolled over without a reset time is otherwise indistinguishable from a quiet session.
+
+The limit: this is an estimate, and it is treated as one. It never denies, even in Strict mode, because a projection is not a fact. It also assumes the next hour looks like the last one, which a session that is about to stop does not.
+

@@ -1,6 +1,6 @@
 # Harness contract
 
-This is what ZeroTurn promises to an adapter, and what an adapter must do in return. The version is `zeroturn.event/1` for events and `1.1.0` for the command surface, the JSON output, and the exit codes together. `zeroturn capabilities --json` reports both.
+This is what ZeroTurn promises to an adapter, and what an adapter must do in return. The version is `zeroturn.event/1` for events and `1.2.0` for the command surface, the JSON output, and the exit codes together. `zeroturn capabilities --json` reports both.
 
 The schemas named here are in [schemas/](../schemas), and [conformance/](../conformance) checks that ZeroTurn's own output follows them.
 
@@ -120,7 +120,7 @@ Read `zeroturn capabilities --json`, which follows [capabilities.schema.json](..
 ## Versions and compatibility
 
 - `contract` in an event names the event contract. A different value is refused with a message that names the one this build speaks, and the event is ignored. The adapter sees exit 0 and a line on standard error.
-- `contractVersion` is `1.1.0`. Version 1.1.0 added the `file.read` event and the credential guard, and took nothing away from 1.0.0.
+- `contractVersion` is `1.2.0`. Version 1.1.0 added the `file.read` event and the credential guard. Version 1.2.0 added the rate projection: three measurements in the session record and the `projection` trigger name. Neither took anything away from 1.0.0.
 - `contractVersion` follows semantic versioning. A new field, event type, or command raises the minor version. Changing the meaning of an exit code, removing a field, or changing a decision shape raises the major version.
 - ZeroTurn does not refuse a harness version it has not been tested against. It says so instead: `zeroturn policy set guard.mode strict` reports when the installed harness differs from the tested one.
 - An adapter should send the harness version it is running against, so a report can say what was observed.

@@ -165,10 +165,26 @@ func ScanBytes(name string, b []byte) ([]Finding, error) {
 	return ScanReader(name, bytes.NewReader(b))
 }
 
+// redactors are the same patterns without word boundaries. Detection
+// keeps the boundaries, so a finding is precise. Redaction drops them,
+// because a value glued to other text, which happens in logs, still has
+// to be removed: leaving one behind is worse than removing too much.
+var redactors = buildRedactors()
+
+func buildRedactors() []detector {
+	out := make([]detector, 0, len(detectors))
+	for _, d := range detectors {
+		loose := d
+		loose.re = regexp.MustCompile(strings.ReplaceAll(d.re.String(), `\b`, ""))
+		out = append(out, loose)
+	}
+	return out
+}
+
 // Redact replaces credential shaped text with a category label. It is
 // applied to every command output ZeroTurn prints or writes to a log.
 func Redact(s string) string {
-	for _, d := range detectors {
+	for _, d := range redactors {
 		cat := d.category
 		if d.valueGroup > 0 {
 			s = d.re.ReplaceAllStringFunc(s, func(m string) string {

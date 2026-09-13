@@ -312,3 +312,45 @@ func TestInterruptedSubagentsDoNotAccumulate(t *testing.T) {
 		t.Fatalf("the record reached %d bytes after 500 subagents", info.Size())
 	}
 }
+
+func TestFiveHourBaselineKeepsTheFirstReadingOfTheWindow(t *testing.T) {
+	reset := int64(1788000000)
+	var s Session
+	t0 := time.Now()
+	s.SampleFiveHour(12, &reset, t0)
+	s.SampleFiveHour(30, &reset, t0.Add(time.Hour))
+	s.SampleFiveHour(44, &reset, t0.Add(2*time.Hour))
+	if s.FiveHourBasePct == nil || *s.FiveHourBasePct != 12 {
+		t.Fatalf("baseline moved: %v", s.FiveHourBasePct)
+	}
+	if s.FiveHourBaseAt == nil || !s.FiveHourBaseAt.Equal(t0.UTC()) {
+		t.Fatalf("baseline time moved: %v", s.FiveHourBaseAt)
+	}
+}
+
+func TestFiveHourBaselineRestartsWhenTheWindowDoes(t *testing.T) {
+	first, second := int64(1788000000), int64(1788018000)
+	var s Session
+	t0 := time.Now()
+	s.SampleFiveHour(80, &first, t0)
+	s.SampleFiveHour(4, &second, t0.Add(time.Hour))
+	if *s.FiveHourBasePct != 4 || *s.FiveHourBaseReset != second {
+		t.Fatalf("baseline from the old window survived: %v", *s.FiveHourBasePct)
+	}
+}
+
+// The harness may not report a reset time. A reading below the baseline
+// is then the only sign that the window has rolled over.
+func TestFiveHourBaselineRestartsOnAReadingThatFell(t *testing.T) {
+	var s Session
+	t0 := time.Now()
+	s.SampleFiveHour(70, nil, t0)
+	s.SampleFiveHour(75, nil, t0.Add(30*time.Minute))
+	if *s.FiveHourBasePct != 70 {
+		t.Fatalf("baseline moved on a rise: %v", *s.FiveHourBasePct)
+	}
+	s.SampleFiveHour(5, nil, t0.Add(time.Hour))
+	if *s.FiveHourBasePct != 5 {
+		t.Fatalf("baseline stayed above the reading: %v", *s.FiveHourBasePct)
+	}
+}

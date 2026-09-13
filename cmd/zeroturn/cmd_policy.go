@@ -86,6 +86,7 @@ func policyTable(c config.Config) string {
 		{"context critical", pctText(c.Guard.Context.Critical)},
 		{"five hour warn", pctText(c.Guard.Limits.FiveHourWarn)},
 		{"seven day warn", pctText(c.Guard.Limits.SevenDayWarn)},
+		{"rate projection", c.Guard.Limits.Projection},
 		{"duration warn", fmt.Sprintf("%d minutes", c.Guard.Session.DurationWarnMinutes)},
 		{"active subagents warn", fmt.Sprintf("%d", c.Guard.Session.ActiveSubagentsWarn)},
 		{"subagent starts warn", fmt.Sprintf("%d", c.Guard.Session.SubagentStartsWarn)},
@@ -357,6 +358,15 @@ func applyPolicyKey(c *config.Config, key, value string) error {
 			return err
 		}
 		c.Guard.Limits.SevenDayWarn = n
+	case "guard.limits.projection":
+		v := strings.ToLower(value)
+		if v != config.ProjectionOn && v != config.ProjectionOff {
+			return output.Errorf(output.ExitInvalidUsage,
+				"zeroturn policy set changed nothing",
+				"value "+strconv.Quote(value)+" is not a projection setting",
+				"use on, or off")
+		}
+		c.Guard.Limits.Projection = v
 	case "guard.session.durationWarnMinutes":
 		n, err := intVal()
 		if err != nil {

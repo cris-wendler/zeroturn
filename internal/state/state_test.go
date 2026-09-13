@@ -421,3 +421,99 @@ func TestFiveHourBaselineRestartsOnAReadingThatFell(t *testing.T) {
 		t.Fatalf("baseline stayed above the reading: %v", *s.FiveHourBasePct)
 	}
 }
+
+// Lock must answer, whatever is wrong with the directory. A retry loop
+// that cannot make progress spins on a processor and never returns, and
+// the hook that called it never exits.
+func TestLockReturnsWhenTheLockCannotBeCreated(t *testing.T) {
+	cases := map[string]func(t *testing.T, dir string){
+		"state.lock is a directory": func(t *testing.T, dir string) {
+			p := filepath.Join(dir, "state.lock")
+			if err := os.Mkdir(p, 0700); err != nil {
+				t.Fatal(err)
+			}
+			// Not empty, so it cannot be removed as a stale lock file.
+			if err := ioutil.WriteFile(filepath.Join(p, "keep"), []byte("x"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			old := time.Now().Add(-time.Hour)
+			os.Chtimes(p, old, old)
+		},
+		"directory is read only": func(t *testing.T, dir string) {
+			if runtime.GOOS == "windows" {
+				// Windows does not take directory permissions from the
+				// mode bits, so the directory stays writable and there
+				// is nothing to test here.
+				t.Skip("directory permissions are not set by chmod on this system")
+			}
+			p := filepath.Join(dir, "state.lock")
+			if err := ioutil.WriteFile(p, []byte("99999\n"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			old := time.Now().Add(-time.Hour)
+			os.Chtimes(p, old, old)
+			if err := os.Chmod(dir, 0500); err != nil {
+				t.Skip(err)
+			}
+		},
+	}
+
+	defer func(d time.Duration) { lockTimeout = d }(lockTimeout)
+	lockTimeout = 200 * time.Millisecond
+
+	for name, setup := range cases {
+		t.Run(name, func(t *testing.T) {
+			dir, err := ioutil.TempDir("", "zt-lock")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() {
+				os.Chmod(dir, 0700)
+				os.RemoveAll(dir)
+			}()
+			setup(t, dir)
+
+			st := &Store{dir: dir}
+			done := make(chan error, 1)
+			go func() {
+				_, lerr := st.Lock()
+				done <- lerr
+			}()
+			select {
+			case lerr := <-done:
+				if lerr == nil {
+					t.Fatal("the lock was reported as taken")
+				}
+			case <-time.After(20 * time.Second):
+				t.Fatal("Lock never returned: it is spinning")
+			}
+		})
+	}
+}
+
+// A lock nobody released is cleared, which is the case the retry loop
+// exists for and must keep working.
+func TestLockClearsALockLeftBehind(t *testing.T) {
+	dir, err := ioutil.TempDir("", "zt-lock")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	p := filepath.Join(dir, "state.lock")
+	if err := ioutil.WriteFile(p, []byte("99999\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	old := time.Now().Add(-time.Hour)
+	os.Chtimes(p, old, old)
+
+	st := &Store{dir: dir}
+	start := time.Now()
+	unlock, err := st.Lock()
+	if err != nil {
+		t.Fatalf("a lock older than the stale limit was not cleared: %v", err)
+	}
+	unlock()
+	if time.Since(start) > 2*time.Second {
+		t.Fatalf("clearing a stale lock took %s", time.Since(start))
+	}
+}

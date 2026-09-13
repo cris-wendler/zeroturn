@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -91,7 +92,13 @@ func main() {
 	}
 
 	if err != nil {
-		if ze, ok := err.(*output.Error); ok {
+		// Asking for help is not a failure. The command has already
+		// printed what was asked for.
+		if errors.Is(err, errHelp) {
+			return
+		}
+		var ze *output.Error
+		if errors.As(err, &ze) {
 			ze.Print(os.Stderr)
 			os.Exit(ze.Code)
 		}

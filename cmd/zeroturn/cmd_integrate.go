@@ -114,6 +114,10 @@ func cmdIntegrate(ctx context.Context, args []string) error {
 		return output.Errorf(output.ExitInvalidUsage, "zeroturn integrate changed nothing",
 			"no harness was named", "run zeroturn integrate claude --plan")
 	}
+	if args[0] == "--help" || args[0] == "-h" || args[0] == "help" {
+		fmt.Print(integrateUsage)
+		return errHelp
+	}
 	harness := args[0]
 	rest := args[1:]
 
@@ -132,6 +136,9 @@ func cmdIntegrate(ctx context.Context, args []string) error {
 			userWide = true
 		case "--replace-status-line":
 			replaceStatus = true
+		case "--help", "-h":
+			fmt.Print(integrateUsage)
+			return errHelp
 		default:
 			return output.Errorf(output.ExitInvalidUsage, "zeroturn integrate changed nothing",
 				"flag "+a+" is not one zeroturn integrate accepts", "run zeroturn integrate --help")

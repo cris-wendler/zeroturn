@@ -223,3 +223,21 @@ The guards on the estimate matter more than the estimate. A rate is ignored when
 
 The limit: this is an estimate, and it is treated as one. It never denies, even in Strict mode, because a projection is not a fact. It also assumes the next hour looks like the last one, which a session that is about to stop does not.
 
+## 21. What Copilot exposes, read from the hook engine rather than the schemas
+
+Date: 2026-09-12
+
+Finding: entry 19 corrected the Copilot research but left four questions open, because the schemas did not answer them. They were answered by reading the native hook engine in the installed package, version 1.0.83, and the answers change what an adapter can be.
+
+A hook can be an external command. A definition carries one of `command`, `bash`, `powershell`, `exec`, `url`, or `prompt`; the process's standard output is parsed as JSON, and exit code 2 denies the tool call. `preToolUse` answers with `permissionDecision` of `allow`, `deny`, or `ask` and a `permissionDecisionReason`, which are the same words ZeroTurn already produces.
+
+No hook payload carries usage, quota, token counts, or session duration. That part of the original research was right, and it was checked directly rather than assumed: the hook input types carry only the session, the time, the working directory, and the tool. The quota structures sit in the account client, a different module.
+
+Session pressure is still reachable, through a different door. `statusLine.command` runs a child process and hands it the session status as JSON on standard input, including context window use, the window size, premium requests, and credits. That is the same arrangement ZeroTurn already uses on Claude Code.
+
+Decision: the adapter is worth writing, and it uses two entry points rather than one, a `preToolUse` hook for the gate and the status line process for pressure. The findings are recorded in [integrations/copilot.md](integrations/copilot.md) with the file each one came from. What ZeroTurn claims about Copilot stays at nothing until an adapter has run against a real session, which is the same bar the Claude Code gate had to clear.
+
+Two spellings would have failed silently if an adapter had guessed them: the prompt event is `userPromptSubmitted`, not `userPromptSubmit`, and the end of turn event is `agentStop`, with no plain `stop`.
+
+The lesson, again: the answer was in the binary, not in the schemas. Entry 19 said a capability check has a shelf life. This one adds that a capability check has a depth, and stopping at the published schema is not the bottom.
+

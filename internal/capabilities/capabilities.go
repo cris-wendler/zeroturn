@@ -73,7 +73,7 @@ func Describe(version string) Doc {
 				Events:          []string{},
 				GateSupported:   false,
 				StatusSupported: false,
-				Notes:           "No adapter ships in this version. No Copilot hook payload carries usage, context, or session duration, so session pressure cannot be shown. Gating through the preToolUse hook on the task tool has not been tested.",
+				Notes:           "No adapter ships in this version, so nothing here claims Copilot support. The installed CLI does expose hooks for tool use and subagents, a pre tool decision, and quota and context values, which is recorded in docs/product-boundary.md. An adapter is planned and will be marked supported only after it has run against a real session.",
 			},
 		},
 		ExitCodes: map[string]string{

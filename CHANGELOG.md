@@ -39,6 +39,10 @@ First prototype. Nothing has been released yet.
 - `doctor` reports when the settings point at an executable that has moved or is no longer there, since hooks in that state fail in silence.
 - `integrate claude --apply` repairs those entries, and leaves commands it does not own untouched.
 
+**Research corrections**
+
+- The reason Copilot support was cut turned out to be wrong for the shipped CLI, which does expose hooks for tool use and subagents, a pre tool decision, quota snapshots, and context token counts. The claim is corrected and an adapter is planned, with support claimed only once it has run against a real session.
+
 **Contract and safety**
 
 - Published JSON schemas and a conformance suite.

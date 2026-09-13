@@ -34,6 +34,7 @@ The adapter sends one document that follows [normalized-event.schema.json](../sc
   "cwd": "/path/to/repository",
   "contextPercent": 82,
   "fiveHourPercent": 81,
+  "fiveHourResetsAt": 1788000000,
   "durationMs": 11520000
 }
 ```
@@ -55,6 +56,7 @@ Rules for the adapter:
 - Send only the fields in the schema. ZeroTurn's decoder declares no others, so anything else is discarded, but sending it means the adapter has read it.
 - Never send prompts, responses, transcripts, file contents, diffs, credentials, or environment values. The gate makes its decision from measurements alone. The one exception is `filePath` on `file.read`, which is a path, not content: ZeroTurn opens that file itself and reports only the file, the line, and the category of what it finds.
 - A measurement the harness did not report is left out, or sent as `null`. It is never sent as zero. Zero means the measurement was zero.
+- Send `fiveHourResetsAt` whenever the harness reports one. A usage percentage on its own gives the level and not the trajectory, and the gate uses the reset time to tell a window filling faster than the clock from one that will reset before it matters. Without it, the rate projection cannot run.
 - `sessionId` must be stable for the life of a session. Counts belong to it.
 - `agentId` on `subagent.start` and `subagent.stop` lets ZeroTurn tell subagents apart, so a repeated or out of order stop cannot drive the active count below the truth.
 

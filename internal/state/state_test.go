@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 	"sync"
@@ -225,33 +226,99 @@ func TestRepoHashHidesPath(t *testing.T) {
 	}
 }
 
+// permittedFields is every name the stored record is allowed to carry.
+// Adding a field to Session without adding it here fails the test below,
+// which is the point: the list is the decision about what ZeroTurn keeps,
+// and it has to be made deliberately rather than by writing a struct
+// field. Nothing here may name anything a person wrote.
+var permittedFields = map[string]bool{
+	"schemaVersion": true, "sessionId": true, "repoHash": true, "harness": true, "harnessVersion": true,
+	"model": true, "startedAt": true, "updatedAt": true, "durationMs": true, "contextPercent": true,
+	"contextWindowSize": true, "peakContextPercent": true, "fiveHourPercent": true, "fiveHourResetsAt": true,
+	"fiveHourBasePercent": true, "fiveHourBaseAt": true, "fiveHourBaseReset": true,
+	"sevenDayPercent": true, "sevenDayResetsAt": true, "subagentStarts": true, "subagentStops": true,
+	"activeSubagents": true, "peakActiveSubagents": true, "backgroundTasks": true, "confirmRequests": true,
+	"credentialWarnings":   true,
+	"deniedSubagentStarts": true, "allowedSubagentStarts": true, "directValidations": true,
+	"directGitOperations": true, "lastDecision": true, "activeAgentIds": true,
+	"gateOutcomes": true, "pendingAsk": true,
+	// Inside a gate outcome.
+	"gateOutcomes.decision": true, "gateOutcomes.at": true, "gateOutcomes.approved": true,
+	"gateOutcomes.triggers": true, "gateOutcomes.contextPercent": true, "gateOutcomes.fiveHourPercent": true,
+	"gateOutcomes.sevenDayPercent": true, "gateOutcomes.durationMinutes": true,
+	"gateOutcomes.activeSubagents": true, "gateOutcomes.subagentStarts": true,
+}
+
+// jsonNames walks a type and returns the name of every field it can
+// write, descending into the structs it contains.
+func jsonNames(t reflect.Type, prefix string, out map[string]bool) {
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		name := strings.Split(f.Tag.Get("json"), ",")[0]
+		if name == "" || name == "-" {
+			continue
+		}
+		out[prefix+name] = true
+		ft := f.Type
+		for ft.Kind() == reflect.Ptr || ft.Kind() == reflect.Slice {
+			ft = ft.Elem()
+		}
+		if ft.Kind() == reflect.Struct && ft != reflect.TypeOf(time.Time{}) {
+			jsonNames(ft, prefix+name+".", out)
+		}
+	}
+}
+
 // The stored record may contain only the permitted field list.
+//
+// This is checked against the type rather than against a sample record.
+// Almost every field is omitted when it holds no value, so a record a
+// test builds shows only the fields that test happened to set, and a new
+// field nobody meant to store would pass unnoticed. Three fields did
+// exactly that before this was written.
 func TestStoredRecordHasOnlyPermittedFields(t *testing.T) {
+	declared := map[string]bool{}
+	jsonNames(reflect.TypeOf(Session{}), "", declared)
+
+	for name := range declared {
+		if !permittedFields[name] {
+			t.Errorf("the record can store %q, which is not on the permitted list. "+
+				"Add it deliberately, or do not store it", name)
+		}
+	}
+	for name := range permittedFields {
+		if !declared[name] {
+			t.Errorf("%q is permitted but the record no longer has it, so the list is stale", name)
+		}
+	}
+}
+
+// The type says what can be written. This says what actually is.
+func TestWrittenRecordCarriesOnlyPermittedFields(t *testing.T) {
 	st := testStore(t)
 	v := 50.0
+	reset := int64(1788000000)
 	st.Update("s", "h", func(s *Session) {
 		s.ContextPct = &v
+		s.FiveHourPct = &v
+		s.FiveHourResetsAt = &reset
+		s.SampleFiveHour(v, &reset, time.Now())
 		s.AddActive("agent-1")
 		s.LastDecision = "ask"
+		s.RecordGate("ask", []string{"context"})
 	})
 	b, _ := ioutil.ReadFile(filepath.Join(st.SessionsDir(), "s.json"))
 	var m map[string]interface{}
-	json.Unmarshal(b, &m)
-	permitted := map[string]bool{
-		"schemaVersion": true, "sessionId": true, "repoHash": true, "harness": true, "harnessVersion": true,
-		"model": true, "startedAt": true, "updatedAt": true, "durationMs": true, "contextPercent": true,
-		"contextWindowSize": true, "peakContextPercent": true, "fiveHourPercent": true, "fiveHourResetsAt": true,
-		"sevenDayPercent": true, "sevenDayResetsAt": true, "subagentStarts": true, "subagentStops": true,
-		"activeSubagents": true, "peakActiveSubagents": true, "backgroundTasks": true, "confirmRequests": true,
-		"credentialWarnings":   true,
-		"deniedSubagentStarts": true, "allowedSubagentStarts": true, "directValidations": true,
-		"directGitOperations": true, "lastDecision": true, "activeAgentIds": true,
-		"gateOutcomes": true, "pendingAsk": true,
+	if err := json.Unmarshal(b, &m); err != nil {
+		t.Fatal(err)
 	}
 	for k := range m {
-		if !permitted[k] {
+		if !permittedFields[k] {
 			t.Errorf("unexpected stored field %q", k)
 		}
+	}
+	if _, ok := m["gateOutcomes"]; !ok {
+		t.Fatal("the record under test carries no gate outcome, so the nested fields were not exercised")
 	}
 }
 

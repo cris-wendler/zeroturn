@@ -110,7 +110,11 @@ func credentialGate(st *state.Store, e events.Event) error {
 		return nil
 	}
 	info, err := os.Stat(e.FilePath)
-	if err != nil || info.IsDir() || info.Size() > maxScan {
+	// Only an ordinary file is scanned. A directory has nothing to read,
+	// and a device such as /dev/zero reports a size of zero and then
+	// never reaches the end, which would hang the read the developer is
+	// waiting for.
+	if err != nil || !info.Mode().IsRegular() || info.Size() > maxScan {
 		return nil
 	}
 	content, err := ioutil.ReadFile(e.FilePath)

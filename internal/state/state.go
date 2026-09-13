@@ -186,16 +186,22 @@ var ErrLocked = errors.New("another ZeroTurn process holds the state lock")
 
 const lockStale = 10 * time.Second
 
+// lockTimeout is how long an acquisition waits for a lock another
+// process holds. It is a variable so that tests can shorten it; nothing
+// outside this package changes it.
+var lockTimeout = 5 * time.Second
+
 // Lock serialises state writes between concurrent ZeroTurn processes.
 // An exclusive create is used rather than a platform lock call so the
 // behaviour is the same on every supported operating system.
 func (s *Store) Lock() (func(), error) {
 	p := filepath.Join(s.dir, "state.lock")
-	deadline := time.Now().Add(5 * time.Second)
+	deadline := time.Now().Add(lockTimeout)
 	// The wait starts short and grows. A hook holds the lock for well
 	// under a millisecond, so a fixed wait of tens of milliseconds spent
 	// most of its time asleep while the lock was already free.
 	wait := 200 * time.Microsecond
+	stolen := false
 	for {
 		f, err := os.OpenFile(p, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 		if err == nil {
@@ -203,12 +209,27 @@ func (s *Store) Lock() (func(), error) {
 			f.Close()
 			return func() { os.Remove(p) }, nil
 		}
-		if info, statErr := os.Stat(p); statErr == nil && time.Since(info.ModTime()) > lockStale {
-			os.Remove(p)
-			continue
+		// Only a lock another process holds is worth waiting for. Any
+		// other failure, a directory that cannot be written or a
+		// state.lock that is not a regular file, is returned at once.
+		// Retrying one of those spins until the process is killed, which
+		// costs a whole processor and never ends.
+		if !os.IsExist(err) {
+			return nil, err
 		}
 		if time.Now().After(deadline) {
 			return nil, ErrLocked
+		}
+		// A lock left behind by a process that died is cleared once. If
+		// it cannot be removed it is not ours to clear, so the wait runs
+		// out and the caller is told, rather than trying forever.
+		if !stolen {
+			if info, statErr := os.Stat(p); statErr == nil && time.Since(info.ModTime()) > lockStale {
+				stolen = true
+				if os.Remove(p) == nil {
+					continue
+				}
+			}
 		}
 		time.Sleep(wait)
 		// The wait is capped low. One hook holds the lock for about a

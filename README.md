@@ -310,7 +310,11 @@ Tested on Claude Code 2.1.265. A denial was honoured in a real session and no su
 
 ## GitHub Copilot CLI
 
-Not supported in this version. No Copilot hook payload carries usage, context utilisation, or session duration, so Session Guard has nothing to show there. Custom commands need an interface that GitHub labels experimental. An adapter is planned once those values are exposed.
+Not supported yet. No adapter ships, and nothing here claims Copilot support.
+
+The reason it was cut has changed. A re-reading of the installed CLI, version 1.0.83, found hook events for tool use and subagents, a pre tool decision of allow, deny, or ask, quota snapshots, context window token counts, and a local telemetry file for token usage. The details, and what is still unverified, are in [docs/product-boundary.md](docs/product-boundary.md) and [docs/decisions.md](docs/decisions.md).
+
+An adapter is planned. It will be described as supported when it has been run against a real session, and not before.
 
 ## Harness contract
 

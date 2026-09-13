@@ -78,6 +78,9 @@ func applyTo(s *state.Session, e events.Event) {
 
 		switch e.Type {
 		case events.TypeSubagentStrt:
+			// A subagent starting after an ask is the developer having
+			// approved it. It is the only outcome the harness reports.
+			s.ResolveGate()
 			s.AddActive(e.AgentID)
 		case events.TypeSubagentStop:
 			s.RemoveActive(e.AgentID)
@@ -250,6 +253,13 @@ func cmdEvent(ctx context.Context, args []string) error {
 		applyTo(s, e)
 		res = policy.Evaluate(cfg, *s)
 		s.LastDecision = res.Decision
+		if res.Decision != policy.DecisionAllow {
+			names := make([]string, 0, len(res.Triggers))
+			for _, t := range res.Triggers {
+				names = append(names, t.Name)
+			}
+			s.RecordGate(res.Decision, names)
+		}
 		switch res.Decision {
 		case policy.DecisionAsk:
 			s.ConfirmRequests++

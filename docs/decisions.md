@@ -184,3 +184,15 @@ The costs, stated wherever this is described:
 - A blocked message is erased by the harness rather than handed back, so a long message is lost.
 
 Consequence: the privacy section now describes both guards. The normalized contract is unchanged: there is no prompt event in it, and an adapter never sends message text.
+
+## 18. Thresholds are proposed from behavior, not guessed
+
+Date: 2026-09-12
+
+Decision: ZeroTurn records each gate decision with the measurements behind it, and whether a subagent started afterwards. `zeroturn policy tune` reads those records and proposes thresholds. It never changes one.
+
+Evidence: the defaults were chosen for a first run and are described that way. Nothing else in the tool tells a developer whether they are right, and a guard that asks too often is switched off rather than tuned. The harness reports the one outcome that matters: a subagent starting after an ask means the developer approved it. That is enough to tell an early threshold from one that is doing its job, and it needs nothing about the work itself.
+
+Consequence: a session record holds up to twenty outcomes, each a decision, a time, a list of threshold names, and the measurements at that moment. No text, and nothing a person wrote. The suggestion is printed as the exact command to run, and it stays a suggestion: five observations are required before one appears, and a threshold that is often declined is reported as working rather than changed.
+
+The limit, stated in the output: approval is inferred. A subagent that starts for another reason after an ask would read as an approval.

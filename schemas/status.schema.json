@@ -130,6 +130,16 @@
         "credentialWarnings": {
           "type": "integer",
           "minimum": 0
+        },
+        "pendingAsk": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "gateOutcomes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gateOutcome"
+          }
         }
       }
     },
@@ -216,6 +226,55 @@
         },
         "available": {
           "type": "boolean"
+        }
+      }
+    },
+    "gateOutcome": {
+      "type": "object",
+      "required": [
+        "decision",
+        "at",
+        "approved"
+      ],
+      "additionalProperties": false,
+      "description": "One gate decision and what followed it. Measurements and threshold names only.",
+      "properties": {
+        "decision": {
+          "enum": [
+            "ask",
+            "deny"
+          ]
+        },
+        "at": {
+          "type": "string"
+        },
+        "approved": {
+          "type": "boolean",
+          "description": "Inferred: a subagent starting after an ask means it was approved."
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "contextPercent": {
+          "type": "number"
+        },
+        "fiveHourPercent": {
+          "type": "number"
+        },
+        "sevenDayPercent": {
+          "type": "number"
+        },
+        "durationMinutes": {
+          "type": "integer"
+        },
+        "activeSubagents": {
+          "type": "integer"
+        },
+        "subagentStarts": {
+          "type": "integer"
         }
       }
     }

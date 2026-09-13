@@ -22,6 +22,7 @@ const policyUsage = `zeroturn policy <subcommand>
   check   Evaluate the current session against them, changing nothing
   set     Change one value, for example: zeroturn policy set guard.mode confirm
   reset   Restore the default thresholds
+  tune    Suggest thresholds from what the gate asked and what you did
 `
 
 func cmdPolicy(ctx context.Context, args []string) error {
@@ -39,6 +40,8 @@ func cmdPolicy(ctx context.Context, args []string) error {
 		return policySet(ctx, args[1:])
 	case "reset":
 		return policyReset(ctx, args[1:])
+	case "tune":
+		return cmdTune(ctx, args[1:])
 	default:
 		fmt.Fprint(os.Stderr, policyUsage)
 		return output.Errorf(output.ExitInvalidUsage,

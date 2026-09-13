@@ -46,7 +46,7 @@ Evidence: ZeroTurnaround publishes libraries named `zt-zip`, `zt-exec`, and `zt-
 
 ## 4. The Copilot adapter is deferred
 
-Date: 2026-09-11
+Date: 2026-09-11. Superseded in part by entry 19, which corrects the evidence.
 
 Decision: version one ships no Copilot adapter. The README lists Copilot as planned and explains why.
 
@@ -196,3 +196,15 @@ Evidence: the defaults were chosen for a first run and are described that way. N
 Consequence: a session record holds up to twenty outcomes, each a decision, a time, a list of threshold names, and the measurements at that moment. No text, and nothing a person wrote. The suggestion is printed as the exact command to run, and it stays a suggestion: five observations are required before one appears, and a threshold that is often declined is reported as working rather than changed.
 
 The limit, stated in the output: approval is inferred. A subagent that starts for another reason after an ask would read as an approval.
+
+## 19. The reason Copilot was cut was wrong for the shipped version
+
+Date: 2026-09-12
+
+Finding: entry 4 deferred Copilot because no Copilot hook payload carried usage, context, or session duration. That was taken from the documentation. Reading the installed package, version 1.0.83, shows the CLI ships hook events for `preToolUse`, `subagentStart`, `subagentStop`, `sessionStart`, and `sessionEnd`; a pre tool decision of allow, deny, or ask with a reason, the same shape Claude Code uses; quota snapshots with entitlement, used requests, and reset date; context window token counts; a local telemetry file exporter for token usage; and its own session budget through `--max-ai-credits`. Hooks can be configured as files, without the experimental extension interface.
+
+Decision: the claim is corrected in [product-boundary.md](product-boundary.md) with the file each capability was verified in, and an adapter moves from refused to planned. What ZeroTurn says about Copilot support stays at nothing until an adapter exists and has been run against a real session, because the rule is that support is claimed only where it has been observed.
+
+Still unverified, and therefore still not claimed: the schema of a `.github/hooks` file, whether a hook defined as a command receives the same input as an extension callback and may answer with a permission decision, and whether usage values reach a hook at all rather than only the account interface and the event stream.
+
+The lesson worth keeping: a capability check has a shelf life. This one was three days old. Anything the scope depends on should be re-read from the installed software before it is repeated.

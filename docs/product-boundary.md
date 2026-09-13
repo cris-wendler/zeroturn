@@ -52,6 +52,26 @@ The matcher `Agent` contains only letters, so the harness treats it as an exact 
 
 ### GitHub Copilot CLI 1.0.83
 
+Re-examined on 2026-09-12 by reading the installed package rather than the documentation. The earlier finding below was wrong for this version, and is kept underneath so the correction is visible.
+
+What version 1.0.83 ships, verified in `@github/copilot/node_modules/@github/copilot-darwin-x64`:
+
+| Capability | Where it was verified |
+| --- | --- |
+| Hook events including `preToolUse`, `subagentStart`, `subagentStop`, `sessionStart`, `sessionEnd`, `userPromptSubmitted` | `schemas/api.schema.json`, the `HookType` enum |
+| A pre tool decision of `allow`, `deny`, or `ask`, with a reason | `copilot-sdk/types.d.ts`, `PreToolUseHookOutput` |
+| Quota snapshots: entitlement, used requests, remaining, reset date | `schemas/api.schema.json`, `AccountQuotaSnapshot` and `AccountGetQuotaResult` |
+| Context window token counts | `schemas/api.schema.json`, `HistoryCompactContextWindow` |
+| Token usage exportable locally as JSON lines | `copilot help monitoring`, `COPILOT_OTEL_FILE_EXPORTER_PATH` |
+| Its own session budget, with warnings at 50, 75, and 90 percent | `copilot help limits`, `--max-ai-credits` |
+| Hooks configurable as files, without the experimental extension interface | `copilot help config`, `hooks` keyed by event name, same schema as `.github/hooks/*.json` |
+
+Not verified, and therefore not claimed: the exact schema of a `.github/hooks/*.json` file, whether a hook defined as a command receives the same input as an extension callback and may answer with a permission decision, and whether quota or context values reach a hook at all rather than only the account API and the session event stream.
+
+Consequence for the product: the reason Copilot support was cut no longer holds in the form it was written. The gate and subagent counting look possible through documented interfaces, and session pressure looks possible through the account API or the local telemetry file. What ZeroTurn claims about Copilot stays at nothing until an adapter is written and tested against a real session.
+
+The earlier finding, from 2026-09-10, which this replaces:
+
 Three extension surfaces exist and they are not equivalent.
 
 Hooks are documented and carry no experimental label. The event list includes `preToolUse`, which accepts `permissionDecision` with values allow, deny, or ask. Subagents are spawned through the built in `task` tool, so gating is possible at the tool layer.

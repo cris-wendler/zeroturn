@@ -3,7 +3,10 @@ package main
 import (
 	"bufio"
 	"context"
+	"errors"
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -124,11 +127,30 @@ var confirm = func(question string) (bool, error) {
 	return line == "y" || line == "yes", nil
 }
 
-func flagSetHas(args []string, name string) bool {
-	for _, a := range args {
-		if a == name {
-			return true
+// errHelp reports that help was asked for, which is not a failure. The
+// flag package returns flag.ErrHelp from Parse for -h and --help, and
+// treating that as a parse error made the top level instruction to run
+// zeroturn <command> --help print an error and exit with the code a
+// harness reads as a blocking one.
+var errHelp = errors.New("help requested")
+
+// parseFlags reads the flags for one command. Asking for help prints the
+// command's own usage and the flags it accepts, and stops.
+func parseFlags(fs *flag.FlagSet, args []string, usage, command string) error {
+	// The flag package prints its own usage before returning the error.
+	// This prints the project's instead.
+	fs.SetOutput(ioutil.Discard)
+	fs.Usage = func() {}
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			fmt.Print(usage)
+			fs.SetOutput(os.Stdout)
+			fmt.Println("Flags:")
+			fs.PrintDefaults()
+			return errHelp
 		}
+		return output.Errorf(output.ExitInvalidUsage, "zeroturn could not read the flags",
+			err.Error(), "run zeroturn "+command+" --help")
 	}
-	return false
+	return nil
 }

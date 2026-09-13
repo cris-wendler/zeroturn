@@ -10,13 +10,19 @@ import (
 	"github.com/cris-wendler/zeroturn/internal/output"
 )
 
+const capabilitiesUsage = `zeroturn capabilities [--json]
+
+Print the contract this build speaks: the version, the event types, the
+guard modes, the commands, the exit codes, and the fields that are
+recorded and never recorded. An adapter should read this rather than
+assume.
+`
+
 func cmdCapabilities(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("capabilities", flag.ContinueOnError)
-	fs.SetOutput(os.Stderr)
 	asJSON := fs.Bool("json", false, "print machine readable output")
-	if err := fs.Parse(args); err != nil {
-		return output.Errorf(output.ExitInvalidUsage, "zeroturn could not read the flags", err.Error(),
-			"run zeroturn capabilities --json")
+	if err := parseFlags(fs, args, capabilitiesUsage, "capabilities"); err != nil {
+		return err
 	}
 	doc := capabilities.Describe(Version)
 	if *asJSON {

@@ -40,13 +40,19 @@ type tuneReport struct {
 
 const tuneNote = "Approval is inferred: a subagent starting after an ask means it was approved. Nothing about the work itself is recorded."
 
+const tuneUsage = `zeroturn policy tune [--json] [--days <n>]
+
+Suggest thresholds from what the gate asked and what happened next. A
+threshold that always asks and is always approved is asking too early.
+It never changes a setting itself.
+`
+
 func cmdTune(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("policy tune", flag.ContinueOnError)
-	fs.SetOutput(os.Stderr)
 	asJSON := fs.Bool("json", false, "print machine readable output")
 	days := fs.Int("days", 7, "how many days of observations to read")
-	if err := fs.Parse(args); err != nil {
-		return output.Errorf(output.ExitInvalidUsage, "zeroturn could not read the flags", err.Error(), "run zeroturn policy tune --help")
+	if err := parseFlags(fs, args, tuneUsage, "policy tune"); err != nil {
+		return err
 	}
 	repo, err := openRepo(ctx)
 	if err != nil {

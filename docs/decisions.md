@@ -279,6 +279,26 @@ The second test recorded an exception rather than hiding it. A message on its wa
 
 The lesson: a test that asserts an absence has to be shown failing. An absence is the default state of an empty object, and a test that never sees the thing it forbids is indistinguishable from one that works.
 
+## 24. Asking for help is not a failure
+
+Date: 2026-09-12
+
+Finding: the top level usage told a reader to run `zeroturn <command> --help`. Doing so printed the flag package's own listing, in a format the rest of the program does not use, followed by an error saying the flags could not be read, and exited 2. Every command that takes flags behaved this way. `ship`, which parses its arguments by hand, was the only one that did not.
+
+The exit code made it more than untidy. Two is invalid usage here, and it is also the code a harness reads as a blocking error.
+
+Two worse cases turned up while fixing it. `zeroturn integrate --help` reported that `--help` was not a flag it accepts. `zeroturn policy reset --help` restored the default thresholds: the command took no notice of its arguments, so asking it what it does made it do it.
+
+Decision: one helper reads the flags for every command. A request for help prints that command's own usage and the flags it accepts, and stops with success. Commands that read a word before their flags, which are `report`, `policy`, and `integrate`, answer it before that word is interpreted. Usage text was written for the six commands that had none.
+
+`policy reset` now refuses any argument it does not understand rather than ignoring it. A command that writes should not treat an unrecognised word as permission to proceed.
+
+`zeroturn event` answers help too, and still exits 0 on every other failure, because a gate that fails must not stop a session.
+
+Consequence: a test runs `--help` against every command and subcommand and requires success, the command's own name in the output, no flag package listing, and no error text. A second test keeps an unknown flag an error, with the wording and the code it had before.
+
+The exit codes gained the test they never had. Every assertion in the suite used the named constant, so renumbering one would have left the suite green and broken every adapter. The numbers are now written out once, and the capabilities document is checked against them.
+
 ## 25. An adapter can send what the gate measures
 
 Date: 2026-09-12
@@ -292,4 +312,3 @@ Decision: `fiveHourResetsAt` and `sevenDayResetsAt` are part of the normalized e
 Two tests hold the two paths together. The first parses the same session from a Claude payload and from a normalized one and requires the resulting events to be equal. The second walks the event type and fails when a field exists that the adapter facing shape has no way to carry, with the deliberate exceptions named in the code. Both were confirmed to fail against the shape that shipped this morning.
 
 The lesson: a contract with two implementations needs a test that compares them. Testing each against its own fixtures proves only that each is self consistent, which is exactly what a divergence looks like from the inside.
-

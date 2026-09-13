@@ -33,14 +33,23 @@ const (
 	checkFail = "fail"
 )
 
+const doctorUsage = `zeroturn doctor [--json] [--compat [--live]]
+
+Check the local installation: the executable, the harnesses found, the
+state directory, and the repository.
+
+--compat tests that guard decisions are produced correctly, from
+fixtures. Adding --live starts one real coding session in a throwaway
+repository and reports what the harness actually did with the answer.
+`
+
 func cmdDoctor(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("doctor", flag.ContinueOnError)
-	fs.SetOutput(os.Stderr)
 	asJSON := fs.Bool("json", false, "print machine readable output")
 	compat := fs.Bool("compat", false, "test that guard decisions are produced correctly")
 	live := fs.Bool("live", false, "with --compat, start one real coding session to test the harness response")
-	if err := fs.Parse(args); err != nil {
-		return output.Errorf(output.ExitInvalidUsage, "zeroturn could not read the flags", err.Error(), "run zeroturn doctor --help")
+	if err := parseFlags(fs, args, doctorUsage, "doctor"); err != nil {
+		return err
 	}
 
 	var checks []check

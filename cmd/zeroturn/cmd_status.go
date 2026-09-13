@@ -23,15 +23,22 @@ type statusJSON struct {
 	Note      string         `json:"note,omitempty"`
 }
 
+const statusUsage = `zeroturn status [--json] [--stdin --harness <name>]
+
+Show the condition of the current session: context use, the usage
+windows, how long it has run, and how many subagents are active.
+
+With --stdin it reads one harness status payload and prints a status
+line, which is how a harness draws it on every repaint.
+`
+
 func cmdStatus(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("status", flag.ContinueOnError)
-	fs.SetOutput(os.Stderr)
 	stdin := fs.Bool("stdin", false, "read a harness status payload from standard input")
 	harness := fs.String("harness", "claude", "harness sending the payload when --stdin is used")
 	asJSON := fs.Bool("json", false, "print machine readable output")
-	if err := fs.Parse(args); err != nil {
-		return output.Errorf(output.ExitInvalidUsage, "zeroturn could not read the flags",
-			err.Error(), "run zeroturn status --help")
+	if err := parseFlags(fs, args, statusUsage, "status"); err != nil {
+		return err
 	}
 
 	if *stdin {

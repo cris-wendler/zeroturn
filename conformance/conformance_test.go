@@ -195,6 +195,18 @@ func TestNormalizedEventContract(t *testing.T) {
 		t.Fatalf("a valid normalized event was not accepted: exit %d %s", code, errText)
 	}
 
+	// The window reset times are what the rate projection measures
+	// against. An adapter that cannot send them gets the level but not
+	// the trajectory, which is how that feature shipped Claude only.
+	windows, err := ioutil.ReadFile(filepath.Join("..", "fixtures", "normalized", "status-with-windows.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	mustFollow(t, "normalized-event.schema.json", windows)
+	if _, errText, code := run(t, work, string(windows), "event", "--harness", "normalized"); code != 0 || errText != "" {
+		t.Fatalf("a normalized status carrying window reset times was not accepted: exit %d %s", code, errText)
+	}
+
 	bad, err := ioutil.ReadFile(filepath.Join("..", "fixtures", "normalized", "bad-contract.json"))
 	if err != nil {
 		t.Fatal(err)

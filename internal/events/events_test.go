@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -209,5 +210,82 @@ func TestPreToolUseForAnotherToolIsUnsupported(t *testing.T) {
 	_, err := ParseClaude(strings.NewReader(`{"hook_event_name":"PreToolUse","tool_name":"Grep"}`), "PreToolUse")
 	if !IsUnsupportedTool(err) {
 		t.Fatalf("err %v", err)
+	}
+}
+
+// An adapter for another harness has to be able to say everything the
+// Claude path says. When the two parsers disagree, a feature built on
+// the Claude payload is silently unavailable everywhere else: the rate
+// projection shipped that way, because the normalized event could not
+// carry a window reset time and nothing compared the two.
+func TestBothParsersCarryTheSameSessionFacts(t *testing.T) {
+	const claude = `{
+		"session_id": "s-1",
+		"cwd": "/tmp/project",
+		"version": "2.1.265",
+		"model": {"display_name": "Opus"},
+		"context_window": {"used_percentage": 76, "context_window_size": 200000},
+		"rate_limits": {
+			"five_hour": {"used_percentage": 81, "resets_at": 1788000000},
+			"seven_day": {"used_percentage": 47, "resets_at": 1788400000}
+		},
+		"cost": {"total_duration_ms": 11520000}
+	}`
+	const normalized = `{
+		"contract": "zeroturn.event/1",
+		"harness": "other",
+		"harnessVersion": "2.1.265",
+		"type": "status",
+		"sessionId": "s-1",
+		"cwd": "/tmp/project",
+		"model": "Opus",
+		"contextPercent": 76,
+		"contextWindowSize": 200000,
+		"fiveHourPercent": 81,
+		"fiveHourResetsAt": 1788000000,
+		"sevenDayPercent": 47,
+		"sevenDayResetsAt": 1788400000,
+		"durationMs": 11520000
+	}`
+
+	fromClaude, err := ParseClaude(strings.NewReader(claude), "statusline")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fromAdapter, err := ParseNormalized(strings.NewReader(normalized))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The harness name is meant to differ. Everything describing the
+	// session has to match.
+	fromClaude.Harness, fromAdapter.Harness = "", ""
+	fromClaude.Type, fromAdapter.Type = "", ""
+
+	if !reflect.DeepEqual(fromClaude, fromAdapter) {
+		t.Errorf("the two parsers disagree about the same session\nclaude:     %+v\nnormalized: %+v",
+			fromClaude, fromAdapter)
+	}
+}
+
+// Every measurement the Claude payload can report must have somewhere to
+// live in the adapter facing shape, or an adapter cannot report it.
+func TestTheNormalizedShapeCanCarryEveryMeasurement(t *testing.T) {
+	normalized := map[string]bool{}
+	nt := reflect.TypeOf(Normalized{})
+	for i := 0; i < nt.NumField(); i++ {
+		normalized[nt.Field(i).Name] = true
+	}
+	// Fields of Event the normalized form deliberately does not carry.
+	// Prompt exists only on the Claude path, for the prompt guard.
+	skip := map[string]bool{"Contract": true, "Prompt": true}
+
+	et := reflect.TypeOf(Event{})
+	for i := 0; i < et.NumField(); i++ {
+		name := et.Field(i).Name
+		if skip[name] || normalized[name] {
+			continue
+		}
+		t.Errorf("an event can carry %s and an adapter has no way to send it", name)
 	}
 }

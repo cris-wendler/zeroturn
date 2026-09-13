@@ -232,23 +232,28 @@ func IsUnsupportedTool(err error) bool {
 
 // Normalized is the JSON form a non Claude adapter sends to ZeroTurn.
 type Normalized struct {
-	Contract        string   `json:"contract"`
-	Harness         string   `json:"harness"`
-	HarnessVersion  string   `json:"harnessVersion,omitempty"`
-	Type            string   `json:"type"`
-	SessionID       string   `json:"sessionId"`
-	CWD             string   `json:"cwd,omitempty"`
-	Model           string   `json:"model,omitempty"`
-	ContextPct      *float64 `json:"contextPercent,omitempty"`
-	ContextSize     *int     `json:"contextWindowSize,omitempty"`
-	FiveHourPct     *float64 `json:"fiveHourPercent,omitempty"`
-	SevenDayPct     *float64 `json:"sevenDayPercent,omitempty"`
-	DurationMS      *int64   `json:"durationMs,omitempty"`
-	AgentID         string   `json:"agentId,omitempty"`
-	FilePath        string   `json:"filePath,omitempty"`
-	AgentType       string   `json:"agentType,omitempty"`
-	BackgroundTasks *int     `json:"backgroundTasks,omitempty"`
-	EndReason       string   `json:"endReason,omitempty"`
+	Contract       string   `json:"contract"`
+	Harness        string   `json:"harness"`
+	HarnessVersion string   `json:"harnessVersion,omitempty"`
+	Type           string   `json:"type"`
+	SessionID      string   `json:"sessionId"`
+	CWD            string   `json:"cwd,omitempty"`
+	Model          string   `json:"model,omitempty"`
+	ContextPct     *float64 `json:"contextPercent,omitempty"`
+	ContextSize    *int     `json:"contextWindowSize,omitempty"`
+	FiveHourPct    *float64 `json:"fiveHourPercent,omitempty"`
+	// The reset times are what the rate projection measures against. An
+	// adapter that reports a usage percentage without one gives the
+	// level but not the trajectory.
+	FiveHourResetsAt *int64   `json:"fiveHourResetsAt,omitempty"`
+	SevenDayPct      *float64 `json:"sevenDayPercent,omitempty"`
+	SevenDayResetsAt *int64   `json:"sevenDayResetsAt,omitempty"`
+	DurationMS       *int64   `json:"durationMs,omitempty"`
+	AgentID          string   `json:"agentId,omitempty"`
+	FilePath         string   `json:"filePath,omitempty"`
+	AgentType        string   `json:"agentType,omitempty"`
+	BackgroundTasks  *int     `json:"backgroundTasks,omitempty"`
+	EndReason        string   `json:"endReason,omitempty"`
 }
 
 // ParseNormalized reads the adapter facing event format.
@@ -279,7 +284,8 @@ func ParseNormalized(r io.Reader) (Event, error) {
 		Contract: Contract, Harness: n.Harness, HarnessVersion: n.HarnessVersion,
 		Type: n.Type, SessionID: n.SessionID, CWD: n.CWD, Model: n.Model,
 		ContextPct: n.ContextPct, ContextSize: n.ContextSize,
-		FiveHourPct: n.FiveHourPct, SevenDayPct: n.SevenDayPct,
+		FiveHourPct: n.FiveHourPct, FiveHourResetsAt: n.FiveHourResetsAt,
+		SevenDayPct: n.SevenDayPct, SevenDayResetsAt: n.SevenDayResetsAt,
 		DurationMS: n.DurationMS, AgentID: n.AgentID, AgentType: n.AgentType, FilePath: n.FilePath,
 		BackgroundTasks: n.BackgroundTasks, EndReason: n.EndReason,
 	}, nil

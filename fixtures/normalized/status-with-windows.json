@@ -1,0 +1,16 @@
+{
+  "contract": "zeroturn.event/1",
+  "harness": "example",
+  "harnessVersion": "1.0.0",
+  "type": "status",
+  "sessionId": "fixture-windows",
+  "cwd": "/fixture/repo",
+  "model": "Example",
+  "contextPercent": 41,
+  "contextWindowSize": 200000,
+  "fiveHourPercent": 41,
+  "fiveHourResetsAt": 1788000000,
+  "sevenDayPercent": 20,
+  "sevenDayResetsAt": 1788400000,
+  "durationMs": 3600000
+}

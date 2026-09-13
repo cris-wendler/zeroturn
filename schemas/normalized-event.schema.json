@@ -70,6 +70,13 @@
       "minimum": 0,
       "maximum": 100
     },
+    "fiveHourResetsAt": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "When the five hour window resets, as seconds since the epoch. Send it whenever the harness reports one: with it ZeroTurn can tell a window filling faster than the clock from one that will reset in time, and without it only the level is known."
+    },
     "sevenDayPercent": {
       "type": [
         "number",
@@ -77,6 +84,13 @@
       ],
       "minimum": 0,
       "maximum": 100
+    },
+    "sevenDayResetsAt": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "When the seven day window resets, as seconds since the epoch."
     },
     "durationMs": {
       "type": [

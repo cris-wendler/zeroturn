@@ -191,6 +191,12 @@ const lockStale = 10 * time.Second
 // outside this package changes it.
 var lockTimeout = 5 * time.Second
 
+// missingBeforeGivingUp is how many times in a row the lock entry may be
+// absent while it still cannot be created before the directory is taken
+// to be one nothing can be written to. A lock being released is absent
+// for a moment, so a single reading concludes nothing.
+const missingBeforeGivingUp = 20
+
 // Lock serialises state writes between concurrent ZeroTurn processes.
 // An exclusive create is used rather than a platform lock call so the
 // behaviour is the same on every supported operating system.
@@ -202,6 +208,7 @@ func (s *Store) Lock() (func(), error) {
 	// most of its time asleep while the lock was already free.
 	wait := 200 * time.Microsecond
 	stolen := false
+	missing := 0
 	for {
 		f, err := os.OpenFile(p, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 		if err == nil {
@@ -209,13 +216,26 @@ func (s *Store) Lock() (func(), error) {
 			f.Close()
 			return func() { os.Remove(p) }, nil
 		}
-		// Only a lock another process holds is worth waiting for. Any
-		// other failure, a directory that cannot be written or a
-		// state.lock that is not a regular file, is returned at once.
-		// Retrying one of those spins until the process is killed, which
-		// costs a whole processor and never ends.
-		if !os.IsExist(err) {
-			return nil, err
+		// The error alone cannot say whether another process holds the
+		// lock. Windows reports a lock file somebody else holds as
+		// access denied rather than as an existing file, and reports one
+		// in the middle of being released the same way, while the entry
+		// is briefly neither there nor gone.
+		//
+		// So the lock entry is what is examined, and a directory nothing
+		// can be created in is recognised by the entry staying absent
+		// across several attempts rather than by a single reading. A
+		// release race keeps waiting, which it should, and a directory
+		// that cannot be written still gives up in a few milliseconds
+		// instead of spinning on a processor forever.
+		info, statErr := os.Stat(p)
+		if statErr != nil {
+			missing++
+			if missing > missingBeforeGivingUp {
+				return nil, err
+			}
+		} else {
+			missing = 0
 		}
 		if time.Now().After(deadline) {
 			return nil, ErrLocked
@@ -223,12 +243,10 @@ func (s *Store) Lock() (func(), error) {
 		// A lock left behind by a process that died is cleared once. If
 		// it cannot be removed it is not ours to clear, so the wait runs
 		// out and the caller is told, rather than trying forever.
-		if !stolen {
-			if info, statErr := os.Stat(p); statErr == nil && time.Since(info.ModTime()) > lockStale {
-				stolen = true
-				if os.Remove(p) == nil {
-					continue
-				}
+		if !stolen && statErr == nil && time.Since(info.ModTime()) > lockStale {
+			stolen = true
+			if os.Remove(p) == nil {
+				continue
 			}
 		}
 		time.Sleep(wait)

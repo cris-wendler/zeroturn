@@ -253,7 +253,9 @@ Decision: only a lock another process holds is waited for. Any other failure is 
 
 Consequence: `Lock` can return an error that is not `ErrLocked`. Every caller already treats a failure to lock as a reason to do nothing, and `zeroturn event` still exits 0, so no behavior changes for a healthy installation. The acquisition deadline became a package variable so a test can shorten it instead of waiting five seconds for each case.
 
-The lesson: the retry loop was written for contention and tested for contention, and both tests passed. Nothing asked what happened when the operation could not succeed at all. A loop that retries needs a test for the case that never succeeds, not only for the case that succeeds late.
+The first attempt at this fix retried only when the error said the file already existed, and Windows failed it. A lock file another process holds, or one being deleted, is reported there as access denied rather than as an existing file, so sixty concurrent writers lost ten of their updates. The error code cannot carry this decision. What both systems answer the same way is whether the lock entry is there: if it is, another process may be holding it and waiting is right; if it is not and the file still could not be created, the directory cannot be written and waiting cannot help.
+
+The lesson: the retry loop was written for contention and tested for contention, and both tests passed. Nothing asked what happened when the operation could not succeed at all. A loop that retries needs a test for the case that never succeeds, not only for the case that succeeds late. The second lesson is that the fix for it was wrong on a system nobody ran it on, and continuous integration on three systems is what said so.
 
 Still open, and recorded rather than fixed here: the lock has no ownership mark, so a lock judged stale and removed while its holder is merely slow can be removed twice; and the staleness limit is longer than the acquisition deadline, so one invocation cannot recover from a holder that died moments ago.
 

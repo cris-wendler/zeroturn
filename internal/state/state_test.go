@@ -440,6 +440,12 @@ func TestLockReturnsWhenTheLockCannotBeCreated(t *testing.T) {
 			os.Chtimes(p, old, old)
 		},
 		"directory is read only": func(t *testing.T, dir string) {
+			if runtime.GOOS == "windows" {
+				// Windows does not take directory permissions from the
+				// mode bits, so the directory stays writable and there
+				// is nothing to test here.
+				t.Skip("directory permissions are not set by chmod on this system")
+			}
 			p := filepath.Join(dir, "state.lock")
 			if err := ioutil.WriteFile(p, []byte("99999\n"), 0600); err != nil {
 				t.Fatal(err)

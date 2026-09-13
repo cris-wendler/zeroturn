@@ -241,3 +241,21 @@ Two spellings would have failed silently if an adapter had guessed them: the pro
 
 The lesson, again: the answer was in the binary, not in the schemas. Entry 19 said a capability check has a shelf life. This one adds that a capability check has a depth, and stopping at the published schema is not the bottom.
 
+## 23. The privacy tests are checked against the type, not against a sample
+
+Date: 2026-09-12
+
+Finding: the two tests that guard the promise this project rests on could not fail.
+
+The first checks the stored record against a list of permitted fields. It built one record, set three values on it, and inspected the keys that appeared. Almost every field is omitted when it holds no value, so a field the sample did not set never appeared, and a field nobody meant to store passed unnoticed. The three fields added by the rate projection were missing from the permitted list and the test still passed.
+
+The second asserts that no transcript path survives parsing. No payload in its table carried one.
+
+Decision: the record is compared against the type. Every name `Session` can write, including the names inside a gate outcome, must be on the permitted list, and a name on the list that no longer exists fails too, so the list cannot go stale in either direction. A second test keeps the check against what is actually written, because the type says what can be stored and only a written record says what is. The event payloads now carry a marker in a transcript path, a subagent prompt, a typed message, an assistant reply, and file content, and the test asserts the marker does not survive.
+
+Both were confirmed to fail before being relied on. Adding a `lastPromptText` field to the record fails the first. Binding an assistant reply in the decoder fails the second.
+
+The second test recorded an exception rather than hiding it. A message on its way out is bound on the prompt event, because the prompt guard cannot scan a message it has not read. It stays in memory, it is never stored, and the test clears that one field and checks everything else, so the exception is visible in the code rather than implied by a passing test.
+
+The lesson: a test that asserts an absence has to be shown failing. An absence is the default state of an empty object, and a test that never sees the thing it forbids is indistinguishable from one that works.
+

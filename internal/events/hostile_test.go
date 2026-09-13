@@ -12,6 +12,9 @@ import (
 // content it does not declare.
 func TestHostilePayloads(t *testing.T) {
 	huge := strings.Repeat("a", 1<<20)
+	// A marker that appears nowhere else, so finding it in a parsed
+	// event means that event carried it out of the payload.
+	const secret = "zt-private-marker-9c4f1a"
 	cases := map[string]string{
 		"empty object":            `{}`,
 		"empty array":             `[]`,
@@ -32,6 +35,18 @@ func TestHostilePayloads(t *testing.T) {
 		"a null byte":             "{\"session_id\": \"a\\u0000b\"}",
 		"unicode":                 `{"session_id": "会话", "cwd": "/tmp/项目"}`,
 		"an enormous array":       `{"background_tasks": [` + strings.TrimSuffix(strings.Repeat(`{},`, 5000), ",") + `]}`,
+
+		// These carry what the harness really sends and ZeroTurn must
+		// never keep. Without them the check below cannot fail, because
+		// a payload with no private content proves nothing about a
+		// decoder that discards it.
+		"a transcript path": `{"session_id":"a","transcript_path":"/Users/someone/.claude/projects/x/` + secret + `.jsonl"}`,
+		"a subagent prompt": `{"session_id":"a","tool_name":"Agent","tool_input":{"prompt":"` + secret + `","description":"` + secret + `"}}`,
+		"a typed message":   `{"session_id":"a","prompt":"` + secret + `"}`,
+		"an assistant reply": `{"session_id":"a","last_assistant_message":"` + secret + `",` +
+			`"message":{"content":[{"type":"text","text":"` + secret + `"}]}}`,
+		"a file path and its content": `{"session_id":"a","tool_name":"Write",` +
+			`"tool_input":{"file_path":"/tmp/x","content":"` + secret + `"}}`,
 	}
 	for name, payload := range cases {
 		for _, event := range []string{"", "PreToolUse", "Stop", "SessionEnd", "UserPromptSubmit", "SubagentStart"} {
@@ -48,6 +63,24 @@ func TestHostilePayloads(t *testing.T) {
 				blob, merr := json.Marshal(e)
 				if merr != nil {
 					t.Errorf("%s: the parsed event cannot be marshalled: %v", name, merr)
+				}
+				// The decoder declares only permitted fields, so nothing
+				// private can be bound to a variable in the first place.
+				// This is what proves that, against payloads that carry
+				// it.
+				//
+				// There is one deliberate exception. A message on its way
+				// out is bound on the prompt event so the prompt guard
+				// can scan it for credentials in memory. It is never
+				// stored, and the Prompt field is cleared here so the
+				// rest of the event is still checked.
+				checked := e
+				if checked.Type == TypePromptSubmit {
+					checked.Prompt = ""
+				}
+				blob2, _ := json.Marshal(checked)
+				if strings.Contains(string(blob2), secret) {
+					t.Errorf("%s with event %q kept private content", name, event)
 				}
 				if strings.Contains(string(blob), "transcript") {
 					t.Errorf("%s: the event kept a transcript path", name)

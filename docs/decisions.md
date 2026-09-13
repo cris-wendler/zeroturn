@@ -279,20 +279,6 @@ The second test recorded an exception rather than hiding it. A message on its wa
 
 The lesson: a test that asserts an absence has to be shown failing. An absence is the default state of an empty object, and a test that never sees the thing it forbids is indistinguishable from one that works.
 
-## 25. An adapter can send what the gate measures
-
-Date: 2026-09-12
-
-Finding: the rate projection was built on the five hour reset time, the contract version was raised to 1.2.0 for it, and the adapter facing event had no field for a reset time. The schema declares `additionalProperties: false`, so an adapter could not even send one legally. `Project` returns nothing without it, so the feature was silently unavailable to every harness except Claude Code.
-
-Nothing caught it because nothing compared the two parsers. Each was tested against its own payloads, and each passed.
-
-Decision: `fiveHourResetsAt` and `sevenDayResetsAt` are part of the normalized event and the published schema, and the contract document tells an adapter to send them and says what is lost without them.
-
-Two tests hold the two paths together. The first parses the same session from a Claude payload and from a normalized one and requires the resulting events to be equal. The second walks the event type and fails when a field exists that the adapter facing shape has no way to carry, with the deliberate exceptions named in the code. Both were confirmed to fail against the shape that shipped this morning.
-
-The lesson: a contract with two implementations needs a test that compares them. Testing each against its own fixtures proves only that each is self consistent, which is exactly what a divergence looks like from the inside.
-
 ## 24. Asking for help is not a failure
 
 Date: 2026-09-12
@@ -313,3 +299,16 @@ Consequence: a test runs `--help` against every command and subcommand and requi
 
 The exit codes gained the test they never had. Every assertion in the suite used the named constant, so renumbering one would have left the suite green and broken every adapter. The numbers are now written out once, and the capabilities document is checked against them.
 
+## 25. An adapter can send what the gate measures
+
+Date: 2026-09-12
+
+Finding: the rate projection was built on the five hour reset time, the contract version was raised to 1.2.0 for it, and the adapter facing event had no field for a reset time. The schema declares `additionalProperties: false`, so an adapter could not even send one legally. `Project` returns nothing without it, so the feature was silently unavailable to every harness except Claude Code.
+
+Nothing caught it because nothing compared the two parsers. Each was tested against its own payloads, and each passed.
+
+Decision: `fiveHourResetsAt` and `sevenDayResetsAt` are part of the normalized event and the published schema, and the contract document tells an adapter to send them and says what is lost without them.
+
+Two tests hold the two paths together. The first parses the same session from a Claude payload and from a normalized one and requires the resulting events to be equal. The second walks the event type and fails when a field exists that the adapter facing shape has no way to carry, with the deliberate exceptions named in the code. Both were confirmed to fail against the shape that shipped this morning.
+
+The lesson: a contract with two implementations needs a test that compares them. Testing each against its own fixtures proves only that each is self consistent, which is exactly what a divergence looks like from the inside.

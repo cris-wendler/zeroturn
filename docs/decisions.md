@@ -241,6 +241,26 @@ Two spellings would have failed silently if an adapter had guessed them: the pro
 
 The lesson, again: the answer was in the binary, not in the schemas. Entry 19 said a capability check has a shelf life. This one adds that a capability check has a depth, and stopping at the published schema is not the bottom.
 
+## 22. The state lock answers, whatever is wrong with the directory
+
+Date: 2026-09-12
+
+Finding: an architecture review found that `Lock` could not fail. Its retry loop treated every failure to create the lock file as a lock somebody else was holding. When the entry looked stale it removed it and repeated, without checking the deadline and without sleeping. If the removal could not succeed, the loop spun on a processor and never ended.
+
+It was reproduced through the real executable, not only in a test. With `state.lock` present as a directory rather than a file, `zeroturn event` ran at one whole processor and never exited. A read only state directory did the same. That contradicts the fail open rule in [harness-contract.md](harness-contract.md), which promises that an unreadable state directory ends in silence and exit 0. A hook that never returns is worse than one that fails: it holds the harness until its timeout and then keeps burning a processor after it.
+
+Decision: only a lock another process holds is waited for. Any other failure is returned at once, the deadline is checked on every pass, and a lock left behind by a dead process is cleared once rather than repeatedly. The same scenario now exits 0 in the time the deadline allows.
+
+Consequence: `Lock` can return an error that is not `ErrLocked`. Every caller already treats a failure to lock as a reason to do nothing, and `zeroturn event` still exits 0, so no behavior changes for a healthy installation. The acquisition deadline became a package variable so a test can shorten it instead of waiting five seconds for each case.
+
+Two attempts at this fix were wrong, and Windows failed both. The first retried only when the error said the file already existed: a lock another process holds is reported there as access denied rather than as an existing file, so sixty concurrent writers lost ten of their updates. The second looked at whether the lock entry was there, which is right in principle, but a lock in the middle of being released is briefly neither there nor gone, and a writer that arrived in that moment gave up.
+
+What works is to treat the entry staying absent as the signal, rather than one reading of it. A directory nothing can be created in shows an absent entry every time, and gives up in a few milliseconds. A release race shows it once and keeps waiting.
+
+The lesson: the retry loop was written for contention and tested for contention, and both tests passed. Nothing asked what happened when the operation could not succeed at all. A loop that retries needs a test for the case that never succeeds, not only for the case that succeeds late. The second lesson is that the fix for it was wrong on a system nobody ran it on, and continuous integration on three systems is what said so.
+
+Still open, and recorded rather than fixed here: the lock has no ownership mark, so a lock judged stale and removed while its holder is merely slow can be removed twice; and the staleness limit is longer than the acquisition deadline, so one invocation cannot recover from a holder that died moments ago.
+
 ## 23. The privacy tests are checked against the type, not against a sample
 
 Date: 2026-09-12

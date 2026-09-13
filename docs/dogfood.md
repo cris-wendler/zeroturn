@@ -215,7 +215,7 @@ A second project on the same machine, a web application with its own test and li
   "guard": {
     "mode": "confirm",
     "context": { "warn": 70, "confirm": 80, "critical": 90 },
-    "limits": { "fiveHourWarn": 75, "sevenDayWarn": 75 },
+    "limits": { "fiveHourWarn": 75, "sevenDayWarn": 75, "projection": "on" },
     "session": { "durationWarnMinutes": 240, "activeSubagentsWarn": 2, "subagentStartsWarn": 4 }
   },
   "verify": {

@@ -8,8 +8,9 @@ import (
 
 // ContractVersion covers the command surface, the event shape, the JSON
 // output, and the exit codes together. 1.1.0 added the file.read event
-// and the credential guard, which take nothing away from 1.0.0.
-const ContractVersion = "1.1.0"
+// and the credential guard. 1.2.0 added the rate projection: three
+// session fields and the projection trigger. Both take nothing away.
+const ContractVersion = "1.2.0"
 
 // ClaudeTestedVersion is the harness release on which allow and deny were
 // observed end to end. Other releases may work, and are reported as

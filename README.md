@@ -196,7 +196,7 @@ zeroturn doctor                    # check the installation
   "guard": {
     "mode": "observe",
     "context": { "warn": 70, "confirm": 80, "critical": 90 },
-    "limits": { "fiveHourWarn": 75, "sevenDayWarn": 75 },
+    "limits": { "fiveHourWarn": 75, "sevenDayWarn": 75, "projection": "on" },
     "session": { "durationWarnMinutes": 240, "activeSubagentsWarn": 2, "subagentStartsWarn": 4 },
     "credentials": { "mode": "ask", "prompts": "off" }
   },
@@ -223,6 +223,20 @@ zeroturn policy set guard.mode confirm
 zeroturn policy set guard.context.confirm 85
 zeroturn policy reset
 ```
+
+### Rate, not only level
+
+A percentage on its own is a weak question. Seventy five percent of the five hour window is fine when the window resets in ten minutes and a problem when it resets in four hours, and a threshold cannot tell those apart. So the gate also measures the rate.
+
+ZeroTurn keeps the first five hour reading of the window that is running now, and from it works out how fast the window is being used and where that lands when it resets:
+
+```text
+New subagent requires approval. Five hour usage is 41% and rising 19% an hour, with 3h20m left before it resets.
+```
+
+Forty one percent crosses no threshold. The trajectory does. A session that is using the window heavily but will still finish inside it says nothing at all.
+
+The estimate is treated as an estimate. It never denies, even in Strict mode. It is ignored when the rate has been measured over less than fifteen minutes, when usage is not rising, when the window has already reset, and when the reading belongs to a window that has rolled over. Turn it off with `zeroturn policy set guard.limits.projection off`, which restores threshold only behavior.
 
 ### Thresholds from what actually happened
 

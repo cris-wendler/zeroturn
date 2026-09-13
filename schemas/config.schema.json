@@ -77,6 +77,13 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 100
+            },
+            "projection": {
+              "enum": [
+                "on",
+                "off"
+              ],
+              "description": "Whether the guard also asks when the rate of use implies the five hour window runs out before it resets, whatever the reading is now. on is the default. A file written before this setting existed reads as on."
             }
           }
         },

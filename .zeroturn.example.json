@@ -9,7 +9,8 @@
     },
     "limits": {
       "fiveHourWarn": 75,
-      "sevenDayWarn": 75
+      "sevenDayWarn": 75,
+      "projection": "on"
     },
     "session": {
       "durationWarnMinutes": 240,

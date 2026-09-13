@@ -238,3 +238,40 @@ func TestTurnEndClearsSubagentsThatNeverStopped(t *testing.T) {
 		t.Fatalf("the report lost what happened: %+v", rep)
 	}
 }
+
+// The rate of use is measured from the first reading of the window that
+// is running now, so a repaint that reports a higher figure must not
+// move the baseline and erase the rate.
+func TestStatusLineKeepsTheFirstReadingOfTheWindow(t *testing.T) {
+	work, _ := repoWithConfig(t, nil)
+	at := func(pct float64) func(map[string]interface{}) {
+		return func(m map[string]interface{}) {
+			m["rate_limits"] = map[string]interface{}{
+				"five_hour": map[string]interface{}{"used_percentage": pct, "resets_at": 1788000000},
+			}
+		}
+	}
+	statusline(t, work, "s", at(14))
+	statusline(t, work, "s", at(31))
+
+	sessions, _ := filepath.Glob(filepath.Join(os.Getenv("ZEROTURN_STATE_DIR"), "sessions", "*.json"))
+	if len(sessions) == 0 {
+		t.Fatal("no session record")
+	}
+	b, _ := ioutil.ReadFile(sessions[0])
+	var record struct {
+		Pct       float64 `json:"fiveHourPercent"`
+		BasePct   float64 `json:"fiveHourBasePercent"`
+		BaseAt    string  `json:"fiveHourBaseAt"`
+		BaseReset int64   `json:"fiveHourBaseReset"`
+	}
+	if err := json.Unmarshal(b, &record); err != nil {
+		t.Fatal(err)
+	}
+	if record.Pct != 31 || record.BasePct != 14 {
+		t.Fatalf("reading %v, baseline %v, want 31 and 14", record.Pct, record.BasePct)
+	}
+	if record.BaseAt == "" || record.BaseReset != 1788000000 {
+		t.Fatalf("baseline not tied to the window: %+v", record)
+	}
+}

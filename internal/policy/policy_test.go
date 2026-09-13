@@ -3,6 +3,7 @@ package policy
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/cris-wendler/zeroturn/internal/config"
 	"github.com/cris-wendler/zeroturn/internal/state"
@@ -218,5 +219,111 @@ func TestCredentialDecisionSummarisesSeveralCategories(t *testing.T) {
 	_, reason := CredentialDecision(config.CredentialAsk, "f", 1, []string{"private key", "github token", "slack token"})
 	if !strings.Contains(reason, "private key and 2 more") {
 		t.Fatalf("reason %q", reason)
+	}
+}
+
+// A session with a baseline reading, taken span ago in the window that is
+// running now, which resets in resetsIn.
+func rising(base, now float64, span, resetsIn time.Duration, at time.Time) state.Session {
+	reset := at.Add(resetsIn).Unix()
+	took := at.Add(-span)
+	return state.Session{
+		FiveHourPct:       f(now),
+		FiveHourResetsAt:  &reset,
+		FiveHourBasePct:   f(base),
+		FiveHourBaseAt:    &took,
+		FiveHourBaseReset: &reset,
+	}
+}
+
+func TestProjectionAsksWhenTheRateOutrunsTheWindow(t *testing.T) {
+	at := time.Now()
+	// 30% in an hour, three hours to go: 40 + 90 lands well past 100.
+	s := rising(10, 40, time.Hour, 3*time.Hour, at)
+	r := EvaluateAt(withMode(config.ModeConfirm), s, at)
+	if r.Decision != DecisionAsk {
+		t.Fatalf("got %s, want ask: %+v", r.Decision, r.Triggers)
+	}
+	var got *Trigger
+	for i := range r.Triggers {
+		if r.Triggers[i].Name == "projection" {
+			got = &r.Triggers[i]
+		}
+	}
+	if got == nil {
+		t.Fatalf("no projection trigger: %+v", r.Triggers)
+	}
+	for _, want := range []string{"40%", "30% an hour", "3h00m"} {
+		if !strings.Contains(got.Text, want) {
+			t.Errorf("text %q does not name %s", got.Text, want)
+		}
+	}
+}
+
+func TestHeavySessionThatFinishesInsideTheWindowStaysQuiet(t *testing.T) {
+	at := time.Now()
+	// Half the window used already, but it resets in twenty minutes and
+	// the rate would add only another 10%. Nothing to say.
+	s := rising(20, 50, time.Hour, 20*time.Minute, at)
+	r := EvaluateAt(withMode(config.ModeConfirm), s, at)
+	if r.Decision != DecisionAllow || r.Level != LevelOK {
+		t.Fatalf("got %s/%s, want allow/ok: %+v", r.Decision, r.Level, r.Triggers)
+	}
+}
+
+func TestProjectionIgnoresARateItCannotTrust(t *testing.T) {
+	at := time.Now()
+	cases := map[string]state.Session{
+		"span shorter than the minimum": rising(0, 20, 5*time.Minute, 4*time.Hour, at),
+		"usage not rising":              rising(40, 40, time.Hour, 4*time.Hour, at),
+		"window already reset":          rising(10, 40, time.Hour, -time.Minute, at),
+	}
+	stale := rising(10, 40, time.Hour, 3*time.Hour, at)
+	other := *stale.FiveHourBaseReset + 900
+	stale.FiveHourBaseReset = &other
+	cases["baseline from an earlier window"] = stale
+
+	missing := rising(10, 40, time.Hour, 3*time.Hour, at)
+	missing.FiveHourResetsAt = nil
+	cases["no reset time"] = missing
+
+	for name, s := range cases {
+		if _, ok := Project(s, at); ok {
+			t.Errorf("%s: projected anyway", name)
+		}
+		if r := EvaluateAt(withMode(config.ModeConfirm), s, at); r.Decision != DecisionAllow {
+			t.Errorf("%s: decision %s", name, r.Decision)
+		}
+	}
+}
+
+func TestProjectionCanBeSwitchedOff(t *testing.T) {
+	at := time.Now()
+	c := withMode(config.ModeConfirm)
+	c.Guard.Limits.Projection = config.ProjectionOff
+	if r := EvaluateAt(c, rising(10, 40, time.Hour, 3*time.Hour, at), at); r.Decision != DecisionAllow {
+		t.Fatalf("got %s with projection off", r.Decision)
+	}
+}
+
+func TestProjectionIsNotRepeatedOnceTheThresholdIsCrossed(t *testing.T) {
+	at := time.Now()
+	s := rising(50, 90, time.Hour, 3*time.Hour, at)
+	r := EvaluateAt(withMode(config.ModeConfirm), s, at)
+	for _, x := range r.Triggers {
+		if x.Name == "projection" {
+			t.Fatalf("projection repeats the five hour trigger: %+v", r.Triggers)
+		}
+	}
+	if r.Decision != DecisionAsk {
+		t.Fatalf("got %s, want ask", r.Decision)
+	}
+}
+
+func TestProjectionNeverDeniesInStrictMode(t *testing.T) {
+	at := time.Now()
+	r := EvaluateAt(withMode(config.ModeStrict), rising(0, 40, time.Hour, 4*time.Hour, at), at)
+	if r.Decision != DecisionAsk {
+		t.Fatalf("got %s, want ask: a projection is an estimate, not a fact", r.Decision)
 	}
 }

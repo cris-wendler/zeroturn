@@ -12,6 +12,7 @@ First prototype. Nothing has been released yet.
 - Subagent gate through `PreToolUse` with the exact `Agent` matcher, in observe, confirm, and strict modes.
 - Subagent counting from harness start and stop events, which no harness reports itself.
 - Strict mode requires approval on the machine, so a committed configuration cannot deny subagents for everyone.
+- Rate projection: the gate also asks when the rate of use implies the five hour window runs out before it resets, whatever the reading is now. A heavy session that will still finish inside the window stays quiet. Setting `guard.limits.projection`, on by default.
 
 **Credential guard**
 

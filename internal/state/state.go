@@ -45,7 +45,14 @@ type Session struct {
 	FiveHourPct      *float64 `json:"fiveHourPercent,omitempty"`
 	FiveHourResetsAt *int64   `json:"fiveHourResetsAt,omitempty"`
 	SevenDayPct      *float64 `json:"sevenDayPercent,omitempty"`
-	SevenDayResetsAt *int64   `json:"sevenDayResetsAt,omitempty"`
+
+	// The first reading of the five hour window in the window that is
+	// running now. Rate is measured from it, and it is reset when the
+	// harness reports a different reset time, which means a new window.
+	FiveHourBasePct   *float64   `json:"fiveHourBasePercent,omitempty"`
+	FiveHourBaseAt    *time.Time `json:"fiveHourBaseAt,omitempty"`
+	FiveHourBaseReset *int64     `json:"fiveHourBaseReset,omitempty"`
+	SevenDayResetsAt  *int64     `json:"sevenDayResetsAt,omitempty"`
 
 	SubagentStarts  int `json:"subagentStarts"`
 	SubagentStops   int `json:"subagentStops"`
@@ -420,6 +427,31 @@ func (s *Session) AddActive(agentID string) {
 // turn ends never reported stopping, usually because the session was
 // interrupted. Starts, stops, and the peak are left alone: they are the
 // record of what happened.
+// SampleFiveHour keeps the first reading of the window that is running
+// now, so that a rate can be measured from it. The baseline is replaced
+// when the harness reports a different reset time, and when a reading
+// falls below it, which is a window that has rolled over.
+func (s *Session) SampleFiveHour(pct float64, resetsAt *int64, now time.Time) {
+	if s.FiveHourBasePct != nil && sameWindow(s.FiveHourBaseReset, resetsAt) && pct >= *s.FiveHourBasePct {
+		return
+	}
+	value, at := pct, now.UTC()
+	s.FiveHourBasePct = &value
+	s.FiveHourBaseAt = &at
+	s.FiveHourBaseReset = nil
+	if resetsAt != nil {
+		reset := *resetsAt
+		s.FiveHourBaseReset = &reset
+	}
+}
+
+func sameWindow(a, b *int64) bool {
+	if a == nil || b == nil {
+		return a == nil && b == nil
+	}
+	return *a == *b
+}
+
 // RecordGate stores one decision, with the measurements behind it, and
 // marks it as waiting to see whether a subagent follows.
 func (s *Session) RecordGate(decision string, triggers []string) {

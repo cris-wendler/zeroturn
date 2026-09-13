@@ -403,6 +403,8 @@ Not planned: `zeroturn sync`. The reasoning is in [docs/decisions.md](docs/decis
 
 The research came before the code, the differentiator was tested before the rest was written, and the constraints were kept rather than worked around. [docs/how-this-was-built.md](docs/how-this-was-built.md) is the record: what was examined and rejected, what would have stopped the project, the defects its own tests found, and what is still unproven.
 
+The code has also been reviewed against itself. [docs/architecture-review.md](docs/architecture-review.md) is that review: what the layering gets right, the defects it found with the reproduction for each one, and the order they are worth fixing in. A hook that could spin on a processor forever, a privacy test unable to fail, and a published contract a second harness cannot use were all found there rather than by a user.
+
 ## License
 
 ZeroTurn is free software licensed under GNU GPL version 3. You may use, study, modify, and distribute it under the terms of that license.

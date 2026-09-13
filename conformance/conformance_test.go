@@ -125,6 +125,7 @@ func TestPublishedOutputFollowsItsSchema(t *testing.T) {
 		{"policy-check.schema.json", []string{"policy", "check", "--json"}},
 		{"report.schema.json", []string{"report", "current", "--json"}},
 		{"report.schema.json", []string{"report", "week", "--json"}},
+		{"policy-tune.schema.json", []string{"policy", "tune", "--json"}},
 	}
 	for _, c := range cases {
 		out, errText, code := run(t, work, "", c.args...)

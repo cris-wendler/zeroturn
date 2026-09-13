@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cris-wendler/zeroturn/schemas/policy-tune.schema.json",
+  "title": "ZeroTurn policy tune",
+  "description": "Output of zeroturn policy tune --json. It suggests thresholds from what the gate asked and what the developer did next, and changes nothing.",
+  "type": "object",
+  "required": [
+    "sessionsObserved",
+    "asks",
+    "approvedAfterAsking",
+    "denied",
+    "thresholds",
+    "generatedAt",
+    "note"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "sessionsObserved": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "asks": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "approvedAfterAsking": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "denied": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "thresholds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/threshold"
+      }
+    },
+    "generatedAt": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string",
+      "description": "States that approval is inferred from a subagent starting after an ask."
+    }
+  },
+  "$defs": {
+    "threshold": {
+      "type": "object",
+      "required": [
+        "trigger",
+        "setting",
+        "current",
+        "asks",
+        "approved",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "trigger": {
+          "enum": [
+            "context",
+            "fiveHour",
+            "sevenDay",
+            "duration",
+            "activeSubagents",
+            "subagentStarts",
+            "backgroundTasks"
+          ]
+        },
+        "setting": {
+          "type": "string"
+        },
+        "current": {
+          "type": "integer"
+        },
+        "asks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "approved": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "suggested": {
+          "type": "integer",
+          "description": "Absent when the observations do not support a change."
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

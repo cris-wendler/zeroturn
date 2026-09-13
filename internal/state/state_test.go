@@ -246,6 +246,7 @@ func TestStoredRecordHasOnlyPermittedFields(t *testing.T) {
 		"credentialWarnings":   true,
 		"deniedSubagentStarts": true, "allowedSubagentStarts": true, "directValidations": true,
 		"directGitOperations": true, "lastDecision": true, "activeAgentIds": true,
+		"gateOutcomes": true, "pendingAsk": true,
 	}
 	for k := range m {
 		if !permitted[k] {

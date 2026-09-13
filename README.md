@@ -224,6 +224,27 @@ zeroturn policy set guard.context.confirm 85
 zeroturn policy reset
 ```
 
+### Thresholds from what actually happened
+
+The defaults are starting points, not measurements. `zeroturn policy tune` reads what the gate asked and what you did next, and proposes thresholds from that.
+
+```text
+$ zeroturn policy tune
+ZEROTURN POLICY TUNE
+Observations from the last 7 days in this repository.
+
+sessions observed      4
+asked                  9
+approved after asking  8
+denied                 0
+
+fiveHour  (guard.limits.fiveHourWarn, now 75)
+  all 6 asks were approved, the highest at 81
+  zeroturn policy set guard.limits.fiveHourWarn 82
+```
+
+Approval is inferred from what the harness reports: a subagent starting after an ask means you approved it. A threshold you always approve is asking too early. One you often decline is doing its job, and the command says so instead of suggesting a change. It needs five observations before it suggests anything, and it never changes a setting itself.
+
 > [!WARNING]
 > Strict mode is never switched on by a file alone. `zeroturn policy set guard.mode strict` shows the exact policy, explains what can be blocked and how to turn it off, checks the installed harness, runs a compatibility test, and asks you to confirm. A repository that commits `"mode": "strict"` gets Confirm behavior on every machine where nobody has approved Strict.
 

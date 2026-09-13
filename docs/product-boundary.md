@@ -66,7 +66,9 @@ What version 1.0.83 ships, verified in `@github/copilot/node_modules/@github/cop
 | Its own session budget, with warnings at 50, 75, and 90 percent | `copilot help limits`, `--max-ai-credits` |
 | Hooks configurable as files, without the experimental extension interface | `copilot help config`, `hooks` keyed by event name, same schema as `.github/hooks/*.json` |
 
-Not verified, and therefore not claimed: the exact schema of a `.github/hooks/*.json` file, whether a hook defined as a command receives the same input as an extension callback and may answer with a permission decision, and whether quota or context values reach a hook at all rather than only the account API and the session event stream.
+Those questions were answered on 2026-09-12 by reading the native hook engine as well as the schemas. A hook can be an external command, its output is parsed as JSON, and `preToolUse` answers with `permissionDecision` and `permissionDecisionReason`. No hook payload carries usage, quota, token counts, or duration; those reach a child process through `statusLine.command` instead. The detail, with the evidence for each answer, is in [integrations/copilot.md](integrations/copilot.md).
+
+Still not verified, and therefore still not claimed: whether a command hook in a `.github/hooks` file is honoured end to end in a real session, the exact key layout of that file, whether the status line payload arrives with the fields named, and the default hook timeout.
 
 Consequence for the product: the reason Copilot support was cut no longer holds in the form it was written. The gate and subagent counting look possible through documented interfaces, and session pressure looks possible through the account API or the local telemetry file. What ZeroTurn claims about Copilot stays at nothing until an adapter is written and tested against a real session.
 
@@ -193,7 +195,7 @@ Each condition was checked before proceeding.
 | A maintained project already provides substantially the same product | No | Sixteen projects examined. None spans the three functions. Closest are budget gates that gate all tool calls rather than delegation |
 | The distinction relies only on different wording | No | The distinction is the gate input, the delegation specific trigger, and the locally maintained subagent counts, all of which are checkable in code |
 | The feature set cannot remain coherent | No, with a recorded reservation | Answer 3 above states the reservation rather than dismissing it |
-| Required platform interfaces are unavailable | No for Claude Code, partly yes for Copilot | Claude interfaces verified in the shipped executable. Copilot lacks usage and context signals, so Copilot support is reduced rather than claimed |
+| Required platform interfaces are unavailable | No for Claude Code, no for Copilot on re read | Claude interfaces verified in the shipped executable. Copilot was re read on 2026-09-12: the gate is available through a `preToolUse` command hook, and pressure through the status line process rather than through hooks. Support is still claimed at nothing until an adapter has run against a real session |
 | Subagent control cannot be tested reliably | Not yet known | `PreToolUse` on `Agent` is the documented path. `zeroturn doctor --compat` runs a non destructive test and reports the result. If allow, ask, and deny cannot be demonstrated, Confirm and Strict are disabled and Observe is reported as the only supported mode |
 | The name has a material conflict | No, after dropping the alias | Registries free, no software trademark found, `zt` alias removed to clear the ZeroTurnaround association |
 
@@ -209,4 +211,4 @@ Percentages from different usage characteristics are never added together. Conte
 
 Subagent counts are ZeroTurn's own observations, not a harness supplied figure, and are labelled that way wherever they appear.
 
-Copilot support is experimental and partial until GitHub exposes usage and context to hooks and moves the extension interface out of experimental status.
+Copilot support is claimed at nothing until an adapter exists and has been run against a real session. The interface was re read on 2026-09-12 and both halves look reachable, the gate through a `preToolUse` command hook and session pressure through the `statusLine.command` process, which is recorded in [integrations/copilot.md](integrations/copilot.md). Reading a package is not the same as watching it work, so nothing is claimed from it.

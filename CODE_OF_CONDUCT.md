@@ -1,26 +1,27 @@
 # Code of conduct
 
-This project is a place to build a small tool well. Everyone taking part, in issues, pull requests, and discussions, is expected to follow these rules.
+This project is a place to build a small tool well. Everyone taking part,
+in issues, pull requests, and discussions, is expected to be respectful,
+including when they disagree, to discuss the work rather than the person,
+to assume good intent and ask when something is unclear, to accept that a
+maintainer may decline a change that is outside the scope, and to leave a
+thread when it stops being useful.
 
-| Expected | Not accepted |
-| --- | --- |
-| Be respectful, including when you disagree | Harassment, insults, or personal attacks |
-| Discuss the work, not the person | Discriminatory language or behavior of any kind |
-| Assume good intent, and ask when something is unclear | Sharing someone's private information without permission |
-| Accept that a maintainer may decline a change that is outside the scope | Sexual language or imagery |
-| Leave a thread when it stops being useful | Carrying on a disruption after being asked to stop |
+Harassment, insults, and personal attacks are not accepted. Neither is
+discriminatory language or behavior of any kind, sharing someone's
+private information without permission, sexual language or imagery, or
+carrying on a disruption after being asked to stop.
 
 ## Reporting
 
-> [!IMPORTANT]
-> Contact the maintainer, [@cris-wendler](https://github.com/cris-wendler) on GitHub. Reports are handled privately, and the person reported is not told who reported them.
+Contact the maintainer, [@cris-wendler](https://github.com/cris-wendler)
+on GitHub. Reports are handled privately, and the person reported is not
+told who reported them.
 
-## What happens then
+A first, minor problem usually gets a private note explaining what was
+wrong. If it continues after that, comments are edited or removed and the
+thread is closed. Something serious, or a pattern, means being blocked
+from the project.
 
-| Situation | Usual response |
-| --- | --- |
-| A first, minor problem | A private note explaining what was wrong |
-| It continues after that note | Comments edited or removed, and the thread closed |
-| Something serious, or a pattern | Blocked from the project |
-
-These rules apply in every project space, and when someone represents the project elsewhere.
+These rules apply in every project space, and when someone represents the
+project elsewhere.

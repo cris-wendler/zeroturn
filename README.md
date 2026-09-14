@@ -1,7 +1,6 @@
 # ZeroTurn
 
-[![Tests on Linux and Windows](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml/badge.svg)](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml)
-[![Tests on macOS](https://github.com/cris-wendler/zeroturn/actions/workflows/macos.yml/badge.svg)](https://github.com/cris-wendler/zeroturn/actions/workflows/macos.yml)
+[![Tests on Linux, macOS, and Windows](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml/badge.svg)](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml)
 
 Know when a coding session is under pressure. Keep routine development work local.
 
@@ -11,8 +10,7 @@ ZeroTurn works with coding harnesses. It is not another coding harness.
 
 ![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask because context, five hour usage, and active subagents are past their thresholds. The credential guard then stops a file that holds an aws access key id from being read, and, with the prompt guard switched on, stops a message carrying the same key from being sent. zeroturn verify passes two checks, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
 
-> [!NOTE]
-> The recording is real output from the executable, made with [docs/demo/record.sh](docs/demo/record.sh) against a sample project. The session values are sample data, not a real account. The last word of the status line says what happens to the next subagent. Here it is `ask`, so the harness asks you before starting another one, with a short reason such as "New subagent requires approval. Context is 82% and five hour usage is 81%."
+The recording is real output from the executable, made with [docs/demo/record.sh](docs/demo/record.sh) against a sample project. The session values are sample data, not a real account. The last word of the status line says what happens to the next subagent. Here it is `ask`, so the harness asks you before starting another one, with a short reason such as "New subagent requires approval. Context is 82% and five hour usage is 81%."
 
 <details>
 <summary>Recording as text</summary>
@@ -131,11 +129,9 @@ You decide. Approving reads the file as usual; declining means the value never l
 zeroturn policy set guard.credentials.mode deny
 ```
 
-> [!IMPORTANT]
-> This reads the file the model was about to open, and only that file. It never reads your prompts. The message names the file, the line, and the kind of credential, never the value.
+This reads the file the model was about to open, and only that file. It never reads your prompts. The message names the file, the line, and the kind of credential, never the value.
 
-> [!NOTE]
-> It looks for high confidence patterns, so it catches a common mistake rather than every possible one. A file larger than 1 MB is skipped, because a credential lives in a small file and a larger one is almost always data, and a credential in an unusual format can pass. It is a guard, not a guarantee.
+It looks for high confidence patterns, so it catches a common mistake rather than every possible one. A file larger than 1 MB is skipped, because a credential lives in a small file and a larger one is almost always data, and a credential in an unusual format can pass. It is a guard, not a guarantee.
 
 ### Messages you send
 
@@ -178,7 +174,8 @@ Put the `zeroturn` executable somewhere on your `PATH`.
 
 Release archives for macOS, Linux, and Windows are built by `scripts/build-release.sh` and attached to each release with their checksums. `go install` and a Homebrew formula follow the first public release. The steps are in [docs/release.md](docs/release.md).
 
-## Five minute setup
+### Setting it up
+
 
 From inside a Git repository:
 
@@ -189,8 +186,7 @@ zeroturn integrate claude --apply  # write it after you confirm
 zeroturn doctor                    # check the installation
 ```
 
-> [!TIP]
-> Start a new coding session after `--apply`. The settings are read when a session starts, so a running session does not pick them up.
+Start a new coding session after `--apply`. The settings are read when a session starts, so a running session does not pick them up.
 
 `init` proposes validation steps only for commands the project actually declares, and only when the executable is installed. It recognises Go, JavaScript and TypeScript through `package.json` scripts, Python with pytest, ruff, mypy, poetry and uv, Rust, Maven and Gradle, .NET, Ruby, and a `Makefile`, which it reads for the targets it declares rather than guessing. The file it writes looks like this:
 
@@ -263,12 +259,9 @@ fiveHour  (guard.limits.fiveHourWarn, now 75)
 
 Approval is inferred from what the harness reports: a subagent starting after an ask means you approved it. A threshold you always approve is asking too early. One you often decline is doing its job, and the command says so instead of suggesting a change. It needs five observations before it suggests anything, and it never changes a setting itself.
 
-> [!WARNING]
-> Strict mode is never switched on by a file alone. `zeroturn policy set guard.mode strict` shows the exact policy, explains what can be blocked and how to turn it off, checks the installed harness, runs a compatibility test, and asks you to confirm. A repository that commits `"mode": "strict"` gets Confirm behavior on every machine where nobody has approved Strict.
+Strict mode is never switched on by a file alone. `zeroturn policy set guard.mode strict` shows the exact policy, explains what can be blocked and how to turn it off, checks the installed harness, runs a compatibility test, and asks you to confirm. A repository that commits `"mode": "strict"` gets Confirm behavior on every machine where nobody has approved Strict.
 
 ## Privacy
-
-![Two columns. Recorded, on your machine: session identifier, harness and version, context percent and window size, five hour and seven day usage, session duration, subagent starts, stops and active count, gate decisions and command counts, and a hash of the repository rather than its path. Never recorded: prompts and responses, source code and diffs, subagent instructions, transcript contents, credentials and environment values, repository paths, and remote URLs holding credentials.](docs/img/privacy.svg)
 
 > [!IMPORTANT]
 > The harness sends a transcript path with most events. ZeroTurn discards it and never opens the file. A test checks that no prompt, response, or path reaches its records.
@@ -307,10 +300,21 @@ ZeroTurn makes no network requests of its own, calls no model, and runs no backg
 | `zeroturn version` | Print the version |
 | `zeroturn event` | The adapter entry point. Harness hooks call this, you do not |
 
-> [!NOTE]
-> Every report ends with the line "Based only on events observed locally by ZeroTurn on this machine." The counts are events, never tokens, cost, or a saving.
+Every report ends with the line "Based only on events observed locally by ZeroTurn on this machine." The counts are events, never tokens, cost, or a saving.
 
-## Claude Code
+
+`status`, `policy show`, `policy check`, `report`, `verify`, `doctor`, and `capabilities` accept `--json`. The schemas are published in [schemas/](schemas), including the repository configuration file and the normalized event an adapter sends.
+
+```sh
+go test ./conformance                                                      # every output still follows its schema
+go run ./conformance/validate schemas/normalized-event.schema.json e.json  # check one document
+```
+
+The validator is part of the project and has no dependencies. A schema using a keyword it does not support is reported rather than skipped, so a contract can never look checked when it is not.
+
+## Harnesses
+### Claude Code
+
 
 Supported. The full guide, including what each hook does and which payload fields are read, is in [docs/integrations/claude-code.md](docs/integrations/claude-code.md). ZeroTurn uses these official interfaces:
 
@@ -326,7 +330,8 @@ Supported. The full guide, including what each hook does and which payload field
 
 Tested on Claude Code 2.1.265 and 2.1.270. A denial was honoured in a real session and no subagent started. An allow let the subagent start. The ask decision was observed interactively on 2.1.270: the harness showed the reason ZeroTurn supplied, and refusing it stopped the subagent from starting. The same prompt offers to stop asking for that tool in that directory, which turns the gate off for it, and ZeroTurn is not told when that is chosen. Run `zeroturn doctor --compat --live` to repeat the denial test on your machine. It starts one short session and spends a small amount of usage.
 
-## GitHub Copilot CLI
+### GitHub Copilot CLI
+
 
 Not supported yet. No adapter ships, and nothing here claims Copilot support.
 
@@ -334,15 +339,14 @@ The reason it was cut has changed. A re-reading of the installed CLI, version 1.
 
 An adapter is planned. It will be described as supported when it has been run against a real session, and not before.
 
-## Harness contract
+### Other harnesses
+
 
 Other harnesses can send events in a normalized JSON form with `zeroturn event --harness normalized`. Each event names the contract `zeroturn.event/1`, and an event that names a different contract is refused with a clear message. `zeroturn capabilities --json` lists the commands, event types, recorded fields, and exit codes.
 
 [docs/harness-contract.md](docs/harness-contract.md) states what ZeroTurn promises an adapter and what an adapter must do in return: process invocation, event shapes, decisions, mutation classification, exit codes, cancellation, redaction, and how versions change. [docs/adapter-authoring.md](docs/adapter-authoring.md) is the practical guide, and [integrations/template/](integrations/template) holds a worked example you can copy.
 
 ## Safety
-
-![Two columns. ship always: stages only the files you name, scans them for credentials, runs your approved checks, reads the branch state first, asks before the first change, and pushes without force. ship refuses: a protected branch, a path outside the repository, files staged that you did not name, a branch behind or diverged, force push, rebase, reset, branch delete, and skipping your Git hooks.](docs/img/safety.svg)
 
 - Validation commands are argument arrays in `.zeroturn.json`, never shell strings. A repository's commands do not run until you approve them on your machine, and changing any command withdraws the approval.
 - Output from validation steps is scanned for credentials before it is printed or logged.
@@ -361,17 +365,6 @@ Other harnesses can send events in a normalized JSON form with `zeroturn event -
 | 7 | incompatible contract version |
 | 8 | integration unavailable |
 
-## JSON schemas
-
-`status`, `policy show`, `policy check`, `report`, `verify`, `doctor`, and `capabilities` accept `--json`. The schemas are published in [schemas/](schemas), including the repository configuration file and the normalized event an adapter sends.
-
-```sh
-go test ./conformance                                                      # every output still follows its schema
-go run ./conformance/validate schemas/normalized-event.schema.json e.json  # check one document
-```
-
-The validator is part of the project and has no dependencies. A schema using a keyword it does not support is reported rather than skipped, so a contract can never look checked when it is not.
-
 ## Contributing
 
 Useful areas: harness adapters, event normalization, project detection, validation presets, platform support, security and redaction tests, terminal rendering, documentation, and conformance fixtures.
@@ -382,15 +375,14 @@ Before contributing, check that the feature is not already there and search the 
 
 ## Limitations
 
-> [!CAUTION]
-> ZeroTurn shows and gates what the harness reports. It cannot see usage the harness does not send, and it does not promise to remove session limits.
+ZeroTurn shows and gates what the harness reports. It cannot see usage the harness does not send, and it does not promise to remove session limits.
 
 - Session values appear only when the harness sends them. Some accounts receive no usage window data.
 - Subagent counts cover only subagents started while ZeroTurn was installed. One that never reports stopping is cleared when the turn ends.
 - The background task count is as current as the last `Stop` event.
 - The interactive approval prompt for Confirm mode was observed on Claude Code 2.1.270. It can be bypassed from the prompt itself: the harness offers to stop asking for that tool in that directory, and ZeroTurn is not told when that is chosen.
 - Session Guard measurements require the terminal interface. In an editor extension the status line is never invoked, so context, the usage windows, and duration are absent and only the subagent counts and the credential guard work. Confirmed on Claude Code 2.1.257.
-- The test suite runs on Linux and Windows for every change, and on macOS weekly. On Windows, tests that need a POSIX shell are skipped. The harness integration has been used on macOS only.
+- The test suite runs on Linux with both supported Go releases, on macOS, and on Windows, for every change. On Windows, tests that need a POSIX shell are skipped. The harness integration has been used on macOS only.
 - The status line has been checked in the terminal interface of the harness only.
 
 ## Roadmap
@@ -416,16 +408,8 @@ The code has also been reviewed against itself. [docs/architecture-review.md](do
 
 ## License
 
-ZeroTurn is free software licensed under GNU GPL version 3. You may use, study, modify, and distribute it under the terms of that license.
-
-![GPL version 3 in plain words. You may: run it for any purpose including at work, read and change the source, share copies changed or not, charge money for doing so, and keep your private changes private. If you share it you must: keep the license and the notices, say what you changed, give people the source code, use this same license for it, and expect no warranty. This is a summary for orientation, not the license. The text in LICENSE is what governs.](docs/img/license.svg)
-
-| | |
-| --- | --- |
-| SPDX identifier | `GPL-3.0-only` |
-| Full text | [LICENSE](LICENSE). [COPYING](COPYING), the traditional GNU name, points to it |
-| Contributions | accepted under the same license, with no contributor license agreement |
-| Dependencies | none, see [docs/dependency-licenses.md](docs/dependency-licenses.md) |
-
-> [!NOTE]
-> The card is a summary, not the license, and it grants nothing. The text in `LICENSE` is the Free Software Foundation's, unmodified, because the license itself forbids changing that document and because tools identify the license by matching it exactly.
+ZeroTurn is free software under `GPL-3.0-only`. The full text is in
+[LICENSE](LICENSE); [COPYING](COPYING) is the traditional GNU name for the same
+file. Contributions are accepted under the same license, with no contributor
+license agreement, and there are no dependencies to license: see
+[docs/dependency-licenses.md](docs/dependency-licenses.md).

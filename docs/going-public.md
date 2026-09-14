@@ -29,7 +29,7 @@ gh repo edit cris-wendler/zeroturn --visibility public --accept-visibility-chang
 gh api -X POST repos/cris-wendler/zeroturn/rulesets --input .github/rulesets/main.json
 ```
 
-It requires a pull request for `main`, requires the four checks that run on a pull request to pass, allows squash merges only, and refuses deletion and force pushes. macOS is deliberately not among them: it runs weekly in its own workflow, so requiring it here would block every pull request on a check that never reports.
+It requires a pull request for `main`, requires the five checks to pass, allows squash merges only, and refuses deletion and force pushes.
 
 **Switch on private vulnerability reporting**, which [SECURITY.md](../SECURITY.md) tells people to use:
 

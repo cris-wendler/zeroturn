@@ -170,7 +170,13 @@ With it off, ZeroTurn never reads what you write, and the hook that would do so 
 > [!IMPORTANT]
 > **Session Guard needs Claude Code running in a terminal.** Context use, the usage windows, and session duration reach ZeroTurn through the harness status line, and through nothing else: no hook payload carries them. An editor extension draws no status line, so it never runs the command, and the guard then has no measurements at all. Subagent counts and the credential guard still work there, because those come from hooks. `zeroturn doctor` reports which case you are in.
 
-ZeroTurn is one executable with no runtime dependencies. Building it needs Go 1.17 or newer.
+ZeroTurn is one executable with no runtime dependencies. Installing it needs Go 1.17 or newer.
+
+```sh
+go install github.com/cris-wendler/zeroturn/cmd/zeroturn@latest
+```
+
+That puts `zeroturn` in your `GOBIN`, or in `$(go env GOPATH)/bin` if that is not set. To build from a checkout instead:
 
 ```sh
 git clone https://github.com/cris-wendler/zeroturn.git
@@ -178,9 +184,7 @@ cd zeroturn
 go build -o zeroturn ./cmd/zeroturn
 ```
 
-Put the `zeroturn` executable somewhere on your `PATH`.
-
-Release archives for macOS, Linux, and Windows are built by `scripts/build-release.sh` and attached to each release with their checksums. `go install` and a Homebrew formula follow the first public release. The steps are in [docs/release.md](docs/release.md).
+Release archives for macOS, Linux, and Windows are built by `scripts/build-release.sh` and attached to each release with their checksums. A Homebrew formula follows the first release. The steps are in [docs/release.md](docs/release.md).
 
 ### Setting it up
 
@@ -398,7 +402,7 @@ Current: everything described above, including both credential guards, plus cont
 
 Planned:
 
-- `go install` and a Homebrew formula after the first public release, following [docs/going-public.md](docs/going-public.md)
+- a Homebrew formula after the first release, following [docs/release.md](docs/release.md)
 - a Copilot adapter once Copilot exposes session values to hooks
 
 Not planned: `zeroturn sync`. The reasoning is in [docs/decisions.md](docs/decisions.md). The research behind the product boundary is in [docs/product-boundary.md](docs/product-boundary.md).

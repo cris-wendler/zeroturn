@@ -83,11 +83,16 @@ ZeroTurn does not promise to remove session limits, and it does not estimate sav
 
 ## How it works
 
+Two lanes, and they are independent. Session Guard watches the session
+and answers the harness when it asks whether a subagent may start. The
+Direct Lane runs your own commands on your machine, with no model turn
+involved at all.
+
 ![Diagram in two lanes. Session Guard: the coding harness sends events from its status line and hooks to ZeroTurn, which checks your thresholds, counts subagents, and keeps local records, then returns a decision for the next subagent: allow, ask you, or deny. The harness applies it before the subagent starts. Direct Lane: you run zeroturn verify or zeroturn ship, ZeroTurn runs only approved commands with a credential scan and safe Git rules, and acts on your project's tests, lint, build, commit, and push, on your machine without a model turn.](docs/img/how-it-works.svg)
 
 ## Session Guard
 
-**Session Guard reads what the harness already reports:** context use, the five hour and seven day usage windows, and session duration. It adds one thing the harness does not report, the number of subagents started and currently running, counted from the harness's own start and stop events.
+Session Guard reads what the harness already reports: context use, the five hour and seven day usage windows, and session duration. It adds one thing the harness does not report, the number of subagents started and currently running, counted from the harness's own start and stop events.
 
 Before a new subagent starts, the gate compares those values with your thresholds. Each measurement is checked against its own limit. Percentages from different measurements are never added together.
 
@@ -135,7 +140,7 @@ It looks for high confidence patterns, so it catches a common mistake rather tha
 
 ### Messages you send
 
-A key you paste into a message is the other way one reaches the model. ZeroTurn can check for that too, and it is **off by default**, because switching it on changes what ZeroTurn reads.
+A key you paste into a message is the other way one reaches the model. ZeroTurn can check for that too, and it is off by default, because switching it on changes what ZeroTurn reads.
 
 ```sh
 zeroturn policy set guard.credentials.prompts block
@@ -153,9 +158,9 @@ With it off, ZeroTurn never reads what you write, and the hook that would do so 
 
 ## Direct Lane
 
-**`zeroturn verify`** runs the checks listed in `.zeroturn.json` directly, without a shell and without a model turn. It prints one line per step and keeps the full output under `.git/zeroturn/logs/`.
+`zeroturn verify` runs the checks listed in `.zeroturn.json` directly, without a shell and without a model turn. It prints one line per step and keeps the full output under `.git/zeroturn/logs/`.
 
-**`zeroturn ship`** stages only the files you name, scans them for credentials, runs the checks, fetches, refuses unsafe branch states, asks for confirmation, then commits with your message and pushes without force. `--dry-run` stops before anything changes.
+`zeroturn ship` stages only the files you name, scans them for credentials, runs the checks, fetches, refuses unsafe branch states, asks for confirmation, then commits with your message and pushes without force. `--dry-run` stops before anything changes.
 
 ## Installation
 
@@ -175,7 +180,6 @@ Put the `zeroturn` executable somewhere on your `PATH`.
 Release archives for macOS, Linux, and Windows are built by `scripts/build-release.sh` and attached to each release with their checksums. `go install` and a Homebrew formula follow the first public release. The steps are in [docs/release.md](docs/release.md).
 
 ### Setting it up
-
 
 From inside a Git repository:
 
@@ -302,7 +306,6 @@ ZeroTurn makes no network requests of its own, calls no model, and runs no backg
 
 Every report ends with the line "Based only on events observed locally by ZeroTurn on this machine." The counts are events, never tokens, cost, or a saving.
 
-
 `status`, `policy show`, `policy check`, `report`, `verify`, `doctor`, and `capabilities` accept `--json`. The schemas are published in [schemas/](schemas), including the repository configuration file and the normalized event an adapter sends.
 
 ```sh
@@ -313,8 +316,12 @@ go run ./conformance/validate schemas/normalized-event.schema.json e.json  # che
 The validator is part of the project and has no dependencies. A schema using a keyword it does not support is reported rather than skipped, so a contract can never look checked when it is not.
 
 ## Harnesses
-### Claude Code
 
+ZeroTurn reads events from a harness and answers it. One harness is
+supported today, one is not, and any other can send events in a
+normalized form.
+
+### Claude Code
 
 Supported. The full guide, including what each hook does and which payload fields are read, is in [docs/integrations/claude-code.md](docs/integrations/claude-code.md). ZeroTurn uses these official interfaces:
 
@@ -332,7 +339,6 @@ Tested on Claude Code 2.1.265 and 2.1.270. A denial was honoured in a real sessi
 
 ### GitHub Copilot CLI
 
-
 Not supported yet. No adapter ships, and nothing here claims Copilot support.
 
 The reason it was cut has changed. A re-reading of the installed CLI, version 1.0.83, found hook events for tool use and subagents, a pre tool decision of allow, deny, or ask, quota snapshots, context window token counts, and a local telemetry file for token usage. The details, and what is still unverified, are in [docs/product-boundary.md](docs/product-boundary.md) and [docs/decisions.md](docs/decisions.md).
@@ -340,7 +346,6 @@ The reason it was cut has changed. A re-reading of the installed CLI, version 1.
 An adapter is planned. It will be described as supported when it has been run against a real session, and not before.
 
 ### Other harnesses
-
 
 Other harnesses can send events in a normalized JSON form with `zeroturn event --harness normalized`. Each event names the contract `zeroturn.event/1`, and an event that names a different contract is refused with a clear message. `zeroturn capabilities --json` lists the commands, event types, recorded fields, and exit codes.
 
@@ -383,7 +388,6 @@ ZeroTurn shows and gates what the harness reports. It cannot see usage the harne
 - The interactive approval prompt for Confirm mode was observed on Claude Code 2.1.270. It can be bypassed from the prompt itself: the harness offers to stop asking for that tool in that directory, and ZeroTurn is not told when that is chosen.
 - Session Guard measurements require the terminal interface. In an editor extension the status line is never invoked, so context, the usage windows, and duration are absent and only the subagent counts and the credential guard work. Confirmed on Claude Code 2.1.257.
 - The test suite runs on Linux with both supported Go releases, on macOS, and on Windows, for every change. On Windows, tests that need a POSIX shell are skipped. The harness integration has been used on macOS only.
-- The status line has been checked in the terminal interface of the harness only.
 
 ## Roadmap
 

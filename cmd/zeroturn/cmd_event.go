@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -29,6 +30,40 @@ import (
 // a limit of the check.
 const maxScan = 1 << 20
 
+// scanTarget reads the file the credential guard is about to scan, and
+// reports whether it is one worth scanning at all.
+//
+// The check is made against the open file rather than against the path.
+// A path can name a different file by the time it is opened, and what
+// gets scanned then is not what was checked, so the size and the kind
+// are read back from the handle the content comes from. The read is
+// bounded as well, whatever the size claimed, because a size is a
+// statement about the past.
+//
+// The cheap check by path stays in front of it. Only an ordinary file is
+// opened, because a device such as /dev/zero reports a size of zero and
+// then never reaches the end, and a pipe blocks on being opened at all,
+// either of which would hang the read a developer is waiting for.
+func scanTarget(path string) ([]byte, bool) {
+	if info, err := os.Stat(path); err != nil || !info.Mode().IsRegular() || info.Size() > maxScan {
+		return nil, false
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, false
+	}
+	defer f.Close()
+	opened, err := f.Stat()
+	if err != nil || !opened.Mode().IsRegular() || opened.Size() > maxScan {
+		return nil, false
+	}
+	content, err := ioutil.ReadAll(io.LimitReader(f, maxScan))
+	if err != nil {
+		return nil, false
+	}
+	return content, true
+}
+
 // credentialGate scans the file a read tool is about to open. It reads
 // the file, never the prompt, and reports the file, the line, and the
 // category, never the value.
@@ -40,16 +75,8 @@ func credentialGate(st *state.Store, e events.Event) error {
 	if cfg.Guard.Credentials.Mode == config.CredentialOff {
 		return nil
 	}
-	info, err := os.Stat(e.FilePath)
-	// Only an ordinary file is scanned. A directory has nothing to read,
-	// and a device such as /dev/zero reports a size of zero and then
-	// never reaches the end, which would hang the read the developer is
-	// waiting for.
-	if err != nil || !info.Mode().IsRegular() || info.Size() > maxScan {
-		return nil
-	}
-	content, err := ioutil.ReadFile(e.FilePath)
-	if err != nil {
+	content, ok := scanTarget(e.FilePath)
+	if !ok {
 		return nil
 	}
 	name := filepath.Base(e.FilePath)

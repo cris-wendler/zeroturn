@@ -1,6 +1,9 @@
 # ZeroTurn
 
 [![Tests on Linux, macOS, and Windows](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml/badge.svg)](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml)
+[![Go 1.17+](https://img.shields.io/badge/go-1.17%2B-00ADD8?logo=go&logoColor=white)](go.mod)
+[![No dependencies](https://img.shields.io/badge/dependencies-none-success)](docs/dependency-licenses.md)
+[![License GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue)](LICENSE)
 
 Know when a coding session is under pressure. Keep routine development work local.
 

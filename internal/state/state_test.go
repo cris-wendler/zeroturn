@@ -628,3 +628,24 @@ func TestAnEventWithNoSessionIsNotStored(t *testing.T) {
 		t.Fatalf("a record was written anyway: %v", entries)
 	}
 }
+
+// Two acquisitions must never produce the same token, whatever the
+// clock does. Windows reports time in coarse steps, so a token built
+// from the process identifier and the clock alone repeats when two
+// acquisitions land inside one step, and the first holder's release
+// then matches the second holder's lock and deletes it.
+func TestATokenIsNeverRepeated(t *testing.T) {
+	at := time.Unix(1000, 0)
+	saved := lockClock
+	lockClock = func() time.Time { return at }
+	defer func() { lockClock = saved }()
+
+	seen := map[string]bool{}
+	for i := 0; i < 1000; i++ {
+		token := lockToken()
+		if seen[token] {
+			t.Fatalf("token %q was produced twice with the clock held still", token)
+		}
+		seen[token] = true
+	}
+}

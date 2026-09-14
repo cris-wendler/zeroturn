@@ -17,6 +17,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -280,15 +281,26 @@ func (s *Store) Lock() (func(), error) {
 	}
 }
 
+// lockClock reads the time for a lock token. It is a variable so that a
+// test can hold it still; nothing outside this package changes it.
+var lockClock = time.Now
+
+// lockSeq counts acquisitions in this process. The clock cannot carry
+// uniqueness on its own: Windows reports time in coarse steps, so two
+// acquisitions inside one step read the same instant, and a token built
+// only from the identifier and the clock would repeat.
+var lockSeq uint64
+
 // lockToken identifies one acquisition. It is written into the lock file
 // so that a release can remove only the lock it took.
 //
 // Without it, a holder whose lock was judged stale and removed would
 // delete the next holder's lock when it finished, and two processes
 // would then write the same records at once. The process identifier
-// alone is not enough, because it is reused.
+// alone is not enough, because it is reused, and the clock is not
+// enough either, for the reason above.
 func lockToken() string {
-	return fmt.Sprintf("%d %d", os.Getpid(), time.Now().UnixNano())
+	return fmt.Sprintf("%d %d %d", os.Getpid(), lockClock().UnixNano(), atomic.AddUint64(&lockSeq, 1))
 }
 
 // releaseLock removes the lock only while it is still the one this

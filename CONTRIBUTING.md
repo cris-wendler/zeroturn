@@ -110,6 +110,20 @@ These apply to code comments, CLI output, error messages, and documentation. `sc
 - **No emoji in default output**, and no decorative banners.
 - **Never call event counts savings.**
 
+## Derive a description, do not maintain one
+
+The most common defect in this repository has been a description kept by hand beside the thing it describes, drifting away from it. A list of permitted fields beside a type, a table of settings beside a struct, a count in a document beside the repository, required checks beside the jobs that produce them.
+
+So: when a change adds something that is named or counted in a second place, add a test that reads the second place from the first, rather than updating both and hoping.
+
+- Compare against the type, with reflection, not against a sample value. A sample only shows what it happens to hold.
+- Fail in both directions. An entry that is missing and an entry that no longer exists are both drift.
+- Say what to correct. `doccount_test.go` names the sentence and the number, so fixing it takes one edit.
+
+Nine tests here do this. They have caught unlisted fields in the stored record, a contract version no adapter could send, broken help on seven commands, and stale counts in the documentation. The drift that had no such check was found by accident instead, once by a pre flight read through that happened to notice a branch rule requiring a check that no longer existed.
+
+This matters more when a coding agent is writing the changes, because it holds no memory of the parallel lists and makes more changes per day than a person does.
+
 ## Pull requests
 
 - [ ] One change per pull request.

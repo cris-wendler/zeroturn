@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/cris-wendler/zeroturn/internal/config"
 	"github.com/cris-wendler/zeroturn/internal/events"
@@ -157,6 +158,8 @@ func checkRepo(ctx context.Context) []check {
 		}
 	}
 
+	out = append(out, checkSessionData(repo.Root))
+
 	installed, paths := installedIntegration(repo.Root)
 	if installed == "" {
 		out = append(out, check{"claude integration", checkWarn,
@@ -233,6 +236,66 @@ func installedIntegration(root string) (string, []string) {
 		}
 	}
 	return "", nil
+}
+
+// checkSessionData reports whether the status line is actually reaching
+// ZeroTurn. Context use and the usage windows arrive through the status
+// line and through nothing else: no hook payload carries them. A harness
+// that never draws a status line therefore never invokes the command, and
+// the guard runs with no measurements at all rather than failing loudly.
+//
+// That is what happens inside an editor extension. The hooks still fire,
+// so subagents are still counted and the credential guard still works,
+// and it looks from the outside as though everything is installed.
+func checkSessionData(repoRoot string) check {
+	st, err := state.Open()
+	if err != nil {
+		return check{"session data", checkWarn, "the local state could not be read, so this could not be checked"}
+	}
+	sessions, err := st.Since(time.Duration(state.DefaultRetentionDays) * 24 * time.Hour)
+	if err != nil {
+		return check{"session data", checkWarn, "the local records could not be read, so this could not be checked"}
+	}
+	hash := state.RepoHash(repoRoot)
+	seen, withUsage := 0, 0
+	var latest *float64
+	for _, s := range sessions {
+		if s.RepoHash != hash {
+			continue
+		}
+		seen++
+		if s.ContextPct != nil {
+			withUsage++
+			latest = s.ContextPct
+		}
+	}
+	switch {
+	case seen == 0:
+		return check{"session data", checkWarn,
+			"no sessions recorded for this repository yet, so the status line could not be checked. Start a coding session and run this again"}
+	case withUsage == 0:
+		subject := fmt.Sprintf("all %d sessions recorded for this repository", seen)
+		if seen == 1 {
+			subject = "the one session recorded for this repository"
+		}
+		return check{"session data", checkFail,
+			fmt.Sprintf("%s carried no context or usage values. "+
+				"The status line is not being invoked, which is what happens in an editor extension, where there is no status line to draw. "+
+				"Subagents are still counted and the credential guard still works, but the guard has no measurements, "+
+				"so thresholds on context, the usage windows, and session duration can never be crossed. "+
+				"Run Claude Code in a terminal for the guard to have anything to read", subject)}
+	case withUsage < seen:
+		// Some sessions carried measurements and some did not, which is
+		// what a person working in both a terminal and an editor sees.
+		// The sessions without them ran with no guard input at all.
+		return check{"session data", checkWarn,
+			fmt.Sprintf("%d of %d recent sessions for this repository carried no context or usage values. "+
+				"Those ran with nothing for the guard to measure, which is what happens in an editor extension, "+
+				"where the status line is never drawn and so never invoked. The most recent measurement was %.0f%% context",
+				seen-withUsage, seen, *latest)}
+	}
+	return check{"session data", checkOK,
+		fmt.Sprintf("the status line is delivering measurements in all %d recent sessions, most recently %.0f%% context", seen, *latest)}
 }
 
 func compatFixtures() []check {

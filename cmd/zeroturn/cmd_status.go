@@ -11,6 +11,7 @@ import (
 	"github.com/cris-wendler/zeroturn/internal/events"
 	"github.com/cris-wendler/zeroturn/internal/output"
 	"github.com/cris-wendler/zeroturn/internal/policy"
+	"github.com/cris-wendler/zeroturn/internal/session"
 	"github.com/cris-wendler/zeroturn/internal/state"
 	"github.com/cris-wendler/zeroturn/internal/status"
 )
@@ -64,12 +65,12 @@ func statusFromStdin(ctx context.Context, harness string) error {
 	if serr != nil {
 		return nil
 	}
-	sess, uerr := applyEvent(st, e)
+	sess, uerr := session.Record(st, e)
 	if uerr != nil {
 		return nil
 	}
 
-	res := policy.Evaluate(sessionConfig(st, e.CWD), sess)
+	res := policy.Evaluate(sessionGuard(st, e.CWD), sess)
 	fmt.Println(status.Render(status.Line{
 		Session: sess,
 		Result:  res,
@@ -96,7 +97,7 @@ func statusFromRepo(ctx context.Context, asJSON bool) error {
 
 	branch, _ := repo.Branch(ctx)
 	sess, found := recentSession(st, repo.Root)
-	res := policy.Evaluate(effectiveGuard(st, repo.Root, cfg), sess)
+	res := policy.Evaluate(guardFor(st, repo.Root, cfg), sess)
 
 	if asJSON {
 		out := statusJSON{Available: found, Policy: res, Branch: branch}

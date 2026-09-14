@@ -13,6 +13,7 @@ import (
 	"github.com/cris-wendler/zeroturn/internal/config"
 	"github.com/cris-wendler/zeroturn/internal/git"
 	"github.com/cris-wendler/zeroturn/internal/output"
+	"github.com/cris-wendler/zeroturn/internal/policy"
 	"github.com/cris-wendler/zeroturn/internal/state"
 	"github.com/cris-wendler/zeroturn/internal/trust"
 )
@@ -60,14 +61,14 @@ func loadConfig(root string) (config.Config, error) {
 	return c, nil
 }
 
-// sessionConfig loads the policy for a harness event from its working
+// sessionGuard loads the policy for a harness event from its working
 // directory. It starts no git process, because it runs on every status
 // line repaint, and it falls back to the defaults on any problem so that a
 // broken file cannot break the harness.
-func sessionConfig(st *state.Store, dir string) config.Config {
+func sessionGuard(st *state.Store, dir string) policy.Guard {
 	root, ok := git.FindRoot(dir)
 	if !ok {
-		return config.Default()
+		return policy.NewGuard(config.Default(), false)
 	}
 	cfg := config.Default()
 	if config.Exists(root) {
@@ -75,17 +76,13 @@ func sessionConfig(st *state.Store, dir string) config.Config {
 			cfg = loaded
 		}
 	}
-	return effectiveGuard(st, root, cfg)
+	return guardFor(st, root, cfg)
 }
 
-// effectiveGuard applies the local Strict approval. A repository file can
-// ask for Strict, but only the person on this machine can enable it, so
-// until they do the gate asks instead of denying.
-func effectiveGuard(st *state.Store, root string, c config.Config) config.Config {
-	if c.Guard.Mode == config.ModeStrict && !trust.StrictApproved(st, root) {
-		c.Guard.Mode = config.ModeConfirm
-	}
-	return c
+// guardFor answers the one question policy.NewGuard asks: has the person
+// at this machine approved Strict mode for this repository.
+func guardFor(st *state.Store, root string, c config.Config) policy.Guard {
+	return policy.NewGuard(c, trust.StrictApproved(st, root))
 }
 
 func openStore() (*state.Store, error) {

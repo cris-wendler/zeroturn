@@ -461,11 +461,6 @@ func (s *Session) AddActive(agentID string) {
 	s.SubagentStarts++
 }
 
-// ClearActive forgets which subagents are running. A subagent cannot
-// outlive the turn that started it, so anything still counted when a
-// turn ends never reported stopping, usually because the session was
-// interrupted. Starts, stops, and the peak are left alone: they are the
-// record of what happened.
 // SampleFiveHour keeps the first reading of the window that is running
 // now, so that a rate can be measured from it. The baseline is replaced
 // when the harness reports a different reset time, and when a reading
@@ -523,6 +518,11 @@ func (s *Session) ResolveGate() {
 	s.PendingAsk = 0
 }
 
+// ClearActive forgets which subagents are running. A subagent cannot
+// outlive the turn that started it, so anything still counted when a
+// turn ends never reported stopping, usually because the session was
+// interrupted. Starts, stops, and the peak are left alone: they are the
+// record of what happened.
 func (s *Session) ClearActive() {
 	s.ActiveIDs = nil
 	s.ActiveSubagents = 0

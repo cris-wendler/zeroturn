@@ -312,3 +312,21 @@ Decision: `fiveHourResetsAt` and `sevenDayResetsAt` are part of the normalized e
 Two tests hold the two paths together. The first parses the same session from a Claude payload and from a normalized one and requires the resulting events to be equal. The second walks the event type and fails when a field exists that the adapter facing shape has no way to carry, with the deliberate exceptions named in the code. Both were confirmed to fail against the shape that shipped this morning.
 
 The lesson: a contract with two implementations needs a test that compares them. Testing each against its own fixtures proves only that each is self consistent, which is exactly what a divergence looks like from the inside.
+
+## 26. The fold and the Strict downgrade are behind types
+
+Date: 2026-09-14
+
+Finding, from the architecture review: the two rules the product rests on lived in the command package as convention.
+
+The first is the fold, event into session record. It decides what every reading means, and every entry point depends on it agreeing, and it was a function in `package main` that no test could reach without building and running the binary.
+
+The second is the Strict downgrade. A repository file can ask for Strict mode, but only the person at this machine can enable it, because otherwise a committed `.zeroturn.json` would deny subagents for everyone who clones it. That is a security rule, and it was applied by remembering to call one helper at five separate places. `policy.Evaluate` did not know the rule existed. A sixth call site that forgot would have reopened the hole, and nothing would have failed to compile.
+
+Decision: the fold moves to `internal/session`, where `Apply` folds one event into a record and `ApplyAt` supplies the clock the five hour baseline needs. The downgrade becomes `policy.Guard`, a value that can only be built by `NewGuard`, which takes the configuration and the answer to one question: has this machine approved Strict. `Evaluate` takes a `Guard` and no longer accepts a configuration, so the check cannot be skipped by forgetting it. There is nothing to remember, because there is no other way in.
+
+The command package keeps one helper that answers that question from the approval record. The self test in `doctor --compat` now says in its own code that it approves Strict, because it asks what the policy table does rather than what this machine allows, which was an assumption it made silently before.
+
+Both new tests were confirmed to fail first. Removing the downgrade from `NewGuard` fails three of the guard tests. Folding a missing reading as zero fails the fold test.
+
+The second test is only that strong because the first attempt at it was not. It checked that a measurement was still present after an event that did not carry it, and a fold that overwrote every reading with zero passed, because zero is present. It now checks the value. An absent reading is not a reading of zero, and a field that is there and wrong is worse than one that is gone.

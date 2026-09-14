@@ -16,7 +16,7 @@ func i64(v int64) *int64   { return &v }
 func render(mode string, s state.Session) string {
 	c := config.Default()
 	c.Guard.Mode = mode
-	return Render(Line{Session: s, Result: policy.Evaluate(c, s), Color: output.Color{}})
+	return Render(Line{Session: s, Result: policy.Evaluate(policy.NewGuard(c, true), s), Color: output.Color{}})
 }
 
 func TestFullLine(t *testing.T) {

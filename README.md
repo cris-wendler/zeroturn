@@ -163,6 +163,9 @@ With it off, ZeroTurn never reads what you write, and the hook that would do so 
 
 ## Installation
 
+> [!IMPORTANT]
+> **Session Guard needs Claude Code running in a terminal.** Context use, the usage windows, and session duration reach ZeroTurn through the harness status line, and through nothing else: no hook payload carries them. An editor extension draws no status line, so it never runs the command, and the guard then has no measurements at all. Subagent counts and the credential guard still work there, because those come from hooks. `zeroturn doctor` reports which case you are in.
+
 ZeroTurn is one executable with no runtime dependencies. Building it needs Go 1.17 or newer.
 
 ```sh
@@ -386,6 +389,7 @@ Before contributing, check that the feature is not already there and search the 
 - Subagent counts cover only subagents started while ZeroTurn was installed. One that never reports stopping is cleared when the turn ends.
 - The background task count is as current as the last `Stop` event.
 - The interactive approval prompt for Confirm mode has not yet been observed.
+- Session Guard measurements require the terminal interface. In an editor extension the status line is never invoked, so context, the usage windows, and duration are absent and only the subagent counts and the credential guard work. Confirmed on Claude Code 2.1.257.
 - The test suite runs on Linux and Windows for every change, and on macOS weekly. On Windows, tests that need a POSIX shell are skipped. The harness integration has been used on macOS only.
 - The status line has been checked in the terminal interface of the harness only.
 

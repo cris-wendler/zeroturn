@@ -400,3 +400,21 @@ The measurement is recorded in `docs/benchmarks.md` with its own conditions rath
 The tests caught the mistake in the first attempt, which is worth recording. Redaction reaches its expression in two branches, and only one of them was changed, so the other dereferenced a pattern that had never been compiled and the package panicked. A nil pointer is the failure this shape invites, and the existing corpus test found it immediately.
 
 No behaviour changed. The same expressions match the same content in the same order, and every existing test in the package passes unaltered.
+
+## 31. The guard has no measurements outside a terminal
+
+Date: 2026-09-14
+
+Finding: context use, the five hour and seven day windows, and session duration reach ZeroTurn through the harness status line and through nothing else. Decision 21 established that no hook payload carries any of them. An editor extension draws no status line, so it never invokes the command, and the guard runs with no measurements while every other sign says it is installed correctly.
+
+This was found by reading the records rather than by reasoning. Every session stored on this machine, and the long build session carried over from the previous one, held a harness name, subagent counts, and credential warnings, and held no context value, no window value, no duration, and no model. Seven sessions across two machines, including the longest one this project has had, and not one measurement.
+
+The code was never at fault. Fed a real status line payload it records everything, which was confirmed directly. The same integration then ran in a terminal and produced context 4 percent, five hour 24 percent, seven day 3 percent, a window size of one million, and the five hour reset time the rate projection needs. The difference is the interface, not the installation.
+
+What this means is worth stating plainly rather than softening. In an extension the subagent gate can only ever act on counts ZeroTurn keeps itself, the rate projection can never fire, and thresholds on context, the windows, and duration can never be crossed. The hooks still work, so the credential guard still reads files and subagents are still counted, which is exactly why the failure is silent.
+
+Decision: say it where someone decides whether to install, and detect it rather than describe it. The README carries it in the installation section and in the list of limits, the integration document explains it under troubleshooting, and `doctor` gains a `session data` check that compares the sessions it has recorded: every session without measurements is a failure, some without is a warning, because working in both places is the case that hides the problem behind the sessions that did work.
+
+On this machine that check now reports six of seven recent sessions carried nothing, which is an accurate description of three days of dogfooding that measured nothing.
+
+The lesson is the one the project already wrote down and did not apply to itself. Stop condition four in the phase 1 research was that the platform interfaces might be missing, and it was tested carefully for Copilot and taken on trust for Claude Code outside a terminal. An interface that is present in one interface of a harness is not present in all of them, and the way to find out is to read what was actually recorded.

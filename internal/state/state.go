@@ -184,7 +184,13 @@ func (s *Store) sessionPath(id string) string {
 
 var ErrLocked = errors.New("another ZeroTurn process holds the state lock")
 
-const lockStale = 10 * time.Second
+// lockStale is how old a lock must be before it is taken to belong to a
+// process that died. It is shorter than lockTimeout on purpose, so that
+// one invocation can recover from a holder that died moments ago rather
+// than waiting out its deadline and leaving the next one to do it. A
+// hook holds the lock for about a millisecond, so this is generous by
+// three orders of magnitude.
+const lockStale = 2 * time.Second
 
 // lockTimeout is how long an acquisition waits for a lock another
 // process holds. It is a variable so that tests can shorten it; nothing
@@ -202,6 +208,7 @@ const missingBeforeGivingUp = 20
 // behaviour is the same on every supported operating system.
 func (s *Store) Lock() (func(), error) {
 	p := filepath.Join(s.dir, "state.lock")
+	token := lockToken()
 	deadline := time.Now().Add(lockTimeout)
 	// The wait starts short and grows. A hook holds the lock for well
 	// under a millisecond, so a fixed wait of tens of milliseconds spent
@@ -212,9 +219,9 @@ func (s *Store) Lock() (func(), error) {
 	for {
 		f, err := os.OpenFile(p, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 		if err == nil {
-			fmt.Fprintf(f, "%d\n", os.Getpid())
+			fmt.Fprintln(f, token)
 			f.Close()
-			return func() { os.Remove(p) }, nil
+			return func() { releaseLock(p, token) }, nil
 		}
 		// The error alone cannot say whether another process holds the
 		// lock. Windows reports a lock file somebody else holds as
@@ -257,6 +264,29 @@ func (s *Store) Lock() (func(), error) {
 			wait *= 2
 		}
 	}
+}
+
+// lockToken identifies one acquisition. It is written into the lock file
+// so that a release can remove only the lock it took.
+//
+// Without it, a holder whose lock was judged stale and removed would
+// delete the next holder's lock when it finished, and two processes
+// would then write the same records at once. The process identifier
+// alone is not enough, because it is reused.
+func lockToken() string {
+	return fmt.Sprintf("%d %d", os.Getpid(), time.Now().UnixNano())
+}
+
+// releaseLock removes the lock only while it is still the one this
+// acquisition took. A lock that was taken over belongs to somebody else
+// and removing it would hand a third process a lock two others believe
+// they hold.
+func releaseLock(path, token string) {
+	b, err := ioutil.ReadFile(path)
+	if err != nil || strings.TrimSpace(string(b)) != token {
+		return
+	}
+	os.Remove(path)
 }
 
 func (s *Store) Load(id string) (Session, bool, error) {

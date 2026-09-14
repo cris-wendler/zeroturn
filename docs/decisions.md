@@ -457,3 +457,17 @@ The evidence that it works is the split between what was caught and how. Drift w
 What makes this worth recording rather than filing as ordinary hygiene is what changed about who writes the code. A person drifts slowly enough for review to catch it. In one afternoon here, an agent left three documents describing the previous continuous integration matrix, made the count in the portfolio document wrong twice, and invalidated a branch rule by renaming the jobs it required. None of it was careless. An agent holds no memory of the parallel lists in a repository and makes more changes in a day than a person, so every hand maintained description rots faster and is read less often than it used to be.
 
 A derived check is the only kind that cannot be forgotten, because there is nothing to remember.
+
+## 34. A release removes only the lock it took
+
+Date: 2026-09-14
+
+The architecture review recorded two faults in the state lock and fixed neither. Both are fixed here.
+
+The first is the serious one. The release closure removed whatever lock file was present, not the one the caller had taken. A holder judged stale has its lock removed and another process takes over, and when the first one finishes it deletes the second one's lock. A third process then acquires a lock two others believe they hold, and the mutual exclusion the file exists to provide is gone.
+
+Each acquisition now writes a token, the process identifier with the time it acquired, and the release reads the file and removes it only while that token is still there. The process identifier alone would not do, because it is reused.
+
+The second is that the staleness limit was longer than the deadline for acquiring. A lock left by a process that died two seconds ago could not be cleared by the next invocation, which waited out its five seconds and gave up on a lock it was entitled to take. The limit is two seconds now, shorter than the deadline, so one invocation recovers. A hook holds the lock for about a millisecond, so that is three orders of magnitude of headroom, and clearing one early is now safe in a way it was not before: the holder it was taken from can no longer delete the new lock when it returns, and every write is atomic, so the worst case is a lost update rather than a damaged record.
+
+Both tests were confirmed to fail first. Against the old release the first reports that the first holder removed the second holder's lock. Against the old limit the second reports that the staleness limit is not shorter than the deadline.

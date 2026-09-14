@@ -1,9 +1,18 @@
 name: ci
 
+# Pull requests run everything that gates a merge. A push to main runs
+# the cheap half again, so the badge and the history say something about
+# main itself rather than only about branches that no longer exist.
+#
+# macOS is not here. It runs weekly in macos.yml, because a macOS runner
+# is billed at ten times its wall clock on a private repository and this
+# project is developed on macOS, so the local suite covers it on every
+# change already.
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -42,15 +51,27 @@ jobs:
             go: "1.17"
           - os: ubuntu-latest
             go: stable
-          - os: macos-latest
-            go: stable
-          - os: windows-latest
-            go: stable
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
           go-version: ${{ matrix.go }}
+          cache: false
+      - name: go test
+        run: go test ./...
+
+  # Windows gates a merge rather than reporting after one. Path handling,
+  # file locking, and the errors a held file reports differ there, and
+  # that difference has produced real defects in this project twice.
+  windows:
+    name: test (windows-latest, Go stable)
+    if: github.event_name != 'push'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
           cache: false
       - name: go test
         run: go test ./...

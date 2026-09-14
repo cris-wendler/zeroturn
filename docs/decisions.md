@@ -348,3 +348,19 @@ The command keeps what a command should keep: flags, where the settings file is,
 Both new packages have tests that were confirmed to fail first. Ignoring the recorded key order fails the settings test. Dropping a whole entry rather than only ZeroTurn's commands in it fails the ownership test. The ten end to end tests that drive the real binary were not changed and still pass, which is what says the behaviour is the same.
 
 `SamePath` is exported because `doctor` applies the same rule when it checks whether the installed entries point at this executable. Comparing two paths as files rather than as text is what makes a symbolic link, which is how a package manager usually installs an executable, not read as a different program.
+
+## 28. The tuning analysis is a library, and its published names are pinned
+
+Date: 2026-09-14
+
+The second half of the extraction the review asked for. `cmd_tune.go` held the analysis that reads what the gate asked and what the developer did next: which threshold was crossed, whether a subagent followed, and what that implies about where the threshold should sit. It is the only part of ZeroTurn that suggests a change to a setting, and it lived in the command package.
+
+Decision: `internal/tune` holds it, as `Analyse` over a configuration, a list of session records, and the repository the records must belong to. The command keeps the flags, the store, and the printing. Records from another repository are ignored, as before: thresholds are per repository, and a history from elsewhere would suggest a change for work it never saw.
+
+A dead field went with the move. `Values []string` was declared on the threshold type, never written and never read.
+
+The six analysis tests moved with the code and are unit tests of a package now rather than of a command. The end to end test stays where it is, because what it proves is that an approval is learned from a subagent starting, which needs the real binary.
+
+One test is new, and it was confirmed to fail first. `schemas/policy-tune.schema.json` sets `additionalProperties: false`, so a renamed field makes the output invalid for every adapter. The conformance suite validates this command's output, but only ever against a report with no thresholds in it, so the names inside a threshold were checked by nothing. They are pinned now, in both directions: a name that appears and is not in the schema fails, and a name that stops appearing fails. Renaming `suggested` fails it.
+
+This mattered here because the move renamed the Go field that holds the list, from `Tunings` to `Thresholds`, while its JSON name stays `thresholds`. That is exactly the edit that silently breaks a contract.

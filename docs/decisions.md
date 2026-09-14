@@ -364,3 +364,21 @@ The six analysis tests moved with the code and are unit tests of a package now r
 One test is new, and it was confirmed to fail first. `schemas/policy-tune.schema.json` sets `additionalProperties: false`, so a renamed field makes the output invalid for every adapter. The conformance suite validates this command's output, but only ever against a report with no thresholds in it, so the names inside a threshold were checked by nothing. They are pinned now, in both directions: a name that appears and is not in the schema fails, and a name that stops appearing fails. Renaming `suggested` fails it.
 
 This mattered here because the move renamed the Go field that holds the list, from `Tunings` to `Thresholds`, while its JSON name stays `thresholds`. That is exactly the edit that silently breaks a contract.
+
+## 29. One registry describes a setting, and the type says when it is missing
+
+Date: 2026-09-14
+
+The last of the three extractions the architecture review asked for. A guard setting was described in three places that had to agree and were checked by nobody: the switch in `policy set` that wrote it, the table in `policy show` that printed it, and the list in `Validate` that range checked it. Adding a setting meant remembering all three. The rate projection, added a day earlier, needed edits in each.
+
+Decision: `internal/config` holds one registry. A key carries the name a person types, the label the table prints, what the value means, the values a choice accepts, and one accessor that returns the field itself. Because the accessor returns the field rather than copying it, reading and writing cannot drift apart, and the wording that refuses a bad value is written once instead of at every key.
+
+`policy show` prints the registry. `policy set` looks a key up in it and reports what it refuses as a `ValidationError`, the same type the file validation already used, so a bad value typed at the command line and a bad value committed to the file now fail the same way. `Validate` takes its percentages from the registry, so a percentage setting added later is range checked without being added to a second list. The command is 376 lines, down from 470.
+
+Two tests hold it, and both were confirmed to fail first. The first reads every setting out of the `Guard` type by reflection, using the JSON path a person would type, and compares it against the registry in both directions: a field with no key fails, and a key naming a field that is gone fails. Removing the key for `guard.session.subagentStartsWarn` fails it by name.
+
+The second is the one that matters more. An accessor can point at the wrong field and still compile, which is the defect this shape invites. So each key is written through, and the test requires that exactly one setting changed and that it was the one the key names. Pointing `guard.context.confirm` at the critical threshold fails it with both names in the message.
+
+The lesson is the same one as the privacy tests in 23 and the adapter parity in 25. A list maintained by hand alongside a type needs a test that derives one from the other, or it is correct only until the next person forgets.
+
+What this buys beyond tidiness: uninstall and configuration migration both need to walk every setting, and neither can now be written against a list that is out of date.

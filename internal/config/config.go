@@ -250,17 +250,14 @@ func (c Config) Validate() error {
 		return ValidationError{"guard.credentials.prompts", "value " + quote(c.Guard.Credentials.Prompts) + " is not a prompt guard setting",
 			"use off, or block"}
 	}
-	for _, f := range []struct {
-		n string
-		v int
-	}{
-		{"guard.context.warn", c.Guard.Context.Warn},
-		{"guard.context.confirm", c.Guard.Context.Confirm},
-		{"guard.context.critical", c.Guard.Context.Critical},
-		{"guard.limits.fiveHourWarn", c.Guard.Limits.FiveHourWarn},
-		{"guard.limits.sevenDayWarn", c.Guard.Limits.SevenDayWarn},
-	} {
-		if err := pct(f.n, f.v); err != nil {
+	// The percentages come from the key registry rather than a list
+	// repeated here, so a new percentage setting is range checked without
+	// anyone remembering to add it.
+	for _, k := range keys {
+		if k.Kind != KindPercent {
+			continue
+		}
+		if err := pct(k.Name, *k.num(&c.Guard)); err != nil {
 			return err
 		}
 	}

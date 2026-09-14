@@ -1,6 +1,7 @@
 # ZeroTurn
 
-[![Tests on Linux, macOS, and Windows](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml/badge.svg)](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml)
+[![Tests on Linux and Windows](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml/badge.svg)](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml)
+[![Tests on macOS](https://github.com/cris-wendler/zeroturn/actions/workflows/macos.yml/badge.svg)](https://github.com/cris-wendler/zeroturn/actions/workflows/macos.yml)
 
 Know when a coding session is under pressure. Keep routine development work local.
 
@@ -385,7 +386,7 @@ Before contributing, check that the feature is not already there and search the 
 - Subagent counts cover only subagents started while ZeroTurn was installed. One that never reports stopping is cleared when the turn ends.
 - The background task count is as current as the last `Stop` event.
 - The interactive approval prompt for Confirm mode has not yet been observed.
-- The test suite runs on Linux, macOS, and Windows in continuous integration. On Windows, tests that need a POSIX shell are skipped. The harness integration has been used on macOS only.
+- The test suite runs on Linux and Windows for every change, and on macOS weekly. On Windows, tests that need a POSIX shell are skipped. The harness integration has been used on macOS only.
 - The status line has been checked in the terminal interface of the harness only.
 
 ## Roadmap

@@ -69,7 +69,7 @@ git push --set-upstream origin docs/short-description
 gh pr create --fill
 ```
 
-Pull requests are **squashed** into one commit, so `main` carries one commit per change with the detail in the pull request. The branch is deleted when it merges. The checks in [.github/workflows/ci.yml](.github/workflows/ci.yml) run on every pull request, and a red check blocks the merge.
+Pull requests are **squashed** into one commit, so `main` carries one commit per change with the detail in the pull request. The branch is deleted when it merges. The checks in [.github/workflows/ci.yml](.github/workflows/ci.yml) run on every pull request, and a red check blocks the merge. They cover Linux with both supported Go versions, and Windows. macOS runs weekly in [.github/workflows/macos.yml](.github/workflows/macos.yml), and can be started by hand from the Actions tab.
 
 ## Working on the code
 

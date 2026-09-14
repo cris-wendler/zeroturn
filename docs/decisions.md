@@ -499,3 +499,17 @@ The first of those closed a drift of the kind decision 33 describes. The publish
 Both tests were confirmed to fail first. Without the digest, four different identifiers report that they all become `a_b`. Without the refusal, a record is written for an event that names no session at all.
 
 Two test payloads had to gain a session identifier to keep passing. They were written without one, which the contract never allowed, and no parser had been enforcing it.
+
+## 37. The check that proves the modes work is itself checked
+
+Date: 2026-09-14
+
+Last of the four defects the architecture review recorded without fixing, and the one whose shape matters most.
+
+`zeroturn doctor --compat` exists to tell somebody that each guard mode still produces the decision it claims. It is the evidence a person is offered when they ask whether the gate works. Nothing checked that it still checks. A version of it that quietly stopped asserting anything would have reported success to everybody who ran it, and the louder the claim it makes, the worse that is.
+
+Decision: three tests. The first requires the three modes and the redaction check to be reported, each passing, each naming the decision it produced. The second requires the live test to say it was not run, rather than leaving a reader to believe the harness was asked something. The third requires the flag to add checks the ordinary run does not have, because a `--compat` returning only the ordinary checks would look like it passed.
+
+Confirmed to fail first. A `compatFixtures` that returns nothing reports that every mode is no longer named.
+
+This is the same rule as decisions 23 and 33, applied one level up. A test that asserts something must be shown failing, and that includes a test whose whole purpose is to assert that other things work.

@@ -15,6 +15,7 @@ import (
 
 	"github.com/cris-wendler/zeroturn/internal/config"
 	"github.com/cris-wendler/zeroturn/internal/events"
+	"github.com/cris-wendler/zeroturn/internal/harness/claude"
 	"github.com/cris-wendler/zeroturn/internal/output"
 	"github.com/cris-wendler/zeroturn/internal/policy"
 	"github.com/cris-wendler/zeroturn/internal/state"
@@ -168,7 +169,7 @@ func checkRepo(ctx context.Context) []check {
 	// fails in silence, which for a guard is the worst way to fail.
 	self := selfPath()
 	for _, p := range paths {
-		if samePath(p, self) {
+		if claude.SamePath(p, self) {
 			continue
 		}
 		if _, err := os.Stat(p); err != nil {
@@ -211,10 +212,10 @@ func installedIntegration(root string) (string, []string) {
 		seen := map[string]bool{}
 		var paths []string
 		add := func(command string) {
-			if !owned(command) {
+			if !claude.Owned(command) {
 				return
 			}
-			if path := installedPath(command); path != "" && !seen[path] {
+			if path := claude.InstalledPath(command); path != "" && !seen[path] {
 				seen[path] = true
 				paths = append(paths, path)
 			}

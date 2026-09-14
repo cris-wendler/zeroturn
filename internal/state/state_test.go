@@ -589,3 +589,42 @@ func TestAHolderThatDiedIsRecoveredWithinOneAcquisition(t *testing.T) {
 	}
 	unlock()
 }
+
+// Counts are kept per session, so two sessions sharing one record would
+// add up into a session that never existed, and the gate would act on
+// numbers belonging to work it has nothing to do with.
+func TestDifferentSessionsNeverShareARecord(t *testing.T) {
+	ids := []string{
+		"a/b", "a_b", "a:b", "a b",
+		strings.Repeat("x", 200), strings.Repeat("x", 199) + "y",
+		"../../etc/passwd", "....//etc/passwd",
+	}
+	seen := map[string]string{}
+	for _, id := range ids {
+		name := safeID(id)
+		if other, clash := seen[name]; clash {
+			t.Errorf("%q and %q both become %q", other, id, name)
+			continue
+		}
+		seen[name] = id
+		if len(name) > 80 {
+			t.Errorf("%q becomes a name of %d characters", id, len(name))
+		}
+		if strings.ContainsAny(name, `/\`) || strings.Contains(name, "..") {
+			t.Errorf("%q becomes %q, which leaves the directory", id, name)
+		}
+	}
+}
+
+// An event that names no session cannot be attributed to one. Writing it
+// anyway put it in a record shared with every other such event.
+func TestAnEventWithNoSessionIsNotStored(t *testing.T) {
+	st := testStore(t)
+	if _, err := st.Update("", "", func(s *Session) { s.AddActive("a") }); err != ErrNoSession {
+		t.Fatalf("err %v, want ErrNoSession", err)
+	}
+	entries, _ := ioutil.ReadDir(st.SessionsDir())
+	if len(entries) != 0 {
+		t.Fatalf("a record was written anyway: %v", entries)
+	}
+}

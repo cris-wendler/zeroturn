@@ -483,3 +483,19 @@ Decision: the reading moves into `scanTarget`, which opens the file once and tak
 The race itself is not tested, and pretending otherwise would be worse than saying so. Winning it on demand needs the file replaced between two calls that are microseconds apart, and a test that tries would pass whether the fix were there or not. What is tested is the shape the fix gives the code: an ordinary file is read, a directory and a missing file and a file over the limit are refused, a device is refused before it is opened, and a file of exactly the limit is read in full.
 
 That last test is in the set because of a mistake worth recording. It began as an assertion that no more than the limit is ever read, which could not fail: a file of exactly the limit reads identically with the bound and without it. It was rewritten to check the boundary it actually exercises, and rejecting a file at the limit rather than above it now fails it. The rule from decision 23 applies to the tests written for a fix as much as to the ones a fix repairs.
+
+## 36. Two sessions can never share a record
+
+Date: 2026-09-14
+
+Third of the four defects the architecture review recorded without fixing. A session identifier that was missing, or that held a character the file name could not carry, became a record shared with every other one like it, and the counts of unrelated sessions added up into a session that never happened. The gate then asked or allowed on numbers belonging to work it had nothing to do with.
+
+There were two ways in. An event with no identifier stored itself as `unknown`, and every other such event joined it. An identifier with an unusable character had it replaced by an underscore, so `a/b`, `a_b`, `a:b` and `a b` all named the same file.
+
+Decision: it is refused at all three layers it can enter through. Both parsers reject an event that does not name its session, the store refuses to write a record for one, and the file name keeps a short digest of the original identifier whenever the name had to be changed at all, inside the same length bound as before.
+
+The first of those closed a drift of the kind decision 33 describes. The published schema has listed `sessionId` as required since it was written, and the normalized parser checked the contract version, the event type and the harness name, but never that one. The description and the thing it described had been apart from the beginning.
+
+Both tests were confirmed to fail first. Without the digest, four different identifiers report that they all become `a_b`. Without the refusal, a record is written for an event that names no session at all.
+
+Two test payloads had to gain a session identifier to keep passing. They were written without one, which the contract never allowed, and no parser had been enforcing it.

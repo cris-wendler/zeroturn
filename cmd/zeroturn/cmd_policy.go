@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 
 	"github.com/cris-wendler/zeroturn/internal/capabilities"
@@ -99,23 +98,12 @@ func policyShow(ctx context.Context, args []string) error {
 }
 
 func policyTable(c config.Config) string {
-	return output.Table([][2]string{
-		{"mode", c.Guard.Mode},
-		{"context warn", pctText(c.Guard.Context.Warn)},
-		{"context confirm", pctText(c.Guard.Context.Confirm)},
-		{"context critical", pctText(c.Guard.Context.Critical)},
-		{"five hour warn", pctText(c.Guard.Limits.FiveHourWarn)},
-		{"seven day warn", pctText(c.Guard.Limits.SevenDayWarn)},
-		{"rate projection", c.Guard.Limits.Projection},
-		{"duration warn", fmt.Sprintf("%d minutes", c.Guard.Session.DurationWarnMinutes)},
-		{"active subagents warn", fmt.Sprintf("%d", c.Guard.Session.ActiveSubagentsWarn)},
-		{"subagent starts warn", fmt.Sprintf("%d", c.Guard.Session.SubagentStartsWarn)},
-		{"credential guard", c.Guard.Credentials.Mode},
-		{"prompt guard", c.Guard.Credentials.Prompts},
-	})
+	rows := make([][2]string, 0, len(config.Keys()))
+	for _, k := range config.Keys() {
+		rows = append(rows, [2]string{k.Label, k.Display(c.Guard)})
+	}
+	return output.Table(rows)
 }
-
-func pctText(v int) string { return strconv.Itoa(v) + "%" }
 
 func modeDescription(mode string) string {
 	switch mode {
@@ -331,107 +319,25 @@ func confirmStrict(c config.Config) error {
 	return nil
 }
 
+// applyPolicyKey writes one setting. The keys, what each one accepts,
+// and the wording that refuses a bad value all come from the registry in
+// internal/config, so this command cannot offer a key the rest of the
+// program does not know about.
 func applyPolicyKey(c *config.Config, key, value string) error {
-	intVal := func() (int, error) {
-		n, err := strconv.Atoi(value)
-		if err != nil {
-			return 0, output.Errorf(output.ExitInvalidUsage,
-				"zeroturn policy set changed nothing",
-				"value "+strconv.Quote(value)+" for "+key+" is not a whole number",
-				"supply a whole number")
-		}
-		return n, nil
-	}
-	switch key {
-	case "guard.mode":
-		v := strings.ToLower(value)
-		if v != config.ModeObserve && v != config.ModeConfirm && v != config.ModeStrict {
-			return output.Errorf(output.ExitInvalidUsage,
-				"zeroturn policy set changed nothing",
-				"value "+strconv.Quote(value)+" is not a guard mode",
-				"use observe, confirm, or strict")
-		}
-		c.Guard.Mode = v
-	case "guard.context.warn":
-		n, err := intVal()
-		if err != nil {
-			return err
-		}
-		c.Guard.Context.Warn = n
-	case "guard.context.confirm":
-		n, err := intVal()
-		if err != nil {
-			return err
-		}
-		c.Guard.Context.Confirm = n
-	case "guard.context.critical":
-		n, err := intVal()
-		if err != nil {
-			return err
-		}
-		c.Guard.Context.Critical = n
-	case "guard.limits.fiveHourWarn":
-		n, err := intVal()
-		if err != nil {
-			return err
-		}
-		c.Guard.Limits.FiveHourWarn = n
-	case "guard.limits.sevenDayWarn":
-		n, err := intVal()
-		if err != nil {
-			return err
-		}
-		c.Guard.Limits.SevenDayWarn = n
-	case "guard.limits.projection":
-		v := strings.ToLower(value)
-		if v != config.ProjectionOn && v != config.ProjectionOff {
-			return output.Errorf(output.ExitInvalidUsage,
-				"zeroturn policy set changed nothing",
-				"value "+strconv.Quote(value)+" is not a projection setting",
-				"use on, or off")
-		}
-		c.Guard.Limits.Projection = v
-	case "guard.session.durationWarnMinutes":
-		n, err := intVal()
-		if err != nil {
-			return err
-		}
-		c.Guard.Session.DurationWarnMinutes = n
-	case "guard.session.activeSubagentsWarn":
-		n, err := intVal()
-		if err != nil {
-			return err
-		}
-		c.Guard.Session.ActiveSubagentsWarn = n
-	case "guard.credentials.mode":
-		v := strings.ToLower(value)
-		if v != config.CredentialOff && v != config.CredentialAsk && v != config.CredentialDeny {
-			return output.Errorf(output.ExitInvalidUsage,
-				"zeroturn policy set changed nothing",
-				"value "+strconv.Quote(value)+" is not a credential guard mode",
-				"use off, ask, or deny")
-		}
-		c.Guard.Credentials.Mode = v
-	case "guard.credentials.prompts":
-		v := strings.ToLower(value)
-		if v != config.PromptsOff && v != config.PromptsBlock {
-			return output.Errorf(output.ExitInvalidUsage,
-				"zeroturn policy set changed nothing",
-				"value "+strconv.Quote(value)+" is not a prompt guard setting",
-				"use off, or block")
-		}
-		c.Guard.Credentials.Prompts = v
-	case "guard.session.subagentStartsWarn":
-		n, err := intVal()
-		if err != nil {
-			return err
-		}
-		c.Guard.Session.SubagentStartsWarn = n
-	default:
+	k, ok := config.Lookup(key)
+	if !ok {
 		return output.Errorf(output.ExitInvalidUsage,
 			"zeroturn policy set changed nothing",
 			"there is no policy key named "+key,
 			"run zeroturn policy show to list the keys")
+	}
+	if err := k.Set(&c.Guard, value); err != nil {
+		ve, isValidation := err.(config.ValidationError)
+		if !isValidation {
+			return err
+		}
+		return output.Errorf(output.ExitInvalidUsage,
+			"zeroturn policy set changed nothing", ve.Detail, ve.Fix)
 	}
 	return nil
 }

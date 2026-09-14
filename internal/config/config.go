@@ -226,41 +226,21 @@ func (c Config) Validate() error {
 			fmt.Sprintf("file declares version %d, this build supports version %d", c.Version, Version),
 			"run zeroturn init to write a supported file, or set version to 1"}
 	}
-	switch c.Guard.Mode {
-	case ModeObserve, ModeConfirm, ModeStrict:
-	default:
-		return ValidationError{"guard.mode", "value " + quote(c.Guard.Mode) + " is not a guard mode",
-			"use observe, confirm, or strict"}
+	// Every choice and every percentage is checked against the registry,
+	// so a setting added there is validated without being added here too.
+	for _, k := range keys {
+		if err := k.Check(c.Guard); err != nil {
+			return err
+		}
 	}
-	switch c.Guard.Credentials.Mode {
-	case CredentialOff, CredentialAsk, CredentialDeny:
-	default:
-		return ValidationError{"guard.credentials.mode", "value " + quote(c.Guard.Credentials.Mode) + " is not a credential guard mode",
-			"use off, ask, or deny"}
-	}
-	switch c.Guard.Limits.Projection {
-	case ProjectionOn, ProjectionOff:
-	default:
-		return ValidationError{"guard.limits.projection", "value " + quote(c.Guard.Limits.Projection) + " is not a projection setting",
-			"use on, or off"}
-	}
-	switch c.Guard.Credentials.Prompts {
-	case PromptsOff, PromptsBlock:
-	default:
-		return ValidationError{"guard.credentials.prompts", "value " + quote(c.Guard.Credentials.Prompts) + " is not a prompt guard setting",
-			"use off, or block"}
-	}
-	for _, f := range []struct {
-		n string
-		v int
-	}{
-		{"guard.context.warn", c.Guard.Context.Warn},
-		{"guard.context.confirm", c.Guard.Context.Confirm},
-		{"guard.context.critical", c.Guard.Context.Critical},
-		{"guard.limits.fiveHourWarn", c.Guard.Limits.FiveHourWarn},
-		{"guard.limits.sevenDayWarn", c.Guard.Limits.SevenDayWarn},
-	} {
-		if err := pct(f.n, f.v); err != nil {
+	// The percentages come from the key registry rather than a list
+	// repeated here, so a new percentage setting is range checked without
+	// anyone remembering to add it.
+	for _, k := range keys {
+		if k.Kind != KindPercent {
+			continue
+		}
+		if err := pct(k.Name, *k.num(&c.Guard)); err != nil {
 			return err
 		}
 	}

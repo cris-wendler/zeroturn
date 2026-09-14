@@ -324,7 +324,7 @@ Supported. The full guide, including what each hook does and which payload field
 
 `zeroturn integrate claude` writes to `.claude/settings.local.json` in the repository, the settings file that applies to you only, because the entries contain the path of your local executable. `--user` writes to your user settings instead, and only after the same plan and confirmation. `--remove` deletes ZeroTurn's own entries and leaves everything else as it was.
 
-Tested on Claude Code 2.1.265. A denial was honoured in a real session and no subagent started. An allow let the subagent start. The ask decision is accepted by the harness, but the interactive approval prompt has not yet been observed, so Confirm mode is not yet described as tested end to end. Run `zeroturn doctor --compat --live` to repeat the denial test on your machine. It starts one short session and spends a small amount of usage.
+Tested on Claude Code 2.1.265 and 2.1.270. A denial was honoured in a real session and no subagent started. An allow let the subagent start. The ask decision was observed interactively on 2.1.270: the harness showed the reason ZeroTurn supplied, and refusing it stopped the subagent from starting. The same prompt offers to stop asking for that tool in that directory, which turns the gate off for it, and ZeroTurn is not told when that is chosen. Run `zeroturn doctor --compat --live` to repeat the denial test on your machine. It starts one short session and spends a small amount of usage.
 
 ## GitHub Copilot CLI
 
@@ -388,7 +388,7 @@ Before contributing, check that the feature is not already there and search the 
 - Session values appear only when the harness sends them. Some accounts receive no usage window data.
 - Subagent counts cover only subagents started while ZeroTurn was installed. One that never reports stopping is cleared when the turn ends.
 - The background task count is as current as the last `Stop` event.
-- The interactive approval prompt for Confirm mode has not yet been observed.
+- The interactive approval prompt for Confirm mode was observed on Claude Code 2.1.270. It can be bypassed from the prompt itself: the harness offers to stop asking for that tool in that directory, and ZeroTurn is not told when that is chosen.
 - Session Guard measurements require the terminal interface. In an editor extension the status line is never invoked, so context, the usage windows, and duration are absent and only the subagent counts and the credential guard work. Confirmed on Claude Code 2.1.257.
 - The test suite runs on Linux and Windows for every change, and on macOS weekly. On Windows, tests that need a POSIX shell are skipped. The harness integration has been used on macOS only.
 - The status line has been checked in the terminal interface of the harness only.

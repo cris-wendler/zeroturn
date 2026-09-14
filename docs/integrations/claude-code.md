@@ -104,7 +104,7 @@ If ZeroTurn cannot parse an event, open its state, or load the configuration, it
 | --- | --- |
 | deny | Honoured. No subagent started. Observed through `zeroturn doctor --compat --live`. |
 | allow | Honoured. The subagent started, and start and stop events arrived with an agent identifier. |
-| ask | Accepted. In an unattended run the harness refused the call. The interactive approval prompt has not yet been observed. |
+| ask | Honoured. Observed interactively on 2.1.270: the harness showed the reason and the refusal stopped the subagent. In an unattended run it refuses the call, because nobody can answer. |
 
 `zeroturn doctor --compat` checks that each mode produces the decision it claims, using fixture events. Adding `--live` starts one short non interactive session with the smallest model, in a temporary repository with temporary ZeroTurn state and a temporary settings file, and reports whether the harness honoured a denial. It spends a small amount of usage.
 

@@ -84,11 +84,11 @@ The performance work came from measurement as well: the first numbers were 31 ms
 
 Written in the README, not buried:
 
-- The interactive approval prompt for Confirm mode has not been observed.
+- The interactive approval prompt was observed on 2026-09-14, on Claude Code 2.1.270, and the refusal was honoured.
 - The integration has been used on macOS only, although the tests run on three systems.
 - The credential guards match high confidence patterns, so they reduce a common mistake rather than eliminate a class of them.
 - Whether the gate is useful in daily work is unknown until it has been used in daily work.
 
 ## How decisions are recorded
 
-31 entries in [decisions.md](decisions.md), each with the decision, the evidence, and the consequence. They include the ones that cut scope: `sync` dropped, Copilot deferred, goreleaser refused, and the license text left untouched. A decision that turns out to be wrong is meant to be replaced there, with its reason, rather than quietly reversed.
+32 entries in [decisions.md](decisions.md), each with the decision, the evidence, and the consequence. They include the ones that cut scope: `sync` dropped, Copilot deferred, goreleaser refused, and the license text left untouched. A decision that turns out to be wrong is meant to be replaced there, with its reason, rather than quietly reversed.

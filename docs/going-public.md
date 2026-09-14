@@ -44,7 +44,7 @@ go install github.com/cris-wendler/zeroturn/cmd/zeroturn@latest
 zeroturn version
 ```
 
-If that works, add the command to the README installation section, which currently describes building from source.
+This was checked on 2026-09-14 and the README now leads with it.
 
 ## Then, when there is something to release
 

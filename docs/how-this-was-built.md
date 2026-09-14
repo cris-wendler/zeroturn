@@ -80,6 +80,31 @@ These were found by the project's own tests and continuous integration, not by a
 
 The performance work came from measurement as well: the first numbers were 31 ms and 53 ms, and two changes brought both to about 8 ms.
 
+## The same defect, six times
+
+One failure kept coming back, and it was not noticed as a pattern until the sixth time. A description of something was kept by hand beside the thing it described, and the two drifted apart.
+
+| What drifted | From what |
+| --- | --- |
+| The list of fields a session record may store | the `Session` type |
+| The shape an adapter can send | the `Event` type the gate reads |
+| The table of policy keys, in three copies | the `Guard` type |
+| The counts in this document | the repository |
+| The platform claims in the README | what the harness actually delivers |
+| The required checks in the branch ruleset | the jobs the workflow defines |
+
+Each one was written up on its own as a new lesson. Read together they are one lesson: a description maintained beside a thing will drift, and the answer is to derive it from the thing instead. Nine tests in this repository now do that. They compare against a type by reflection, against the other implementation of a contract, or against the files on disk, and they fail in both directions, so neither a missing entry nor a stale one survives.
+
+The evidence for whether that works is in what happened next. Every drift with a derived check was caught automatically: three unlisted fields in the stored record, a contract version an adapter could not send, `--help` broken on seven commands, and the counts in this document twice within an hour of the check being written. Every drift without one was caught by luck: a test count out by a hundred, platform claims in three documents, and a branch rule requiring a check that no longer exists, which would have blocked every merge once it was applied.
+
+## Why this matters more with an agent writing the code
+
+A person changes one thing and drifts slowly enough that review catches it. This project was built with a coding agent, and the drift arrived faster than anyone reads.
+
+In a single afternoon: changing the continuous integration matrix left three documents stating the old one; adding two decision entries made the count in this document wrong twice; and changing a workflow silently invalidated the branch rule that depended on its job names. None of that was carelessness. An agent holds no memory of the parallel lists scattered through a repository, and it makes more changes per day than a person, so every hand-maintained description rots faster and is read less often.
+
+That is the argument for deriving rather than maintaining, and it is stronger now than it was before agents wrote code. A check that reads the type is the only kind that cannot be forgotten, because there is nothing to remember.
+
 ## What is still unproven
 
 Written in the README, not buried:
@@ -91,4 +116,4 @@ Written in the README, not buried:
 
 ## How decisions are recorded
 
-32 entries in [decisions.md](decisions.md), each with the decision, the evidence, and the consequence. They include the ones that cut scope: `sync` dropped, Copilot deferred, goreleaser refused, and the license text left untouched. A decision that turns out to be wrong is meant to be replaced there, with its reason, rather than quietly reversed.
+33 entries in [decisions.md](decisions.md), each with the decision, the evidence, and the consequence. They include the ones that cut scope: `sync` dropped, Copilot deferred, goreleaser refused, and the license text left untouched. A decision that turns out to be wrong is meant to be replaced there, with its reason, rather than quietly reversed.

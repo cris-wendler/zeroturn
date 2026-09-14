@@ -8,13 +8,28 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 
 	"github.com/cris-wendler/zeroturn/internal/output"
 )
 
-// Version is set at build time. The zero value marks a development build.
+// Version is set at build time by the release script. A build made with
+// go install carries no such value, so the module version recorded in
+// the executable is used instead, and a developer building from a
+// checkout keeps the default.
 var Version = "0.1.0-dev"
+
+func version() string {
+	if Version != "0.1.0-dev" {
+		return Version
+	}
+	info, ok := debug.ReadBuildInfo()
+	if !ok || info.Main.Version == "" || info.Main.Version == "(devel)" {
+		return Version
+	}
+	return info.Main.Version
+}
 
 const usage = `zeroturn shows session pressure and runs routine development commands locally.
 
@@ -82,7 +97,7 @@ func main() {
 	case "event":
 		err = cmdEvent(ctx, args)
 	case "version", "--version", "-v":
-		fmt.Printf("zeroturn %s\n", Version)
+		fmt.Printf("zeroturn %s\n", version())
 	case "help", "--help", "-h":
 		fmt.Print(usage)
 	default:

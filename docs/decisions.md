@@ -418,3 +418,26 @@ Decision: say it where someone decides whether to install, and detect it rather 
 On this machine that check now reports six of seven recent sessions carried nothing, which is an accurate description of three days of dogfooding that measured nothing.
 
 The lesson is the one the project already wrote down and did not apply to itself. Stop condition four in the phase 1 research was that the platform interfaces might be missing, and it was tested carefully for Copilot and taken on trust for Claude Code outside a terminal. An interface that is present in one interface of a harness is not present in all of them, and the way to find out is to read what was actually recorded.
+
+## 32. The approval prompt was observed, and it can be switched off from inside itself
+
+Date: 2026-09-14
+
+The last unverified claim in this project is closed. Confirm mode had been accepted by the harness and refused correctly in an unattended run, but nobody had watched a person be asked, so the README said so rather than claiming the mode worked end to end.
+
+It was observed on Claude Code 2.1.270, in a terminal, with the five hour threshold set to 20 and the seven day threshold to 1 so that the real measurements would cross them. The harness showed:
+
+```
+Hook PreToolUse:Agent requires confirmation for this tool:
+New subagent requires approval. Five hour usage is 29% and seven day usage is 4%.
+```
+
+The reason is the sentence ZeroTurn built, carried through unchanged. Refusing it stopped the subagent: nothing started. The stored record afterwards held one confirm request, one gate outcome with the decision, the two thresholds that produced it and the measurements behind them, an approval flag still false, and no subagent start. That is exactly what `policy tune` needs in order to learn that a threshold asked and the answer was no.
+
+What the same prompt also showed is worth more than the confirmation. Under the two ordinary answers the harness offers a third: stop asking for this tool in this directory. One keypress turns the gate off for every future subagent there, permanently, and ZeroTurn is never told. Nothing in the record distinguishes a session where the gate was never crossed from one where it was switched off, and a report would show no asks in both cases.
+
+Decision: say so. The README carries it beside the compatibility result and in the list of limits, and the integration document records the ask row as observed. The honest description of the gate is that it asks once and can be dismissed forever from inside its own prompt.
+
+This also settles what the gate is for. A guard that a person can disable in one keypress, at the exact moment it is inconvenient, is not a budget. It is a prompt to notice something, and it is worth what noticing is worth.
+
+Detecting the bypass was considered and not built. The harness records the exemption in its own settings, and reading them to report it is possible, but the shape of that rule was not observed here and guessing it would produce a check that quietly never fires, which is the failure this project has now made twice.

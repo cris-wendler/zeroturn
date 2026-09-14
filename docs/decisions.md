@@ -441,3 +441,19 @@ Decision: say so. The README carries it beside the compatibility result and in t
 This also settles what the gate is for. A guard that a person can disable in one keypress, at the exact moment it is inconvenient, is not a budget. It is a prompt to notice something, and it is worth what noticing is worth.
 
 Detecting the bypass was considered and not built. The harness records the exemption in its own settings, and reading them to report it is possible, but the shape of that rule was not observed here and guessing it would produce a check that quietly never fires, which is the failure this project has now made twice.
+
+## 33. A description beside a thing will drift, so derive it
+
+Date: 2026-09-14
+
+Six defects in this project have now had the same shape, and it took the sixth to see it. A description of something was kept by hand beside the thing it described, and the two came apart: the permitted fields beside the record type, the adapter shape beside the event, the policy keys in three copies beside the configuration struct, the counts in the portfolio document beside the repository, the platform claims in the README beside what the harness delivers, and the required checks in the branch ruleset beside the jobs that produce them.
+
+Each was recorded as its own lesson, in decisions 23, 24, 25, 29, 31 and in the pre flight read before publishing. Together they are one lesson, and it is now written as a rule in the contributing guide: when a change names or counts something in a second place, derive the second from the first in a test rather than maintaining both.
+
+Nine tests here do that. They read a type by reflection, compare one implementation of a contract against the other, or count what is on disk, and they fail in both directions so that neither a missing entry nor a stale one survives.
+
+The evidence that it works is the split between what was caught and how. Drift with a derived check was caught automatically: three unlisted fields in the stored record, a contract version no adapter could send, help broken on seven commands, and the counts in the portfolio document twice inside an hour of the check being written. Drift without one was caught by luck: a test count out by roughly a hundred, platform claims in three documents, and a branch rule requiring a check that a change in the same pull request had just removed, which would have blocked every merge to main once it was applied.
+
+What makes this worth recording rather than filing as ordinary hygiene is what changed about who writes the code. A person drifts slowly enough for review to catch it. In one afternoon here, an agent left three documents describing the previous continuous integration matrix, made the count in the portfolio document wrong twice, and invalidated a branch rule by renaming the jobs it required. None of it was careless. An agent holds no memory of the parallel lists in a repository and makes more changes in a day than a person, so every hand maintained description rots faster and is read less often than it used to be.
+
+A derived check is the only kind that cannot be forgotten, because there is nothing to remember.

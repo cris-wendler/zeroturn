@@ -517,3 +517,75 @@ func TestLockClearsALockLeftBehind(t *testing.T) {
 		t.Fatalf("clearing a stale lock took %s", time.Since(start))
 	}
 }
+
+// A lock judged stale is removed and taken over. The process it was
+// taken from is still running, and when it finishes it releases. Without
+// an ownership mark that release removes the new holder's lock, and a
+// third process then acquires one that two others believe they hold.
+func TestAReleaseCannotRemoveSomebodyElsesLock(t *testing.T) {
+	st := testStore(t)
+	p := filepath.Join(st.Dir(), "state.lock")
+
+	// The first holder acquires, then stalls long enough to look dead.
+	release, err := st.Lock()
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := time.Now().Add(-time.Hour)
+	if err := os.Chtimes(p, old, old); err != nil {
+		t.Fatal(err)
+	}
+
+	// A second process judges it stale, clears it, and takes over.
+	second, err := st.Lock()
+	if err != nil {
+		t.Fatalf("a stale lock was not taken over: %v", err)
+	}
+	taken, err := ioutil.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The first holder now finishes. Its release must do nothing.
+	release()
+
+	after, err := ioutil.ReadFile(p)
+	if err != nil {
+		t.Fatalf("the first holder removed the second holder's lock: %v", err)
+	}
+	if string(after) != string(taken) {
+		t.Fatalf("the lock changed hands: %q became %q", taken, after)
+	}
+	second()
+	if _, err := os.Stat(p); !os.IsNotExist(err) {
+		t.Fatalf("the real holder could not release: %v", err)
+	}
+}
+
+// The staleness limit has to be shorter than the acquisition deadline,
+// or one invocation waits out its whole deadline and gives up on a lock
+// it was entitled to clear, leaving the recovery to the next one.
+func TestAHolderThatDiedIsRecoveredWithinOneAcquisition(t *testing.T) {
+	if lockStale >= lockTimeout {
+		t.Fatalf("stale limit %v is not shorter than the deadline %v, so one acquisition cannot recover", lockStale, lockTimeout)
+	}
+	st := testStore(t)
+	p := filepath.Join(st.Dir(), "state.lock")
+	if err := ioutil.WriteFile(p, []byte("1 1\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	// Dead just long enough to count as stale, far short of the deadline.
+	dead := time.Now().Add(-(lockStale + time.Second))
+	if err := os.Chtimes(p, dead, dead); err != nil {
+		t.Fatal(err)
+	}
+	start := time.Now()
+	unlock, err := st.Lock()
+	if err != nil {
+		t.Fatalf("not recovered: %v", err)
+	}
+	if took := time.Since(start); took > lockTimeout {
+		t.Errorf("recovery took %v, longer than the deadline", took)
+	}
+	unlock()
+}

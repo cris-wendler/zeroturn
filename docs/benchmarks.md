@@ -83,6 +83,26 @@ Two changes, on 2026-09-11:
 
 Before those changes, on the same machine, the status line took 31.3 ms and the gate 53.1 ms.
 
+A third change, on 2026-09-14: the credential patterns are compiled when
+one is first needed rather than when the package is loaded. The
+executable starts fresh for every hook call, and a status line repaint
+never scans anything, so it was compiling thirty expressions, and thirty
+more loose copies of them for redaction, to use none of them. The
+anchors mean that even a scan usually compiles none: a literal string
+has to appear in the line before its expression is built.
+
+That change was measured on a different machine from the table above, so
+the figures are not comparable with it, only with each other:
+
+| Measured on Apple Silicon, 18 processors, Go 1.27.1, plain `go build`, 200 runs | Before | After |
+| --- | --- | --- |
+| startup | 2.6 ms | 2.35 ms |
+| status line | 3.15 ms | 2.9 ms |
+
+About a quarter of a millisecond, which is what compiling those
+expressions costs, and about eight percent of each. Two rounds,
+alternating between the two executables, gave the same result.
+
 ## Limits of these numbers
 
 One machine, one operating system, one storage device. A slower disk or a busy machine will change them. The status line figure is the cost of ZeroTurn's own work, not of the harness that draws the line. `repository status` depends on the size of the repository, because `git` reads it.

@@ -169,11 +169,23 @@ func safeID(id string) string {
 		}
 	}
 	out := b.String()
-	if len(out) > 80 {
-		out = out[:80]
-	}
 	if out == "" {
-		out = "unknown"
+		// Update refuses an event that names no session, so this is the
+		// last line of defence rather than the one that matters.
+		return "unknown"
+	}
+	// Two different identifiers must not name the same record. Anything
+	// outside the permitted characters becomes an underscore, so "a/b"
+	// and "a_b" would otherwise share a file and their counts would add
+	// up into one session that never existed. Whenever the name had to be
+	// changed at all, a short digest of the original keeps it distinct,
+	// inside the same length bound.
+	if out != id || len(out) > 80 {
+		if len(out) > 71 {
+			out = out[:71]
+		}
+		sum := sha256.Sum256([]byte(id))
+		out += "-" + hex.EncodeToString(sum[:])[:8]
 	}
 	return out
 }
@@ -181,6 +193,8 @@ func safeID(id string) string {
 func (s *Store) sessionPath(id string) string {
 	return filepath.Join(s.SessionsDir(), safeID(id)+".json")
 }
+
+var ErrNoSession = errors.New("the event does not name a session")
 
 var ErrLocked = errors.New("another ZeroTurn process holds the state lock")
 
@@ -319,6 +333,11 @@ func (s *Store) Save(sess Session) error {
 
 // Update applies fn to a session under the state lock.
 func (s *Store) Update(id, repoHash string, fn func(*Session)) (Session, error) {
+	// A record with no session to belong to would be shared by every
+	// other one, so there is nowhere safe to write this.
+	if id == "" {
+		return Session{}, ErrNoSession
+	}
 	unlock, err := s.Lock()
 	if err != nil {
 		return Session{}, err

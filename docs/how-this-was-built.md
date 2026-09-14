@@ -116,4 +116,4 @@ Written in the README, not buried:
 
 ## How decisions are recorded
 
-35 entries in [decisions.md](decisions.md), each with the decision, the evidence, and the consequence. They include the ones that cut scope: `sync` dropped, Copilot deferred, goreleaser refused, and the license text left untouched. A decision that turns out to be wrong is meant to be replaced there, with its reason, rather than quietly reversed.
+36 entries in [decisions.md](decisions.md), each with the decision, the evidence, and the consequence. They include the ones that cut scope: `sync` dropped, Copilot deferred, goreleaser refused, and the license text left untouched. A decision that turns out to be wrong is meant to be replaced there, with its reason, rather than quietly reversed.

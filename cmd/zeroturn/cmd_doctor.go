@@ -93,9 +93,17 @@ func cmdDoctor(ctx context.Context, args []string) error {
 	}
 	if failed > 0 {
 		return output.Errorf(output.ExitPolicyFailure, "zeroturn doctor found problems",
-			fmt.Sprintf("%d checks failed", failed), "fix the failures listed above")
+			countedChecks(failed), "fix the failures listed above")
 	}
 	return nil
+}
+
+// countedChecks keeps doctor from reporting "1 checks failed".
+func countedChecks(n int) string {
+	if n == 1 {
+		return "1 check failed"
+	}
+	return fmt.Sprintf("%d checks failed", n)
 }
 
 func checkExecutable(name, bin string, args ...string) check {

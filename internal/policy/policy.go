@@ -168,15 +168,15 @@ func EvaluateAt(g Guard, s state.Session, now time.Time) Result {
 
 	if s.ActiveSubagents >= c.Guard.Session.ActiveSubagentsWarn {
 		t = append(t, Trigger{"activeSubagents", float64(s.ActiveSubagents), float64(c.Guard.Session.ActiveSubagentsWarn),
-			LevelConfirm, fmt.Sprintf("%d subagents are active", s.ActiveSubagents), true})
+			LevelConfirm, countPhrase(s.ActiveSubagents, "1 subagent is active", "%d subagents are active"), true})
 	}
 	if s.SubagentStarts >= c.Guard.Session.SubagentStartsWarn {
 		t = append(t, Trigger{"subagentStarts", float64(s.SubagentStarts), float64(c.Guard.Session.SubagentStartsWarn),
-			LevelConfirm, fmt.Sprintf("%d subagents started this session", s.SubagentStarts), true})
+			LevelConfirm, countPhrase(s.SubagentStarts, "1 subagent started this session", "%d subagents started this session"), true})
 	}
 	if s.BackgroundTasks > 0 {
 		t = append(t, Trigger{"backgroundTasks", float64(s.BackgroundTasks), 1, LevelWarn,
-			fmt.Sprintf("%d background tasks are running", s.BackgroundTasks), true})
+			countPhrase(s.BackgroundTasks, "1 background task is running", "%d background tasks are running"), true})
 	}
 
 	sort.SliceStable(t, func(i, j int) bool { return rank(t[i].Level) > rank(t[j].Level) })
@@ -271,6 +271,16 @@ func Reason(t []Trigger, decision string) string {
 		return head + " " + t[0].Text + "."
 	}
 	return fmt.Sprintf("%s %s and %s.", head, t[0].Text, lowerFirst(t[1].Text))
+}
+
+// countPhrase writes a counted noun in the right form. These strings are
+// read by a person in a permission prompt, where "1 subagents are active"
+// reads as a defect in the tool asking for their approval.
+func countPhrase(n int, one, many string) string {
+	if n == 1 {
+		return one
+	}
+	return fmt.Sprintf(many, n)
 }
 
 func lowerFirst(s string) string {

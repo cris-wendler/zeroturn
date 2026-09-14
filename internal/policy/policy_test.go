@@ -335,3 +335,39 @@ func TestProjectionNeverDeniesInStrictMode(t *testing.T) {
 		t.Fatalf("got %s, want ask: a projection is an estimate, not a fact", r.Decision)
 	}
 }
+
+// The reason is read by a person in a permission prompt, so a counted
+// noun has to agree with its number. Before this, a gate that asked
+// after one subagent said "1 subagents are active", which reads as a
+// defect in the tool asking for approval.
+func TestCountedNounsAgreeWithTheirNumber(t *testing.T) {
+	c := modeConfig(config.ModeConfirm)
+	c.Guard.Session.ActiveSubagentsWarn = 1
+	c.Guard.Session.SubagentStartsWarn = 1
+
+	one := Evaluate(approved(c), state.Session{ActiveSubagents: 1, SubagentStarts: 1, BackgroundTasks: 1})
+	many := Evaluate(approved(c), state.Session{ActiveSubagents: 2, SubagentStarts: 3, BackgroundTasks: 4})
+
+	texts := func(r Result) string {
+		var b strings.Builder
+		for _, x := range r.Triggers {
+			b.WriteString(x.Text)
+			b.WriteString(" | ")
+		}
+		return b.String()
+	}
+	for _, want := range []string{"1 subagent is active", "1 subagent started this session", "1 background task is running"} {
+		if !strings.Contains(texts(one), want) {
+			t.Errorf("missing %q in %s", want, texts(one))
+		}
+	}
+	for _, want := range []string{"2 subagents are active", "3 subagents started this session", "4 background tasks are running"} {
+		if !strings.Contains(texts(many), want) {
+			t.Errorf("missing %q in %s", want, texts(many))
+		}
+	}
+	// The prompt itself, which is what the developer actually reads.
+	if !strings.Contains(one.Reason, "1 subagent is active") {
+		t.Errorf("reason %q", one.Reason)
+	}
+}

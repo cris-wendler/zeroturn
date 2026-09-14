@@ -471,3 +471,15 @@ Each acquisition now writes a token, the process identifier with the time it acq
 The second is that the staleness limit was longer than the deadline for acquiring. A lock left by a process that died two seconds ago could not be cleared by the next invocation, which waited out its five seconds and gave up on a lock it was entitled to take. The limit is two seconds now, shorter than the deadline, so one invocation recovers. A hook holds the lock for about a millisecond, so that is three orders of magnitude of headroom, and clearing one early is now safe in a way it was not before: the holder it was taken from can no longer delete the new lock when it returns, and every write is atomic, so the worst case is a lost update rather than a damaged record.
 
 Both tests were confirmed to fail first. Against the old release the first reports that the first holder removed the second holder's lock. Against the old limit the second reports that the staleness limit is not shorter than the deadline.
+
+## 35. The guard scans the file it opened, not the path it was given
+
+Date: 2026-09-14
+
+Second of the four defects the architecture review recorded without fixing. The credential guard checked the path with one call and then read it with another. Between the two the name can refer to a different file, and what would be scanned then is not what was checked: a file above the limit is read in full, or a device is opened and the read never ends, which hangs the developer waiting for it.
+
+Decision: the reading moves into `scanTarget`, which opens the file once and takes the size and the kind back from the handle the content comes from. The read is bounded as well, whatever the size claimed, because a size is a statement about the past. The cheap check by path stays in front of it, because only an ordinary file should be opened at all: a device reports a size of zero and then never reaches the end, and a pipe blocks on being opened.
+
+The race itself is not tested, and pretending otherwise would be worse than saying so. Winning it on demand needs the file replaced between two calls that are microseconds apart, and a test that tries would pass whether the fix were there or not. What is tested is the shape the fix gives the code: an ordinary file is read, a directory and a missing file and a file over the limit are refused, a device is refused before it is opened, and a file of exactly the limit is read in full.
+
+That last test is in the set because of a mistake worth recording. It began as an assertion that no more than the limit is ever read, which could not fail: a file of exactly the limit reads identically with the bound and without it. It was rewritten to check the boundary it actually exercises, and rejecting a file at the limit rather than above it now fails it. The rule from decision 23 applies to the tests written for a fix as much as to the ones a fix repairs.

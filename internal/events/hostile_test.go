@@ -137,7 +137,7 @@ func TestRandomInputNeverPanics(t *testing.T) {
 // still passed on as the harness sent it, so the policy sees the truth
 // rather than a number ZeroTurn invented.
 func TestPercentagesArePassedThroughUnchanged(t *testing.T) {
-	e, err := ParseClaude(strings.NewReader(`{"context_window":{"used_percentage":140}}`), "")
+	e, err := ParseClaude(strings.NewReader(`{"session_id":"s","context_window":{"used_percentage":140}}`), "")
 	if err != nil {
 		t.Fatal(err)
 	}

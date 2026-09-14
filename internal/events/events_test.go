@@ -207,7 +207,7 @@ func TestFileReadEventCarriesOnlyThePath(t *testing.T) {
 }
 
 func TestPreToolUseForAnotherToolIsUnsupported(t *testing.T) {
-	_, err := ParseClaude(strings.NewReader(`{"hook_event_name":"PreToolUse","tool_name":"Grep"}`), "PreToolUse")
+	_, err := ParseClaude(strings.NewReader(`{"session_id":"s","hook_event_name":"PreToolUse","tool_name":"Grep"}`), "PreToolUse")
 	if !IsUnsupportedTool(err) {
 		t.Fatalf("err %v", err)
 	}
@@ -287,5 +287,18 @@ func TestTheNormalizedShapeCanCarryEveryMeasurement(t *testing.T) {
 			continue
 		}
 		t.Errorf("an event can carry %s and an adapter has no way to send it", name)
+	}
+}
+
+// The published schema requires a session identifier and the record is
+// keyed by it, so a payload without one is refused by both parsers
+// rather than stored where it would be shared.
+func TestAnEventMustNameItsSession(t *testing.T) {
+	if _, err := ParseClaude(strings.NewReader(`{"hook_event_name":"Stop"}`), "Stop"); err == nil {
+		t.Error("the claude parser accepted an event with no session")
+	}
+	normalized := `{"contract":"` + Contract + `","harness":"other","type":"` + TypeStatus + `"}`
+	if _, err := ParseNormalized(strings.NewReader(normalized)); err == nil {
+		t.Error("the normalized parser accepted an event with no session")
 	}
 }

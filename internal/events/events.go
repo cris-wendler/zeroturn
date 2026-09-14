@@ -142,6 +142,13 @@ func ParseClaude(r io.Reader, eventName string) (Event, error) {
 	if err := json.Unmarshal(raw, &p); err != nil {
 		return Event{}, errors.New("the payload is not valid JSON")
 	}
+	// The record is keyed by the session. An event without one cannot be
+	// attributed to a session, and storing it anyway would add its counts
+	// to every other unattributed event, so the gate would act on numbers
+	// belonging to sessions that have nothing to do with each other.
+	if p.SessionID == "" {
+		return Event{}, errors.New("the payload does not name the session")
+	}
 
 	e := Event{
 		Contract:       Contract,
@@ -279,6 +286,13 @@ func ParseNormalized(r io.Reader) (Event, error) {
 	}
 	if n.Harness == "" {
 		return Event{}, errors.New("the adapter did not name its harness")
+	}
+	// The published schema requires a session identifier, and the record
+	// is keyed by it. An event without one cannot be attributed, and
+	// storing it would add its counts to whatever other unattributed
+	// events arrived.
+	if n.SessionID == "" {
+		return Event{}, errors.New("the adapter did not name the session")
 	}
 	return Event{
 		Contract: Contract, Harness: n.Harness, HarnessVersion: n.HarnessVersion,

@@ -219,3 +219,33 @@ func TestEveryPercentKeyIsRangeChecked(t *testing.T) {
 		}
 	}
 }
+
+// A file edited by hand is refused the same way a bad value typed at the
+// command line is. Before the registry these were two switches with the
+// same words written out twice.
+func TestAStoredChoiceIsCheckedAgainstTheRegistry(t *testing.T) {
+	for _, k := range Keys() {
+		if k.Kind != KindChoice {
+			continue
+		}
+		c := Default()
+		*k.str(&c.Guard) = "nonsense"
+		err := c.Validate()
+		ve, isValidation := err.(ValidationError)
+		if !isValidation {
+			t.Errorf("%s: a stored value of nonsense gave %v", k.Name, err)
+			continue
+		}
+		if ve.Field != k.Name {
+			t.Errorf("%s: refused by %q instead", k.Name, ve.Field)
+			continue
+		}
+		// The same value typed at the command line says the same thing.
+		g := Default().Guard
+		typed := k.Set(&g, "nonsense").(ValidationError)
+		if typed.Detail != ve.Detail || typed.Fix != ve.Fix {
+			t.Errorf("%s: stored says %q/%q, typed says %q/%q",
+				k.Name, ve.Detail, ve.Fix, typed.Detail, typed.Fix)
+		}
+	}
+}

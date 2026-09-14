@@ -226,29 +226,12 @@ func (c Config) Validate() error {
 			fmt.Sprintf("file declares version %d, this build supports version %d", c.Version, Version),
 			"run zeroturn init to write a supported file, or set version to 1"}
 	}
-	switch c.Guard.Mode {
-	case ModeObserve, ModeConfirm, ModeStrict:
-	default:
-		return ValidationError{"guard.mode", "value " + quote(c.Guard.Mode) + " is not a guard mode",
-			"use observe, confirm, or strict"}
-	}
-	switch c.Guard.Credentials.Mode {
-	case CredentialOff, CredentialAsk, CredentialDeny:
-	default:
-		return ValidationError{"guard.credentials.mode", "value " + quote(c.Guard.Credentials.Mode) + " is not a credential guard mode",
-			"use off, ask, or deny"}
-	}
-	switch c.Guard.Limits.Projection {
-	case ProjectionOn, ProjectionOff:
-	default:
-		return ValidationError{"guard.limits.projection", "value " + quote(c.Guard.Limits.Projection) + " is not a projection setting",
-			"use on, or off"}
-	}
-	switch c.Guard.Credentials.Prompts {
-	case PromptsOff, PromptsBlock:
-	default:
-		return ValidationError{"guard.credentials.prompts", "value " + quote(c.Guard.Credentials.Prompts) + " is not a prompt guard setting",
-			"use off, or block"}
+	// Every choice and every percentage is checked against the registry,
+	// so a setting added there is validated without being added here too.
+	for _, k := range keys {
+		if err := k.Check(c.Guard); err != nil {
+			return err
+		}
 	}
 	// The percentages come from the key registry rather than a list
 	// repeated here, so a new percentage setting is range checked without

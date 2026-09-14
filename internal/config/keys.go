@@ -155,3 +155,20 @@ func orList(values []string) string {
 	}
 	return fmt.Sprintf("%s, or %s", strings.Join(values[:len(values)-1], ", "), values[len(values)-1])
 }
+
+// Check reports whether the stored value is one this key accepts. It is
+// how a file that was edited by hand is refused, with the same wording a
+// bad value typed at the command line gets.
+func (k Key) Check(g Guard) error {
+	if k.Kind != KindChoice {
+		return nil
+	}
+	v := *k.str(&g)
+	for _, c := range k.Choices {
+		if v == c {
+			return nil
+		}
+	}
+	return ValidationError{k.Name, "value " + quote(v) + " is not " + k.Noun,
+		"use " + orList(k.Choices)}
+}

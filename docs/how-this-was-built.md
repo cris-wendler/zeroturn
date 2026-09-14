@@ -61,7 +61,7 @@ Two refusals shaped the code more than any feature:
 
 | Claim | Where it is checked |
 | --- | --- |
-| It behaves as documented | 270 tests across 35 files. Linux on both supported Go releases, and Windows, run on every change; macOS runs weekly |
+| It behaves as documented | 297 tests across 41 files, run on Linux with both supported Go releases, on macOS, and on Windows |
 | Output matches the published contract | `conformance/`, which runs the real executable against 9 schemas |
 | It is fast enough to sit in a hook | [benchmarks.md](benchmarks.md): status line 7.5 ms, gate 7.7 ms, measured over 50 runs |
 | It does what the documents say | [dogfood.md](dogfood.md): twelve behaviors demonstrated against this repository |
@@ -101,7 +101,7 @@ The evidence for whether that works is in what happened next. Every drift with a
 
 A person changes one thing and drifts slowly enough that review catches it. This project was built with a coding agent, and the drift arrived faster than anyone reads.
 
-In a single afternoon: changing the continuous integration matrix left three documents stating the old one; adding two decision entries made the count in this document wrong twice; and changing a workflow silently invalidated the branch rule that depended on its job names. None of that was carelessness. An agent holds no memory of the parallel lists scattered through a repository, and it makes more changes per day than a person, so every hand-maintained description rots faster and is read less often.
+In a single afternoon: changing the continuous integration matrix left three documents stating the old one, and changing it back left them stating that; adding two decision entries made the count in this document wrong twice; and changing a workflow silently invalidated the branch rule that depended on its job names. None of that was carelessness. An agent holds no memory of the parallel lists scattered through a repository, and it makes more changes per day than a person, so every hand-maintained description rots faster and is read less often.
 
 That is the argument for deriving rather than maintaining, and it is stronger now than it was before agents wrote code. A check that reads the type is the only kind that cannot be forgotten, because there is nothing to remember.
 

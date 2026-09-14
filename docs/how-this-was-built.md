@@ -62,7 +62,7 @@ Two refusals shaped the code more than any feature:
 | Claim | Where it is checked |
 | --- | --- |
 | It behaves as documented | 270 tests across 35 files. Linux on both supported Go releases, and Windows, run on every change; macOS runs weekly |
-| Output matches the published contract | `conformance/`, which runs the real executable against eight schemas |
+| Output matches the published contract | `conformance/`, which runs the real executable against 9 schemas |
 | It is fast enough to sit in a hook | [benchmarks.md](benchmarks.md): status line 7.5 ms, gate 7.7 ms, measured over 50 runs |
 | It does what the documents say | [dogfood.md](dogfood.md): twelve behaviors demonstrated against this repository |
 | It keeps nothing private | Tests that walk the state directory after each kind of event |
@@ -91,4 +91,4 @@ Written in the README, not buried:
 
 ## How decisions are recorded
 
-Seventeen entries in [decisions.md](decisions.md), each with the decision, the evidence, and the consequence. They include the ones that cut scope: `sync` dropped, Copilot deferred, goreleaser refused, and the license text left untouched. A decision that turns out to be wrong is meant to be replaced there, with its reason, rather than quietly reversed.
+30 entries in [decisions.md](decisions.md), each with the decision, the evidence, and the consequence. They include the ones that cut scope: `sync` dropped, Copilot deferred, goreleaser refused, and the license text left untouched. A decision that turns out to be wrong is meant to be replaced there, with its reason, rather than quietly reversed.

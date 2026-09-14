@@ -384,3 +384,19 @@ The second test is the one that matters most. An accessor can point at the wrong
 The lesson is the same one as the privacy tests in 23 and the adapter parity in 25. A list maintained by hand alongside a type needs a test that derives one from the other, or it is correct only until the next person forgets.
 
 What this buys beyond tidiness: uninstall and configuration migration both need to walk every setting, and neither can now be written against a list that is out of date.
+
+## 30. The credential patterns are compiled when one is needed
+
+Date: 2026-09-14
+
+Finding: this executable starts fresh for every hook call, including every status line repaint, and the credential scanner compiled all of its expressions at package load. Thirty detectors, and thirty more loose copies of them built for redaction, plus the placeholder expression. A status line scans nothing and redacts nothing, and it was paying for all of them.
+
+Measured at about a quarter of a millisecond, which was roughly eight percent of both startup and the status line on the machine this was found on. Small in isolation, and paid on every repaint of a line that exists to be unobtrusive.
+
+Decision: a detector holds its pattern as text and compiles it the first time it is actually reached. What makes this more than a deferral is the anchor check that was already there: a literal string has to appear in the line before the expression is built at all, so even a real scan of an ordinary file usually compiles none of them. Redaction builds its loose copies on first use for the same reason, and the placeholder expression is only reached after a detector with a value group has matched.
+
+The measurement is recorded in `docs/benchmarks.md` with its own conditions rather than folded into the table there, which was taken on a different machine with a different Go release. The two are not comparable, and presenting them together would suggest an improvement that was mostly a change of toolchain.
+
+The tests caught the mistake in the first attempt, which is worth recording. Redaction reaches its expression in two branches, and only one of them was changed, so the other dereferenced a pattern that had never been compiled and the package panicked. A nil pointer is the failure this shape invites, and the existing corpus test found it immediately.
+
+No behaviour changed. The same expressions match the same content in the same order, and every existing test in the package passes unaltered.

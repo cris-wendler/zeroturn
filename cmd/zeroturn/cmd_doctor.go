@@ -253,7 +253,11 @@ func compatFixtures() []check {
 	for _, tc := range cases {
 		c := config.Default()
 		c.Guard.Mode = tc.mode
-		got := policy.Evaluate(c, sess)
+		// Strict is approved here because this check asks what the policy
+		// table does, not what this machine has approved. Without it the
+		// Strict case would be downgraded and the check would read as a
+		// failure on a machine that simply has not approved Strict.
+		got := policy.Evaluate(policy.NewGuard(c, true), sess)
 		if got.Decision != tc.want {
 			out = append(out, check{"policy " + tc.mode, checkFail,
 				"expected " + tc.want + " at a critical threshold, got " + got.Decision})

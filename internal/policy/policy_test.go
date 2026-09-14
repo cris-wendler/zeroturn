@@ -12,11 +12,18 @@ import (
 func f(v float64) *float64 { return &v }
 func i64(v int64) *int64   { return &v }
 
-func withMode(mode string) config.Config {
+func modeConfig(mode string) config.Config {
 	c := config.Default()
 	c.Guard.Mode = mode
 	return c
 }
+
+// approved builds the guard for a machine that has approved Strict,
+// which is what the tests below are about. The downgrade itself is
+// tested in guard_test.go.
+func approved(c config.Config) Guard { return NewGuard(c, true) }
+
+func withMode(mode string) Guard { return approved(modeConfig(mode)) }
 
 func TestEmptySessionAllowsInEveryMode(t *testing.T) {
 	for _, mode := range []string{config.ModeObserve, config.ModeConfirm, config.ModeStrict} {
@@ -101,14 +108,15 @@ func TestStrictDeniesOnlyAtCritical(t *testing.T) {
 }
 
 func TestEachThresholdTriggers(t *testing.T) {
-	c := withMode(config.ModeConfirm)
-	mins := int64(c.Guard.Session.DurationWarnMinutes) * 60000
+	cfg := modeConfig(config.ModeConfirm)
+	c := approved(cfg)
+	mins := int64(cfg.Guard.Session.DurationWarnMinutes) * 60000
 	cases := map[string]state.Session{
 		"fiveHour":        {FiveHourPct: f(75)},
 		"sevenDay":        {SevenDayPct: f(75)},
 		"duration":        {DurationMS: i64(mins)},
-		"activeSubagents": {ActiveSubagents: c.Guard.Session.ActiveSubagentsWarn},
-		"subagentStarts":  {SubagentStarts: c.Guard.Session.SubagentStartsWarn},
+		"activeSubagents": {ActiveSubagents: cfg.Guard.Session.ActiveSubagentsWarn},
+		"subagentStarts":  {SubagentStarts: cfg.Guard.Session.SubagentStartsWarn},
 	}
 	for name, s := range cases {
 		r := Evaluate(c, s)
@@ -299,9 +307,9 @@ func TestProjectionIgnoresARateItCannotTrust(t *testing.T) {
 
 func TestProjectionCanBeSwitchedOff(t *testing.T) {
 	at := time.Now()
-	c := withMode(config.ModeConfirm)
+	c := modeConfig(config.ModeConfirm)
 	c.Guard.Limits.Projection = config.ProjectionOff
-	if r := EvaluateAt(c, rising(10, 40, time.Hour, 3*time.Hour, at), at); r.Decision != DecisionAllow {
+	if r := EvaluateAt(approved(c), rising(10, 40, time.Hour, 3*time.Hour, at), at); r.Decision != DecisionAllow {
 		t.Fatalf("got %s with projection off", r.Decision)
 	}
 }

@@ -148,7 +148,7 @@ func policyCheck(ctx context.Context, args []string) error {
 		return err
 	}
 	sess, found := recentSession(st, repo.Root)
-	res := policy.Evaluate(effectiveGuard(st, repo.Root, c), sess)
+	res := policy.Evaluate(guardFor(st, repo.Root, c), sess)
 
 	if *asJSON {
 		return output.JSON(os.Stdout, struct {

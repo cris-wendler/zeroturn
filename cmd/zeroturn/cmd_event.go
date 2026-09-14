@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/cris-wendler/zeroturn/internal/config"
 	"github.com/cris-wendler/zeroturn/internal/security"
@@ -18,83 +17,9 @@ import (
 	"github.com/cris-wendler/zeroturn/internal/events"
 	"github.com/cris-wendler/zeroturn/internal/git"
 	"github.com/cris-wendler/zeroturn/internal/policy"
+	"github.com/cris-wendler/zeroturn/internal/session"
 	"github.com/cris-wendler/zeroturn/internal/state"
 )
-
-func repoHashFor(cwd string) string {
-	if root, ok := git.FindRoot(cwd); ok {
-		return state.RepoHash(root)
-	}
-	return ""
-}
-
-// applyEvent folds one normalized event into the stored session record.
-func applyEvent(st *state.Store, e events.Event) (state.Session, error) {
-	return st.Update(e.SessionID, repoHashFor(e.CWD), func(s *state.Session) {
-		applyTo(s, e)
-	})
-}
-
-func applyTo(s *state.Session, e events.Event) {
-	{
-		if e.Harness != "" {
-			s.Harness = e.Harness
-		}
-		if e.HarnessVersion != "" {
-			s.HarnessVer = e.HarnessVersion
-		}
-		if e.Model != "" {
-			s.Model = e.Model
-		}
-		if e.ContextPct != nil {
-			v := *e.ContextPct
-			s.ContextPct = &v
-		}
-		if e.ContextSize != nil {
-			v := *e.ContextSize
-			s.ContextSize = &v
-		}
-		if e.FiveHourPct != nil {
-			v := *e.FiveHourPct
-			s.FiveHourPct = &v
-			s.SampleFiveHour(v, e.FiveHourResetsAt, time.Now())
-		}
-		if e.FiveHourResetsAt != nil {
-			v := *e.FiveHourResetsAt
-			s.FiveHourResetsAt = &v
-		}
-		if e.SevenDayPct != nil {
-			v := *e.SevenDayPct
-			s.SevenDayPct = &v
-		}
-		if e.SevenDayResetsAt != nil {
-			v := *e.SevenDayResetsAt
-			s.SevenDayResetsAt = &v
-		}
-		if e.DurationMS != nil {
-			v := *e.DurationMS
-			s.DurationMS = &v
-		}
-		if e.BackgroundTasks != nil {
-			s.BackgroundTasks = *e.BackgroundTasks
-		}
-
-		switch e.Type {
-		case events.TypeSubagentStrt:
-			// A subagent starting after an ask is the developer having
-			// approved it. It is the only outcome the harness reports.
-			s.ResolveGate()
-			s.AddActive(e.AgentID)
-		case events.TypeSubagentStop:
-			s.RemoveActive(e.AgentID)
-		case events.TypeSessionStop, events.TypeSessionEnd:
-			// A subagent still counted as running when a turn ends never
-			// reported stopping. Clearing here keeps a later count honest
-			// rather than asking about subagents that are long gone.
-			s.ClearActive()
-		}
-	}
-}
 
 // maxScan bounds the work done while a developer waits. Credentials live
 // in small files: an environment file, a key, a configuration file. A
@@ -111,7 +36,7 @@ func credentialGate(st *state.Store, e events.Event) error {
 	if e.FilePath == "" {
 		return nil
 	}
-	cfg := sessionConfig(st, e.CWD)
+	cfg := sessionGuard(st, e.CWD).Config()
 	if cfg.Guard.Credentials.Mode == config.CredentialOff {
 		return nil
 	}
@@ -142,7 +67,7 @@ func credentialGate(st *state.Store, e events.Event) error {
 	if decision == policy.DecisionAllow {
 		return nil
 	}
-	st.Update(e.SessionID, repoHashFor(e.CWD), func(s *state.Session) { s.CredentialWarnings++ })
+	st.Update(e.SessionID, session.RepoHashFor(e.CWD), func(s *state.Session) { s.CredentialWarnings++ })
 	return printDecision(decision, reason)
 }
 
@@ -154,7 +79,7 @@ func promptGate(st *state.Store, e events.Event) error {
 	if e.Prompt == "" {
 		return nil
 	}
-	cfg := sessionConfig(st, e.CWD)
+	cfg := sessionGuard(st, e.CWD).Config()
 	findings, err := security.ScanBytes("message", []byte(e.Prompt))
 	if err != nil || len(findings) == 0 {
 		return nil
@@ -163,7 +88,7 @@ func promptGate(st *state.Store, e events.Event) error {
 	if !block {
 		return nil
 	}
-	st.Update(e.SessionID, repoHashFor(e.CWD), func(s *state.Session) { s.CredentialWarnings++ })
+	st.Update(e.SessionID, session.RepoHashFor(e.CWD), func(s *state.Session) { s.CredentialWarnings++ })
 
 	b, merr := json.Marshal(promptDecision{Decision: "block", Reason: reason})
 	if merr != nil {
@@ -263,7 +188,7 @@ func cmdEvent(ctx context.Context, args []string) error {
 	}
 
 	if e.Type != events.TypeSubagentPre {
-		if _, uerr := applyEvent(st, e); uerr != nil {
+		if _, uerr := session.Record(st, e); uerr != nil {
 			return nil
 		}
 		return nil
@@ -271,11 +196,11 @@ func cmdEvent(ctx context.Context, args []string) error {
 
 	// The gate folds the event and the decision into one state write,
 	// because it runs while the developer waits for the subagent.
-	cfg := sessionConfig(st, e.CWD)
+	guard := sessionGuard(st, e.CWD)
 	var res policy.Result
-	if _, uerr := st.Update(e.SessionID, repoHashFor(e.CWD), func(s *state.Session) {
-		applyTo(s, e)
-		res = policy.Evaluate(cfg, *s)
+	if _, uerr := st.Update(e.SessionID, session.RepoHashFor(e.CWD), func(s *state.Session) {
+		session.Apply(s, e)
+		res = policy.Evaluate(guard, *s)
 		s.LastDecision = res.Decision
 		if res.Decision != policy.DecisionAllow {
 			names := make([]string, 0, len(res.Triggers))

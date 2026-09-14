@@ -106,13 +106,14 @@ func Project(s state.Session, now time.Time) (Projection, bool) {
 }
 
 // Evaluate reports the condition of a session without changing anything.
-func Evaluate(c config.Config, s state.Session) Result {
-	return EvaluateAt(c, s, time.Now())
+func Evaluate(g Guard, s state.Session) Result {
+	return EvaluateAt(g, s, time.Now())
 }
 
 // EvaluateAt is Evaluate with the current time supplied, which the
 // projection needs and which tests need to control.
-func EvaluateAt(c config.Config, s state.Session, now time.Time) Result {
+func EvaluateAt(g Guard, s state.Session, now time.Time) Result {
+	c := g.cfg
 	var t []Trigger
 
 	if s.ContextPct != nil {

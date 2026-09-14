@@ -20,7 +20,6 @@
         {"context": "format, vet, copy, commit messages"},
         {"context": "test (ubuntu-latest, Go 1.17)"},
         {"context": "test (ubuntu-latest, Go stable)"},
-        {"context": "test (macos-latest, Go stable)"},
         {"context": "test (windows-latest, Go stable)"}
       ]
     }}

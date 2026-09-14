@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cris-wendler/zeroturn/internal/harness/claude"
 	"github.com/cris-wendler/zeroturn/internal/testutil"
 )
 
@@ -100,7 +101,7 @@ func TestIntegrateRepairsAStalePath(t *testing.T) {
 		for _, e := range entries.([]interface{}) {
 			for _, h := range e.(map[string]interface{})["hooks"].([]interface{}) {
 				cmd := h.(map[string]interface{})["command"].(string)
-				if owned(cmd) && !strings.Contains(cmd, selfPath()) {
+				if claude.Owned(cmd) && !strings.Contains(cmd, selfPath()) {
 					t.Errorf("%s still points elsewhere: %s", ev, cmd)
 				}
 			}
@@ -116,37 +117,5 @@ func TestRepairIsNotOfferedWhenNothingIsWrong(t *testing.T) {
 	r := run(t, work, "", "integrate", "claude", "--plan")
 	if strings.Contains(r.stdout, "would repair") {
 		t.Fatalf("a repair was offered for a healthy integration:\n%s", r.stdout)
-	}
-}
-
-func TestInstalledPath(t *testing.T) {
-	cases := map[string]string{
-		`"/usr/local/bin/zeroturn" event --harness claude`: "/usr/local/bin/zeroturn",
-		`/usr/local/bin/zeroturn event`:                    "/usr/local/bin/zeroturn",
-		`"C:\\Program Files\\zeroturn.exe" status`:         `C:\\Program Files\\zeroturn.exe`,
-		`zeroturn`: "zeroturn",
-	}
-	for command, want := range cases {
-		if got := installedPath(command); got != want {
-			t.Errorf("installedPath(%q) = %q, want %q", command, got, want)
-		}
-	}
-}
-
-// The settings file is JSON, whose encoder escapes backslashes. Quoting
-// the path a second time stored every separator doubled, which is what
-// happened before the command was built with plain quotation marks.
-func TestCommandQuotingSurvivesAWindowsPath(t *testing.T) {
-	command := `"C:\Users\dev\zeroturn.exe" event --harness claude --event Stop`
-	b, err := json.Marshal(map[string]string{"command": command})
-	if err != nil {
-		t.Fatal(err)
-	}
-	var back map[string]string
-	if err := json.Unmarshal(b, &back); err != nil {
-		t.Fatal(err)
-	}
-	if got := installedPath(back["command"]); got != `C:\Users\dev\zeroturn.exe` {
-		t.Fatalf("path after a round trip: %q", got)
 	}
 }

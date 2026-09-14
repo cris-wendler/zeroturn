@@ -330,3 +330,21 @@ The command package keeps one helper that answers that question from the approva
 Both new tests were confirmed to fail first. Removing the downgrade from `NewGuard` fails three of the guard tests. Folding a missing reading as zero fails the fold test.
 
 The second test is only that strong because the first attempt at it was not. It checked that a measurement was still present after an event that did not carry it, and a fold that overwrote every reading with zero passed, because zero is present. It now checks the value. An absent reading is not a reading of zero, and a field that is there and wrong is worse than one that is gone.
+
+## 27. The settings writer and the ownership rules are libraries
+
+Date: 2026-09-14
+
+Finding, from the architecture review: `cmd_integrate.go` was 843 lines, and roughly four hundred of them were a library that had nothing to do with being a command. Two things lived in there that the rest of the project depends on being right, and neither could be tested without building the executable and running it.
+
+The first is the settings writer. A settings file belongs to the person using it, and ZeroTurn rewrites it. Keys keep their position, values it does not recognise keep their content, and the write is atomic, because a harness reads this file at startup and half of one would stop it starting. That is a promise, and it was being checked only by end to end tests that ran the binary and read the file back.
+
+The second is ownership. ZeroTurn installs its own entries, repairs them when the executable moves, and removes them, and it must never touch anything else, including a command someone added to the same entry as one of ZeroTurn's.
+
+Decision: `internal/settings` holds the file, as a `File` with `Read`, `Set`, `Delete`, `Section`, `Backup`, and `Write`. `internal/harness/claude` holds the ownership rules and the plan: what would be added, what would be repaired, what is already installed, and what belongs to someone else. The plan is worked out from values in memory and touches nothing, so the same value is what `--plan` prints and what `--apply` acts on, and the two cannot disagree.
+
+The command keeps what a command should keep: flags, where the settings file is, the note about Git ignoring it, the printing, the confirmation, and the mapping to exit codes. It is 376 lines.
+
+Both new packages have tests that were confirmed to fail first. Ignoring the recorded key order fails the settings test. Dropping a whole entry rather than only ZeroTurn's commands in it fails the ownership test. The ten end to end tests that drive the real binary were not changed and still pass, which is what says the behaviour is the same.
+
+`SamePath` is exported because `doctor` applies the same rule when it checks whether the installed entries point at this executable. Comparing two paths as files rather than as text is what makes a symbolic link, which is how a package manager usually installs an executable, not read as a different program.

@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,8 +12,9 @@ import (
 
 	"github.com/cris-wendler/zeroturn/internal/config"
 	"github.com/cris-wendler/zeroturn/internal/git"
+	"github.com/cris-wendler/zeroturn/internal/harness/claude"
 	"github.com/cris-wendler/zeroturn/internal/output"
-	"github.com/cris-wendler/zeroturn/internal/state"
+	"github.com/cris-wendler/zeroturn/internal/settings"
 )
 
 const integrateUsage = `zeroturn integrate <harness> --plan | --apply | --remove
@@ -32,81 +31,6 @@ Without --user the change goes to .claude/settings.local.json, the per user
 settings file for this repository, because the entries contain the absolute
 path of this machine's zeroturn executable.
 `
-
-// hookEntry mirrors the harness settings shape. Unknown fields in the
-// user's own entries are preserved because untouched entries are never
-// decoded into this type.
-type hookEntry struct {
-	Matcher string      `json:"matcher,omitempty"`
-	Hooks   []hookInner `json:"hooks"`
-}
-
-type hookInner struct {
-	Type    string `json:"type"`
-	Command string `json:"command"`
-	Timeout int    `json:"timeout,omitempty"`
-}
-
-type statusLineEntry struct {
-	Type    string `json:"type"`
-	Command string `json:"command"`
-	Padding int    `json:"padding"`
-}
-
-// installedPath reads the executable out of a settings entry ZeroTurn
-// wrote. The command is quoted, so the path is what lies between the
-// first pair of quotation marks.
-func installedPath(command string) string {
-	if !strings.HasPrefix(command, `"`) {
-		if i := strings.Index(command, " "); i > 0 {
-			return command[:i]
-		}
-		return command
-	}
-	if end := strings.Index(command[1:], `"`); end > 0 {
-		return command[1 : end+1]
-	}
-	return ""
-}
-
-// stalePath reports whether a settings entry points somewhere other than
-// this executable. A hook pointing at a path that is gone fails in
-// silence, which for a guard is the worst way to fail.
-func stalePath(command string) (path string, stale bool) {
-	path = installedPath(command)
-	if path == "" || samePath(path, selfPath()) {
-		return path, false
-	}
-	return path, true
-}
-
-// samePath compares two paths as files rather than as text, so a path
-// reached through a symbolic link, which is how a package manager
-// usually installs an executable, is not reported as a different one.
-func samePath(a, b string) bool {
-	if a == b {
-		return true
-	}
-	ai, aerr := os.Stat(a)
-	bi, berr := os.Stat(b)
-	if aerr != nil || berr != nil {
-		return false
-	}
-	return os.SameFile(ai, bi)
-}
-
-type claudePlan struct {
-	SettingsPath   string
-	Backup         string
-	Exists         bool
-	AddStatusLine  bool
-	KeepStatusLine string
-	AddHooks       []claudeHook
-	RepairHooks    []repair
-	KeepHooks      int
-	AlreadyOwned   []string
-	Notes          []string
-}
 
 func cmdIntegrate(ctx context.Context, args []string) error {
 	if len(args) == 0 {
@@ -191,65 +115,15 @@ func claudeSettingsPath(ctx context.Context, userWide bool) (string, error) {
 	return filepath.Join(repo.Root, ".claude", "settings.local.json"), nil
 }
 
-// claudeHook is one settings entry ZeroTurn owns. Matchers are exact
-// tool names, never patterns, so a hook fires for the tool it names and
-// for nothing else.
-// repair is an entry ZeroTurn owns whose executable path no longer
-// matches this one.
-type repair struct {
-	Where string
-	From  string
-	Gone  bool
-}
-
-type claudeHook struct {
-	Event   string
-	Matcher string
-	Purpose string
-}
-
-// claudeHooksFor returns the entries to install for this configuration.
-// The prompt hook is included only when the prompt guard is switched on,
-// so a developer who has not asked for it never has ZeroTurn in the path
-// of their messages.
-func claudeHooksFor(c config.Config) []claudeHook {
-	hooks := claudeHooks
-	if c.Guard.Credentials.Prompts == config.PromptsBlock {
-		hooks = append(append([]claudeHook{}, hooks...),
-			claudeHook{"UserPromptSubmit", "", "the prompt guard, before a message is sent"})
-	}
-	return hooks
-}
-
-var claudeHooks = []claudeHook{
-	{"PreToolUse", "Agent", "the subagent gate"},
-	{"PreToolUse", "Read", "the credential guard, before a file is read"},
-	{"SubagentStart", "", "counts a subagent as started"},
-	{"SubagentStop", "", "counts it as stopped"},
-	{"Stop", "", "reads how many background tasks are running"},
-	{"SessionEnd", "", "marks the end of the session"},
-}
-
-// zeroturnCommand quotes the path with plain quotation marks rather than
-// Go quoting. The settings file is JSON, and its encoder already escapes
-// the backslashes in a Windows path. Quoting them a second time stored
-// every separator doubled.
-func zeroturnCommand(event string) string {
-	quoted := `"` + selfPath() + `"`
-	if event == "" {
-		return quoted + " status --stdin --harness claude"
-	}
-	return quoted + " event --harness claude --event " + event
-}
-
-// owned reports whether a settings entry was written by ZeroTurn. The test
-// looks for the executable name together with a ZeroTurn argument, so a
-// user's own command that merely mentions the word is left alone.
-func owned(command string) bool {
-	if !strings.Contains(command, "zeroturn") {
-		return false
-	}
-	return strings.Contains(command, "event --harness") || strings.Contains(command, "status --stdin")
+// claudePlan is the plan together with what the command needs to report
+// it: where the file is, where the backup goes, and anything the person
+// running it should know before they answer.
+type claudePlan struct {
+	claude.Plan
+	SettingsPath string
+	Backup       string
+	Exists       bool
+	Notes        []string
 }
 
 func integrateClaude(ctx context.Context, mode string, userWide, replaceStatus bool) error {
@@ -258,22 +132,21 @@ func integrateClaude(ctx context.Context, mode string, userWide, replaceStatus b
 		return output.Errorf(output.ExitInternal, "zeroturn integrate changed nothing", err.Error(),
 			"check that your home directory is readable")
 	}
-	raw, readErr := ioutil.ReadFile(path)
-	exists := readErr == nil
-	if readErr != nil && !os.IsNotExist(readErr) {
+	file, err := settings.Read(path)
+	if err != nil {
+		if errors.Is(err, settings.ErrInvalidJSON) {
+			return output.Errorf(output.ExitInvalidUsage, "zeroturn integrate changed nothing",
+				path+" is not valid JSON", "correct the file, then run zeroturn integrate again")
+		}
 		return output.Errorf(output.ExitInternal, "zeroturn integrate changed nothing",
 			"the settings file could not be read", "check permissions on "+path)
 	}
-	if !exists {
-		raw = []byte("{}")
-	}
-
-	top := map[string]json.RawMessage{}
-	if err := json.Unmarshal(raw, &top); err != nil {
+	hooks, err := file.Section("hooks")
+	if err != nil {
 		return output.Errorf(output.ExitInvalidUsage, "zeroturn integrate changed nothing",
-			path+" is not valid JSON", "correct the file, then run zeroturn integrate again")
+			"the hooks section of "+path+" has a shape ZeroTurn does not recognise",
+			"correct the file, then run zeroturn integrate again")
 	}
-	order := topLevelOrder(raw)
 
 	st, serr := openStore()
 	if serr != nil {
@@ -291,177 +164,31 @@ func integrateClaude(ctx context.Context, mode string, userWide, replaceStatus b
 		}
 	}
 
-	plan := claudePlan{SettingsPath: path, Exists: exists}
-	plan.Backup = filepath.Join(backupDir, fmt.Sprintf("claude-settings-%s.json", time.Now().UTC().Format("20060102-150405")))
-
-	hooks := map[string][]json.RawMessage{}
-	if v, ok := top["hooks"]; ok {
-		if err := json.Unmarshal(v, &hooks); err != nil {
-			return output.Errorf(output.ExitInvalidUsage, "zeroturn integrate changed nothing",
-				"the hooks section of "+path+" has a shape ZeroTurn does not recognise",
-				"correct the file, then run zeroturn integrate again")
-		}
+	p := claudePlan{
+		Plan: claude.Build(claude.Input{
+			Top: file.Top, Hooks: hooks, Config: cfg, Exe: selfPath(), ReplaceStatus: replaceStatus,
+		}),
+		SettingsPath: path,
+		Exists:       file.Exists,
+		Backup:       filepath.Join(backupDir, fmt.Sprintf("claude-settings-%s.json", time.Now().UTC().Format("20060102-150405"))),
 	}
-
-	counted := map[string]bool{}
-	for _, h := range claudeHooksFor(cfg) {
-		found := false
-		for _, entry := range hooks[h.Event] {
-			if entryOwnedByZeroTurn(entry, h.Matcher) {
-				found = true
-				if path, stale := stalePath(entryCommand(entry)); stale {
-					plan.RepairHooks = append(plan.RepairHooks, repair{
-						Where: "hooks." + h.Event + " " + h.Matcher, From: path, Gone: !pathExists(path)})
-				}
-				continue
-			}
-			// Entries not owned by ZeroTurn are counted once per event,
-			// however many ZeroTurn entries that event holds.
-			if !counted[h.Event] && !entryOwnedByZeroTurn(entry, "") {
-				plan.KeepHooks++
-			}
-		}
-		counted[h.Event] = true
-		if found {
-			name := h.Event
-			if h.Matcher != "" {
-				name += " " + h.Matcher
-			}
-			plan.AlreadyOwned = append(plan.AlreadyOwned, name)
-		} else {
-			plan.AddHooks = append(plan.AddHooks, h)
-		}
+	if p.KeepStatusLine != "" && !replaceStatus {
+		p.Notes = append(p.Notes,
+			"A status line is already configured and will be left in place. Pass --replace-status-line to replace it.")
 	}
 	if !userWide && !gitIgnored(ctx, path) {
-		plan.Notes = append(plan.Notes,
+		p.Notes = append(p.Notes,
 			path+" is not ignored by Git. The entries hold this machine's executable path, so add it to .gitignore before committing.")
-	}
-
-	if v, ok := top["statusLine"]; ok {
-		var sl statusLineEntry
-		if json.Unmarshal(v, &sl) == nil && owned(sl.Command) {
-			plan.AlreadyOwned = append(plan.AlreadyOwned, "statusLine")
-			if path, stale := stalePath(sl.Command); stale {
-				plan.RepairHooks = append(plan.RepairHooks, repair{Where: "statusLine", From: path, Gone: !pathExists(path)})
-			}
-		} else {
-			plan.KeepStatusLine = sl.Command
-			plan.AddStatusLine = replaceStatus
-			if !replaceStatus {
-				plan.Notes = append(plan.Notes,
-					"A status line is already configured and will be left in place. Pass --replace-status-line to replace it.")
-			}
-		}
-	} else {
-		plan.AddStatusLine = true
 	}
 
 	switch mode {
 	case "plan":
-		printClaudePlan(plan, top, order)
+		printClaudePlan(p, file.Keys())
 		return nil
 	case "remove":
-		return applyClaudeRemove(path, top, order, hooks, backupDir, plan)
+		return applyClaudeRemove(file, hooks, backupDir, p)
 	}
-	return applyClaudeInstall(path, top, order, hooks, backupDir, plan, replaceStatus)
-}
-
-// entryOwnedByZeroTurn reports whether this entry is one ZeroTurn wrote.
-// A matcher narrows the test to the entry for one tool; an empty matcher
-// matches any ZeroTurn entry.
-// repointEntry rewrites only the ZeroTurn commands inside an entry,
-// keeping every other field, including ones ZeroTurn does not know.
-func repointEntry(raw json.RawMessage, command string) json.RawMessage {
-	var entry map[string]json.RawMessage
-	if json.Unmarshal(raw, &entry) != nil {
-		return raw
-	}
-	var inner []map[string]json.RawMessage
-	if json.Unmarshal(entry["hooks"], &inner) != nil {
-		return raw
-	}
-	for i, h := range inner {
-		var cmd string
-		if json.Unmarshal(h["command"], &cmd) == nil && owned(cmd) {
-			b, _ := json.Marshal(command)
-			inner[i]["command"] = b
-		}
-	}
-	b, _ := json.Marshal(inner)
-	entry["hooks"] = b
-	out, err := json.Marshal(entry)
-	if err != nil {
-		return raw
-	}
-	return out
-}
-
-func pathExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
-}
-
-// entryCommand returns the first ZeroTurn command in an entry.
-func entryCommand(raw json.RawMessage) string {
-	var e hookEntry
-	if json.Unmarshal(raw, &e) != nil {
-		return ""
-	}
-	for _, h := range e.Hooks {
-		if owned(h.Command) {
-			return h.Command
-		}
-	}
-	return ""
-}
-
-func entryOwnedByZeroTurn(raw json.RawMessage, matcher string) bool {
-	var e hookEntry
-	if json.Unmarshal(raw, &e) != nil {
-		return false
-	}
-	if matcher != "" && e.Matcher != matcher {
-		return false
-	}
-	for _, h := range e.Hooks {
-		if owned(h.Command) {
-			return true
-		}
-	}
-	return false
-}
-
-// withoutZeroTurnHooks removes ZeroTurn's own commands from one hook entry
-// and keeps everything else in it, so a command a user added to the same
-// entry survives removal. keep is false when nothing remains.
-func withoutZeroTurnHooks(raw json.RawMessage) (rest json.RawMessage, removed int, keep bool) {
-	var entry map[string]json.RawMessage
-	if json.Unmarshal(raw, &entry) != nil {
-		return raw, 0, true
-	}
-	var inner []json.RawMessage
-	if json.Unmarshal(entry["hooks"], &inner) != nil {
-		return raw, 0, true
-	}
-	var kept []json.RawMessage
-	for _, h := range inner {
-		var hi hookInner
-		if json.Unmarshal(h, &hi) == nil && owned(hi.Command) {
-			removed++
-			continue
-		}
-		kept = append(kept, h)
-	}
-	if removed == 0 {
-		return raw, 0, true
-	}
-	if len(kept) == 0 {
-		return nil, removed, false
-	}
-	b, _ := json.Marshal(kept)
-	entry["hooks"] = b
-	out, _ := json.Marshal(entry)
-	return out, removed, true
+	return applyClaudeInstall(file, hooks, backupDir, p, replaceStatus)
 }
 
 func gitIgnored(ctx context.Context, path string) bool {
@@ -472,7 +199,8 @@ func gitIgnored(ctx context.Context, path string) bool {
 	return repo.IsIgnored(ctx, path)
 }
 
-func printClaudePlan(p claudePlan, top map[string]json.RawMessage, order []string) {
+func printClaudePlan(p claudePlan, order []string) {
+	exe := selfPath()
 	fmt.Println("ZEROTURN INTEGRATE CLAUDE (plan)")
 	fmt.Printf("settings file   %s\n", p.SettingsPath)
 	if !p.Exists {
@@ -483,14 +211,14 @@ func printClaudePlan(p claudePlan, top map[string]json.RawMessage, order []strin
 
 	fmt.Println("would add:")
 	if p.AddStatusLine {
-		fmt.Printf("  statusLine    %s\n", zeroturnCommand(""))
+		fmt.Printf("  statusLine    %s\n", claude.Command(exe, ""))
 	}
 	for _, h := range p.AddHooks {
 		suffix := ""
 		if h.Matcher != "" {
 			suffix = fmt.Sprintf("  (matcher %s, exact, %s)", h.Matcher, h.Purpose)
 		}
-		fmt.Printf("  hooks.%-14s %s%s\n", h.Event, zeroturnCommand(h.Event), suffix)
+		fmt.Printf("  hooks.%-14s %s%s\n", h.Event, claude.Command(exe, h.Event), suffix)
 	}
 	if !p.AddStatusLine && len(p.AddHooks) == 0 {
 		fmt.Println("  nothing, the integration is already installed")
@@ -506,7 +234,7 @@ func printClaudePlan(p claudePlan, top map[string]json.RawMessage, order []strin
 			}
 			fmt.Printf("  %-22s points at %s, %s\n", r.Where, r.From, state)
 		}
-		fmt.Printf("  all of them would point at %s\n", selfPath())
+		fmt.Printf("  all of them would point at %s\n", exe)
 		fmt.Println()
 	}
 
@@ -543,14 +271,14 @@ func printClaudePlan(p claudePlan, top map[string]json.RawMessage, order []strin
 	fmt.Println("\nNothing was changed. Run the same command with --apply to write it.")
 }
 
-func applyClaudeInstall(path string, top map[string]json.RawMessage, order []string,
-	hooks map[string][]json.RawMessage, backupDir string, p claudePlan, replaceStatus bool) error {
+func applyClaudeInstall(file *settings.File, hooks map[string][]json.RawMessage,
+	backupDir string, p claudePlan, replaceStatus bool) error {
 
-	if !p.AddStatusLine && len(p.AddHooks) == 0 && len(p.RepairHooks) == 0 {
+	if p.NothingToDo() {
 		fmt.Println("The Claude integration is already installed. Nothing was changed.")
 		return nil
 	}
-	printClaudePlan(p, top, order)
+	printClaudePlan(p, file.Keys())
 	fmt.Println()
 	ok, err := confirm("Apply this change?")
 	if err != nil {
@@ -562,63 +290,30 @@ func applyClaudeInstall(path string, top map[string]json.RawMessage, order []str
 	}
 
 	if p.Exists {
-		if err := backupFile(path, p.Backup); err != nil {
+		if err := file.Backup(p.Backup); err != nil {
 			return output.Errorf(output.ExitInternal, "zeroturn integrate changed nothing",
 				"the backup could not be written", "check that "+backupDir+" is writable")
 		}
 	}
 
-	// An entry ZeroTurn owns that points at another executable is
-	// rewritten to point here. Entries it does not own are left alone.
-	if len(p.RepairHooks) > 0 {
-		for event, entries := range hooks {
-			for i, entry := range entries {
-				if !entryOwnedByZeroTurn(entry, "") {
-					continue
-				}
-				if _, stale := stalePath(entryCommand(entry)); !stale {
-					continue
-				}
-				entries[i] = repointEntry(entry, zeroturnCommand(event))
-			}
-		}
-		if v, ok := top["statusLine"]; ok {
-			var sl statusLineEntry
-			if json.Unmarshal(v, &sl) == nil && owned(sl.Command) {
-				if _, stale := stalePath(sl.Command); stale {
-					sl.Command = zeroturnCommand("")
-					b, _ := json.Marshal(sl)
-					top["statusLine"] = json.RawMessage(b)
-				}
-			}
-		}
-	}
-
-	for _, h := range p.AddHooks {
-		entry := hookEntry{Matcher: h.Matcher,
-			Hooks: []hookInner{{Type: "command", Command: zeroturnCommand(h.Event), Timeout: 10}}}
-		b, _ := json.Marshal(entry)
-		hooks[h.Event] = append(hooks[h.Event], json.RawMessage(b))
-	}
+	exe := selfPath()
+	claude.Install(file.Top, hooks, p.Plan, exe, replaceStatus)
 	if len(hooks) > 0 {
 		b, _ := json.Marshal(hooks)
-		top["hooks"] = json.RawMessage(b)
-		order = ensureKey(order, "hooks")
+		file.Set("hooks", json.RawMessage(b))
 	}
 	if p.AddStatusLine || replaceStatus {
-		b, _ := json.Marshal(statusLineEntry{Type: "command", Command: zeroturnCommand(""), Padding: 0})
-		top["statusLine"] = json.RawMessage(b)
-		order = ensureKey(order, "statusLine")
+		file.Set("statusLine", claude.StatusLineValue(exe))
 	}
 
-	if err := writeOrdered(path, top, order); err != nil {
+	if err := file.Write(); err != nil {
 		return output.Errorf(output.ExitInternal, "zeroturn integrate could not write the settings file",
 			err.Error(), "the backup at "+p.Backup+" holds the previous content")
 	}
 	if len(p.RepairHooks) > 0 {
-		fmt.Printf("Repointed %d entries at %s\n", len(p.RepairHooks), selfPath())
+		fmt.Printf("Repointed %d entries at %s\n", len(p.RepairHooks), exe)
 	}
-	fmt.Printf("Wrote %s\n", path)
+	fmt.Printf("Wrote %s\n", file.Path)
 	if p.Exists {
 		fmt.Printf("Backup %s\n", p.Backup)
 	}
@@ -626,49 +321,22 @@ func applyClaudeInstall(path string, top map[string]json.RawMessage, order []str
 	return nil
 }
 
-func applyClaudeRemove(path string, top map[string]json.RawMessage, order []string,
-	hooks map[string][]json.RawMessage, backupDir string, p claudePlan) error {
+func applyClaudeRemove(file *settings.File, hooks map[string][]json.RawMessage,
+	backupDir string, p claudePlan) error {
 
 	if !p.Exists {
-		fmt.Printf("No settings file at %s. Nothing to remove.\n", path)
+		fmt.Printf("No settings file at %s. Nothing to remove.\n", file.Path)
 		return nil
 	}
 
-	removed := 0
-	for ev, entries := range hooks {
-		var kept []json.RawMessage
-		for _, e := range entries {
-			rest, n, keep := withoutZeroTurnHooks(e)
-			removed += n
-			if keep {
-				kept = append(kept, rest)
-			}
-		}
-		if len(kept) == 0 {
-			delete(hooks, ev)
-			continue
-		}
-		hooks[ev] = kept
-	}
-
-	removedStatus := false
-	if v, ok := top["statusLine"]; ok {
-		var sl statusLineEntry
-		if json.Unmarshal(v, &sl) == nil && owned(sl.Command) {
-			delete(top, "statusLine")
-			order = removeKey(order, "statusLine")
-			removedStatus = true
-			removed++
-		}
-	}
-
+	removed, removedStatus := claude.Remove(file.Top, hooks)
 	if removed == 0 {
 		fmt.Println("No ZeroTurn entries were found. Nothing was changed.")
 		return nil
 	}
 
 	fmt.Println("ZEROTURN INTEGRATE CLAUDE (remove)")
-	fmt.Printf("settings file   %s\n", path)
+	fmt.Printf("settings file   %s\n", file.Path)
 	fmt.Printf("backup          %s\n", p.Backup)
 	fmt.Printf("would remove    %d ZeroTurn entries\n", removed)
 	if removedStatus {
@@ -685,159 +353,24 @@ func applyClaudeRemove(path string, top map[string]json.RawMessage, order []stri
 			"the removal was declined", "run the command again when you are ready")
 	}
 
-	if err := backupFile(path, p.Backup); err != nil {
+	if err := file.Backup(p.Backup); err != nil {
 		return output.Errorf(output.ExitInternal, "zeroturn integrate changed nothing",
 			"the backup could not be written", "check that "+backupDir+" is writable")
 	}
+	if removedStatus {
+		file.Delete("statusLine")
+	}
 	if len(hooks) == 0 {
-		delete(top, "hooks")
-		order = removeKey(order, "hooks")
+		file.Delete("hooks")
 	} else {
 		b, _ := json.Marshal(hooks)
-		top["hooks"] = json.RawMessage(b)
+		file.Set("hooks", json.RawMessage(b))
 	}
-	if err := writeOrdered(path, top, order); err != nil {
+	if err := file.Write(); err != nil {
 		return output.Errorf(output.ExitInternal, "zeroturn integrate could not write the settings file",
 			err.Error(), "the backup at "+p.Backup+" holds the previous content")
 	}
-	fmt.Printf("Removed %d ZeroTurn entries from %s\n", removed, path)
+	fmt.Printf("Removed %d ZeroTurn entries from %s\n", removed, file.Path)
 	fmt.Printf("Backup %s\n", p.Backup)
 	return nil
-}
-
-func backupFile(src, dst string) error {
-	if err := os.MkdirAll(filepath.Dir(dst), 0700); err != nil {
-		return err
-	}
-	b, err := ioutil.ReadFile(src)
-	if err != nil {
-		return err
-	}
-	return state.AtomicWrite(dst, b, 0600)
-}
-
-// topLevelOrder records the order of keys in the original file so that an
-// unrelated setting does not move when ZeroTurn rewrites the file.
-func topLevelOrder(raw []byte) []string {
-	dec := json.NewDecoder(bytes.NewReader(raw))
-	tok, err := dec.Token()
-	if err != nil {
-		return nil
-	}
-	if d, ok := tok.(json.Delim); !ok || d != '{' {
-		return nil
-	}
-	var keys []string
-	depth := 0
-	for {
-		t, err := dec.Token()
-		if err == io.EOF || err != nil {
-			return keys
-		}
-		if d, ok := t.(json.Delim); ok {
-			switch d {
-			case '{', '[':
-				depth++
-			case '}', ']':
-				if depth == 0 {
-					return keys
-				}
-				depth--
-			}
-			continue
-		}
-		if depth == 0 {
-			if s, ok := t.(string); ok {
-				keys = append(keys, s)
-				var skip json.RawMessage
-				if dec.Decode(&skip) != nil {
-					return keys
-				}
-			}
-		}
-	}
-}
-
-func ensureKey(order []string, key string) []string {
-	for _, k := range order {
-		if k == key {
-			return order
-		}
-	}
-	return append(order, key)
-}
-
-func removeKey(order []string, key string) []string {
-	var out []string
-	for _, k := range order {
-		if k != key {
-			out = append(out, k)
-		}
-	}
-	return out
-}
-
-// writeOrdered rebuilds the file preserving the original key order and
-// writes it atomically so an interruption cannot leave a partial file.
-func writeOrdered(path string, top map[string]json.RawMessage, order []string) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		return err
-	}
-	if len(top) == 0 {
-		// Removing the last entry leaves an empty settings file rather
-		// than a file with a stray blank line in it.
-		return state.AtomicWrite(path, []byte("{}\n"), 0644)
-	}
-	seen := map[string]bool{}
-	var buf bytes.Buffer
-	buf.WriteString("{\n")
-	first := true
-	emit := func(k string) error {
-		v, ok := top[k]
-		if !ok || seen[k] {
-			return nil
-		}
-		seen[k] = true
-		if !first {
-			buf.WriteString(",\n")
-		}
-		first = false
-		kb, _ := json.Marshal(k)
-		buf.WriteString("  ")
-		buf.Write(kb)
-		buf.WriteString(": ")
-		var indented bytes.Buffer
-		if err := json.Indent(&indented, v, "  ", "  "); err != nil {
-			return err
-		}
-		buf.Write(indented.Bytes())
-		return nil
-	}
-	for _, k := range order {
-		if err := emit(k); err != nil {
-			return err
-		}
-	}
-	rest := make([]string, 0, len(top))
-	for k := range top {
-		if !seen[k] {
-			rest = append(rest, k)
-		}
-	}
-	sortStrings(rest)
-	for _, k := range rest {
-		if err := emit(k); err != nil {
-			return err
-		}
-	}
-	buf.WriteString("\n}\n")
-	return state.AtomicWrite(path, buf.Bytes(), 0644)
-}
-
-func sortStrings(s []string) {
-	for i := 1; i < len(s); i++ {
-		for j := i; j > 0 && s[j] < s[j-1]; j-- {
-			s[j], s[j-1] = s[j-1], s[j]
-		}
-	}
 }

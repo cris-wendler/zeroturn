@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cris-wendler/zeroturn/internal/harness/claude"
 	"github.com/cris-wendler/zeroturn/internal/output"
 	"github.com/cris-wendler/zeroturn/internal/testutil"
 )
@@ -61,7 +62,7 @@ func zeroturnHooks(m map[string]interface{}) map[string]int {
 	for ev, list := range hooks {
 		for _, e := range list.([]interface{}) {
 			for _, h := range e.(map[string]interface{})["hooks"].([]interface{}) {
-				if owned(h.(map[string]interface{})["command"].(string)) {
+				if claude.Owned(h.(map[string]interface{})["command"].(string)) {
 					out[ev]++
 				}
 			}
@@ -106,7 +107,7 @@ func TestIntegrateInstallReinstallRemove(t *testing.T) {
 	after := readJSON(t, settingsFile(work))
 	got := zeroturnHooks(after)
 	want := map[string]int{}
-	for _, h := range claudeHooks {
+	for _, h := range claude.Hooks {
 		want[h.Event]++
 	}
 	for ev, n := range want {
@@ -117,7 +118,7 @@ func TestIntegrateInstallReinstallRemove(t *testing.T) {
 	matchers := map[string]bool{}
 	for _, e := range after["hooks"].(map[string]interface{})["PreToolUse"].([]interface{}) {
 		m := e.(map[string]interface{})
-		if owned(m["hooks"].([]interface{})[0].(map[string]interface{})["command"].(string)) {
+		if claude.Owned(m["hooks"].([]interface{})[0].(map[string]interface{})["command"].(string)) {
 			matcher, _ := m["matcher"].(string)
 			matchers[matcher] = true
 		}

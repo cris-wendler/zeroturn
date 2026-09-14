@@ -61,7 +61,7 @@ Two refusals shaped the code more than any feature:
 
 | Claim | Where it is checked |
 | --- | --- |
-| It behaves as documented | 172 tests, run on Linux with Go 1.17 and the current release, and on Windows, for every change, and on macOS weekly |
+| It behaves as documented | 270 tests across 35 files. Linux on both supported Go releases, and Windows, run on every change; macOS runs weekly |
 | Output matches the published contract | `conformance/`, which runs the real executable against eight schemas |
 | It is fast enough to sit in a hook | [benchmarks.md](benchmarks.md): status line 7.5 ms, gate 7.7 ms, measured over 50 runs |
 | It does what the documents say | [dogfood.md](dogfood.md): twelve behaviors demonstrated against this repository |

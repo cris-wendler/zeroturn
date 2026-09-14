@@ -513,3 +513,17 @@ Decision: three tests. The first requires the three modes and the redaction chec
 Confirmed to fail first. A `compatFixtures` that returns nothing reports that every mode is no longer named.
 
 This is the same rule as decisions 23 and 33, applied one level up. A test that asserts something must be shown failing, and that includes a test whose whole purpose is to assert that other things work.
+
+## 38. A lock token cannot be built from the clock
+
+Date: 2026-09-14
+
+Decision 34 gave each acquisition of the state lock a token, so that a release removes only the lock it took. The token was the process identifier and the time in nanoseconds. That is not unique.
+
+Windows reports time in coarse steps. Two acquisitions inside one step read the same instant, and since both come from the same process the identifier does not separate them either, so the two tokens are identical. The first holder's release then matches the second holder's lock and deletes it, which is the defect decision 34 was written to remove.
+
+The test written for it did not catch this. It performs the real sequence, and on a machine with a fine grained clock the two tokens differ and it passes. It failed on Windows on the first run after the repository went public, which was also the first continuous integration run in seventeen merges.
+
+Decision: the token carries a counter that increments once per acquisition, and the clock is read through a variable so a test can hold it still. With the clock frozen, a thousand tokens must all differ. Replacing the increment with a plain read fails it by name.
+
+The lesson is the one this project keeps relearning from the same file. Three defects in the state lock have now been found by Windows and by nothing else: a contended lock reported as access denied rather than as an existing file, a lock in the middle of being released appearing neither present nor absent, and now a clock too coarse to separate two acquisitions. A test that depends on timing resolution is a test that passes on the machine it was written on.

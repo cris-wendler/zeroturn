@@ -320,9 +320,9 @@ The validator is part of the project and has no dependencies. A schema using a k
 
 ## Harnesses
 
-ZeroTurn reads events from a harness and answers it. One harness is
-supported today, one is not, and any other can send events in a
-normalized form.
+ZeroTurn reads events from a harness and answers it. Claude Code is
+supported. Any other harness can send events in a normalized form by
+writing an adapter.
 
 ### Claude Code
 

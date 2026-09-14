@@ -69,6 +69,19 @@ for f in $files; do
 	esac
 done
 
+# A document where every other point is a callout box reads as generated
+# rather than written, whatever the words say. The limit was set from the
+# documents as they stand, so it catches drift back rather than demanding
+# a rewrite. A ratio of headings to length was tried first and dropped,
+# because it did not fire even on the version this rule exists to prevent.
+for f in $(git ls-files '*.md'); do
+	[ -f "$f" ] || continue
+	callouts=$(grep -c '^> \[!' "$f")
+	if [ "$callouts" -gt 4 ]; then
+		report "callout boxes" "$f: $callouts of them, which is more than a reader will believe"
+	fi
+done
+
 if [ "$status" -ne 0 ]; then
 	echo
 	echo "lint-copy found text that breaks the writing rules in CONTRIBUTING.md."

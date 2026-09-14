@@ -1,5 +1,3 @@
 # Maintainers
 
-| GitHub | Role |
-| --- | --- |
-| [@cris-wendler](https://github.com/cris-wendler) | Primary maintainer |
+[@cris-wendler](https://github.com/cris-wendler), primary maintainer.

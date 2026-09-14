@@ -1,7 +1,5 @@
 # Security policy
 
-![Two columns. Report privately: open the Security tab, choose Report a vulnerability, and include the version, the system, and the steps, with real credentials removed. Never in a public issue, because a public report tells everyone before there is a fix. You get an acknowledgement within seven days and are told whether the report is accepted.](docs/img/security.svg)
-
 > [!CAUTION]
 > Do not open a public issue for a security problem. A public report tells everyone before there is a fix.
 
@@ -39,8 +37,7 @@ These are the promises ZeroTurn makes. A way around any of them is worth reporti
 
 ## What ZeroTurn does not protect against
 
-> [!NOTE]
-> Knowing the limits is part of using it safely.
+Knowing the limits is part of using it safely.
 
 - **The credential scan looks for high confidence patterns.** It is not a replacement for a dedicated secret scanner, and a credential in an unusual format can pass it.
 - **The gate depends on the harness.** It can only ask or deny where the harness honours the answer, which is why `zeroturn doctor --compat --live` exists.

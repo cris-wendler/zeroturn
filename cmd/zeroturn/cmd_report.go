@@ -340,8 +340,8 @@ func retentionNote(span time.Duration) string {
 		return ""
 	}
 	return fmt.Sprintf(
-		"This repository keeps records for %d days, so the window reaches further back than anything that survives. Change it with zeroturn policy set report.retentionDays.",
-		c.Report.RetentionDays)
+		"This repository keeps records for %s, so the window reaches further back than anything that survives. Change it with zeroturn policy set report.retentionDays.",
+		output.Counted(c.Report.RetentionDays, "1 day", "%d days"))
 }
 
 func summarise(window string, sessions []state.Session) reportJSON {
@@ -395,6 +395,8 @@ func reportPurge(st *state.Store, all bool, retention int) error {
 		return output.Errorf(output.ExitInternal, "zeroturn could not purge its records", err.Error(),
 			"check that your user data directory is writable")
 	}
-	fmt.Printf("Deleted %d ZeroTurn session records older than %d days.\n", n, retention)
+	fmt.Printf("Deleted %s older than %s.\n",
+		output.Counted(n, "1 ZeroTurn session record", "%d ZeroTurn session records"),
+		output.Counted(retention, "1 day", "%d days"))
 	return nil
 }

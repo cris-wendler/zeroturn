@@ -97,7 +97,7 @@ func cmdUninstall(args []string) error {
 			fmt.Fprintf(os.Stderr, "Left in place: %s (%s)\n", f.Item.Path, f.Reason)
 		}
 		return output.Errorf(output.ExitInternal, "zeroturn uninstall did not remove everything",
-			fmt.Sprintf("%d of %d items could not be removed", len(result.Failed), len(plan.Items)),
+			output.CountedPair(len(result.Failed), len(plan.Items), "%d of %d %s could not be removed", "item", "items"),
 			"check the permissions on the paths listed above, then run zeroturn uninstall --apply again")
 	}
 	printExecutable()

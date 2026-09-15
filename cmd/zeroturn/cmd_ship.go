@@ -403,7 +403,8 @@ func refuseUnsafeDivergence(d git.Divergence, branch, remote string) error {
 	if d.Behind > 0 {
 		return output.Errorf(output.ExitUnsafeGit,
 			"zeroturn ship changed nothing",
-			fmt.Sprintf("branch %s is %d commits behind %s", branch, d.Behind, d.Upstream),
+			fmt.Sprintf("branch %s is %s behind %s", branch,
+				output.Counted(d.Behind, "1 commit", "%d commits"), d.Upstream),
 			"bring the branch up to date with git merge --ff-only "+d.Upstream+", then run zeroturn ship again")
 	}
 	return nil

@@ -18,6 +18,8 @@ import (
 
 	"github.com/cris-wendler/zeroturn/internal/config"
 	"github.com/cris-wendler/zeroturn/internal/state"
+
+	"github.com/cris-wendler/zeroturn/internal/output"
 )
 
 // EnoughSamples is the point below which a suggestion would be noise
@@ -173,7 +175,8 @@ func currentThreshold(c config.Config, trigger string) int {
 // suggest reads one threshold's history.
 func suggest(t Threshold, approved, declined []float64) (string, *int) {
 	if t.Asks < EnoughSamples {
-		return fmt.Sprintf("only %d asks so far, too few to suggest a change", t.Asks), nil
+		return output.Counted(t.Asks, "only 1 ask so far, too few to suggest a change",
+			"only %d asks so far, too few to suggest a change"), nil
 	}
 	declinedRate := float64(t.Asks-t.Approved) / float64(t.Asks)
 
@@ -188,22 +191,34 @@ func suggest(t Threshold, approved, declined []float64) (string, *int) {
 		if next > 100 && isPercentage(t.Trigger) {
 			return "every ask was approved, and the threshold is already near the top of its range", nil
 		}
-		return fmt.Sprintf("all %d asks were approved, the highest at %.0f", t.Asks, highest), &next
+		return fmt.Sprintf("%s, the highest at %.0f",
+			output.Counted(t.Asks, "the 1 ask was approved", "all %d asks were approved"), highest), &next
 	}
 
 	low := lowest(declined)
 	if declinedRate >= 0.5 {
-		return fmt.Sprintf("%d of %d asks were declined, the lowest at %.0f, so this threshold is doing its job",
-			t.Asks-t.Approved, t.Asks, low), nil
+		return fmt.Sprintf("%s declined, the lowest at %.0f, so this threshold is doing its job",
+			ofAsks(t.Asks-t.Approved, t.Asks), low), nil
 	}
 	// Mostly approved, with a decline at some point. The interesting
 	// value is where the answer changed.
 	next := int(low)
 	if next <= t.Current {
-		return fmt.Sprintf("%d of %d asks were approved, and the one you declined was at %.0f, below the current threshold",
-			t.Approved, t.Asks, low), nil
+		return fmt.Sprintf("%s approved, and the one you declined was at %.0f, below the current threshold",
+			ofAsks(t.Approved, t.Asks), low), nil
 	}
-	return fmt.Sprintf("%d of %d asks were approved, and you declined at %.0f", t.Approved, t.Asks, low), &next
+	return fmt.Sprintf("%s approved, and you declined at %.0f", ofAsks(t.Approved, t.Asks), low), &next
+}
+
+// ofAsks writes "1 of 7 asks was" or "3 of 7 asks were". The noun stays
+// plural because it counts the whole set; the verb agrees with the first
+// number, which is the one that can be one.
+func ofAsks(n, total int) string {
+	verb := "were"
+	if n == 1 {
+		verb = "was"
+	}
+	return output.CountedPair(n, total, "%d of %d %s "+verb, "ask", "asks")
 }
 
 func isPercentage(trigger string) bool {

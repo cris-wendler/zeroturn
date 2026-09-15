@@ -1,6 +1,6 @@
 # Decisions
 
-Each entry records what was decided, the evidence behind it, and what it changes. The research behind the early entries is in [product-boundary.md](product-boundary.md).
+Each entry records what was decided, the evidence behind it, and what it changes.
 
 ## 1. The gate is the product, and sync is not built
 
@@ -42,7 +42,7 @@ Date: 2026-09-10
 
 Decision: the executable is `zeroturn` only.
 
-Evidence: ZeroTurnaround publishes libraries named `zt-zip`, `zt-exec`, and `zt-process-killer`, and `zt` is occupied on npm and PyPI. See product-boundary.md, question 5.
+Evidence: ZeroTurnaround publishes libraries named `zt-zip`, `zt-exec`, and `zt-process-killer`, and `zt` is occupied on npm and PyPI. See entry 1, question 5.
 
 ## 4. The Copilot adapter is deferred
 
@@ -203,7 +203,7 @@ Date: 2026-09-12
 
 Finding: entry 4 deferred Copilot because no Copilot hook payload carried usage, context, or session duration. That was taken from the documentation. Reading the installed package, version 1.0.83, shows the CLI ships hook events for `preToolUse`, `subagentStart`, `subagentStop`, `sessionStart`, and `sessionEnd`; a pre tool decision of allow, deny, or ask with a reason, the same shape Claude Code uses; quota snapshots with entitlement, used requests, and reset date; context window token counts; a local telemetry file exporter for token usage; and its own session budget through `--max-ai-credits`. Hooks can be configured as files, without the experimental extension interface.
 
-Decision: the claim is corrected in [product-boundary.md](product-boundary.md) with the file each capability was verified in, and an adapter moves from refused to planned. What ZeroTurn says about Copilot support stays at nothing until an adapter exists and has been run against a real session, because the rule is that support is claimed only where it has been observed.
+Decision: the claim is corrected here with the file each capability was verified in, and an adapter moves from refused to planned. What ZeroTurn says about Copilot support stays at nothing until an adapter exists and has been run against a real session, because the rule is that support is claimed only where it has been observed.
 
 Still unverified, and therefore still not claimed: the schema of a `.github/hooks` file, whether a hook defined as a command receives the same input as an extension callback and may answer with a permission decision, and whether usage values reach a hook at all rather than only the account interface and the event stream.
 
@@ -235,7 +235,7 @@ No hook payload carries usage, quota, token counts, or session duration. That pa
 
 Session pressure is still reachable, through a different door. `statusLine.command` runs a child process and hands it the session status as JSON on standard input, including context window use, the window size, premium requests, and credits. That is the same arrangement ZeroTurn already uses on Claude Code.
 
-Decision: the adapter is worth writing, and it uses two entry points rather than one, a `preToolUse` hook for the gate and the status line process for pressure. The findings are recorded in [integrations/copilot.md](integrations/copilot.md) with the file each one came from. What ZeroTurn claims about Copilot stays at nothing until an adapter has run against a real session, which is the same bar the Claude Code gate had to clear.
+Decision: the adapter is worth writing, and it uses two entry points rather than one, a `preToolUse` hook for the gate and the status line process for pressure. The findings are recorded in this entry with the file each one came from. What ZeroTurn claims about Copilot stays at nothing until an adapter has run against a real session, which is the same bar the Claude Code gate had to clear.
 
 Two spellings would have failed silently if an adapter had guessed them: the prompt event is `userPromptSubmitted`, not `userPromptSubmit`, and the end of turn event is `agentStop`, with no plain `stop`.
 
@@ -247,7 +247,7 @@ Date: 2026-09-12
 
 Finding: an architecture review found that `Lock` could not fail. Its retry loop treated every failure to create the lock file as a lock somebody else was holding. When the entry looked stale it removed it and repeated, without checking the deadline and without sleeping. If the removal could not succeed, the loop spun on a processor and never ended.
 
-It was reproduced through the real executable, not only in a test. With `state.lock` present as a directory rather than a file, `zeroturn event` ran at one whole processor and never exited. A read only state directory did the same. That contradicts the fail open rule in [harness-contract.md](harness-contract.md), which promises that an unreadable state directory ends in silence and exit 0. A hook that never returns is worse than one that fails: it holds the harness until its timeout and then keeps burning a processor after it.
+It was reproduced through the real executable, not only in a test. With `state.lock` present as a directory rather than a file, `zeroturn event` ran at one whole processor and never exited. A read only state directory did the same. That contradicts the fail open rule the contract publishes, which promises that an unreadable state directory ends in silence and exit 0. A hook that never returns is worse than one that fails: it holds the harness until its timeout and then keeps burning a processor after it.
 
 Decision: only a lock another process holds is waited for. Any other failure is returned at once, the deadline is checked on every pass, and a lock left behind by a dead process is cleared once rather than repeatedly. The same scenario now exits 0 in the time the deadline allows.
 
@@ -395,7 +395,7 @@ Measured at about a quarter of a millisecond, which was roughly eight percent of
 
 Decision: a detector holds its pattern as text and compiles it the first time it is actually reached. What makes this more than a deferral is the anchor check that was already there: a literal string has to appear in the line before the expression is built at all, so even a real scan of an ordinary file usually compiles none of them. Redaction builds its loose copies on first use for the same reason, and the placeholder expression is only reached after a detector with a value group has matched.
 
-The measurement is recorded in `docs/benchmarks.md` with its own conditions rather than folded into the table there, which was taken on a different machine with a different Go release. The two are not comparable, and presenting them together would suggest an improvement that was mostly a change of toolchain.
+The measurement is recorded with its own conditions rather than folded into the table there, which was taken on a different machine with a different Go release. The two are not comparable, and presenting them together would suggest an improvement that was mostly a change of toolchain.
 
 The tests caught the mistake in the first attempt, which is worth recording. Redaction reaches its expression in two branches, and only one of them was changed, so the other dereferenced a pattern that had never been compiled and the package panicked. A nil pointer is the failure this shape invites, and the existing corpus test found it immediately.
 
@@ -683,3 +683,19 @@ The continuous integration job runs the packages that are clean, and the list gr
 - `internal/security`: seven changes the tests accept, at security.go lines 122, 134, 153 twice, 229, 233 and 237. The last three are inside `Redact`, and one of them is the difference between redacting a value at the start of a line and leaving it there.
 - `internal/tune`: nine, at tune.go lines 105, 120, 124, 185, 188, 195, 202, 220 and 230. That matches what a separate pass over this package found: it is the least tested thing that produces a number a person acts on.
 - `internal/config`, `internal/state`, `internal/verify`, `internal/status`, `internal/git`, `internal/settings`, `internal/trust`, `internal/jsonschema` and `internal/harness/claude` are not measured yet.
+
+## 47. The documentation was mostly for me
+
+Date: 2026-09-14
+
+Fourteen documents, thirty thousand words, against ten thousand lines of Go. Opening `docs/` on the public repository was the first time anyone had looked at it as a stranger would: an unordered list of filenames with no way to tell which two mattered.
+
+Three of them were working notes wearing a documentation costume. `going-public.md` was a checklist for an event that had already happened, and it opened by saying the repository was private, which it had not been for days. `dogfood.md` was a transcript of a version of the tool that no longer exists: no note level in `doctor`, no scope on a report, no `uninstall`. `architecture-review.md` was a narrative whose every finding was already an entry in this file. Each of those contradicted something, and this project's own rule is that a document contradicting the code is worse than no document.
+
+The rest was a judgement rather than a defect. Publishing documentation is normal and good practice, and decision records are an established one; the first instinct to cut was partly wrong and is recorded here as wrong. What has changed is that disproportionate prose has become a recognised sign of a generated repository, and thirty thousand words wrapped around ten thousand lines reads that way to a reader who has never met the project. That signal, not the practice of publishing, is what the cut was for.
+
+What is left is three documents: this file, `how-this-was-built.md`, and the Claude Code integration. The findings about how a hook based guardrail fails, which are the most useful thing here for anyone building a control on an agent harness, moved into `how-this-was-built.md` rather than being lost. The contract survives as the published schemas and the conformance suite that runs the real executable against them, which is the form an adapter author actually consumes. The research, the benchmark method, the release steps and the Copilot notes left the repository and remain in its history.
+
+Deleting eleven documents left nine dead links behind, in files nobody had touched: the conformance suite's own README, the adapter template, and two of the documents that stayed. Nothing noticed, because nothing checked. A test now walks every Markdown file and fails when a relative link leads nowhere. It was shown failing by adding one link to a document that had just been deleted.
+
+The number worth recording: after removing eleven of fourteen documents, this file is seventy seven percent of what remains. The volume was never spread across the directory. It was always one document, and that document is the one worth keeping.

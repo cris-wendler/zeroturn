@@ -31,7 +31,7 @@ ZeroTurn works with coding harnesses. It is not another coding harness. It shows
 
 Useful areas:
 
-- adapters for a harness ZeroTurn does not support yet, following [docs/adapter-authoring.md](docs/adapter-authoring.md)
+- adapters for a harness ZeroTurn does not support yet, following the schemas in [schemas/](schemas) and the worked example in [integrations/template/](integrations/template)
 - events: normalization, new fixtures, better handling of missing fields
 - detection: project detection for `zeroturn init`, validation presets for common toolchains
 - platforms: real use on Linux and Windows, where only the tests have run so far
@@ -40,7 +40,7 @@ Useful areas:
 
 ## What does not fit
 
-These are closed or redirected however well they are written. The reasons are in [docs/product-boundary.md](docs/product-boundary.md) and [docs/decisions.md](docs/decisions.md).
+These are closed or redirected however well they are written. The reasons are in [docs/decisions.md](docs/decisions.md).
 
 A model SDK, model calls, or model selection are out, because ZeroTurn
 never calls a model to decide whether a model call should happen. So are a
@@ -83,7 +83,7 @@ Pull requests are **squashed** into one commit, so `main` carries one commit per
 
 ## Working on the code
 
-Requirements: **Go 1.17 or newer** and **Git**. Nothing else. A pull request that adds a dependency needs a reason and a row in [docs/dependency-licenses.md](docs/dependency-licenses.md).
+Requirements: **Go 1.17 or newer** and **Git**. Nothing else. A pull request that adds a dependency needs a reason good enough to change that.
 
 | Command | What it does |
 | --- | --- |
@@ -142,7 +142,7 @@ This matters more when a coding agent is writing the changes, because it holds n
 - [ ] `go test ./...`, `go vet ./...`, and `scripts/lint-copy.sh` pass.
 - [ ] No generated attribution, tool trailers, or prompt text in commits or files.
 
-Exit codes, the event contract, and the JSON output are public. Changing what any of them means needs a major contract version, described in [docs/harness-contract.md](docs/harness-contract.md).
+Exit codes, the event contract, and the JSON output are public. Changing what any of them means needs a major contract version, which `zeroturn capabilities --json` reports.
 
 ## License
 

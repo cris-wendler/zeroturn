@@ -74,7 +74,7 @@ func Describe(version string) Doc {
 				Events:          []string{},
 				GateSupported:   false,
 				StatusSupported: false,
-				Notes:           "No adapter ships in this version, so nothing here claims Copilot support. The installed CLI does expose a pre tool decision through a command hook, and session values through the status line process rather than through hooks, which is recorded in docs/integrations/copilot.md. An adapter is planned and will be marked supported only after it has run against a real session.",
+				Notes:           "No adapter ships in this version, so nothing here claims Copilot support. The installed CLI does expose a pre tool decision through a command hook, and session values through the status line process rather than through hooks, which is recorded in docs/decisions.md. An adapter is planned and will be marked supported only after it has run against a real session.",
 			},
 		},
 		ExitCodes: map[string]string{

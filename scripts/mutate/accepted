@@ -4,3 +4,4 @@
 # this file cannot quietly excuse a change made later at the same place.
 
 internal/policy/policy.go:186 > becomes >=  picking the last of several equal ranks gives the same level as picking the first
+internal/security/security.go:180 > becomes >=  the length cap is applied either way at exactly the cap

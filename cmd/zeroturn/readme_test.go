@@ -68,6 +68,80 @@ func dispatched(t *testing.T) []string {
 	return found
 }
 
+// subcommands reports the names one command answers, read out of its own
+// switch. policy has six of them and they are listed by hand in three
+// places, the same shape of drift as the commands above.
+func subcommands(t *testing.T, file, tag string) []string {
+	t.Helper()
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, file, nil, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var found []string
+	ast.Inspect(f, func(n ast.Node) bool {
+		sw, ok := n.(*ast.SwitchStmt)
+		if !ok {
+			return true
+		}
+		// The subcommand is read from the first argument, which is what
+		// distinguishes this switch from the ones inside the subcommands.
+		idx, ok := sw.Tag.(*ast.IndexExpr)
+		if !ok {
+			return true
+		}
+		if id, ok := idx.X.(*ast.Ident); !ok || id.Name != tag {
+			return true
+		}
+		for _, stmt := range sw.Body.List {
+			clause, ok := stmt.(*ast.CaseClause)
+			if !ok {
+				continue
+			}
+			for _, expr := range clause.List {
+				lit, ok := expr.(*ast.BasicLit)
+				if !ok || lit.Kind != token.STRING {
+					continue
+				}
+				name, err := strconv.Unquote(lit.Value)
+				if err != nil || strings.HasPrefix(name, "-") || name == "help" {
+					continue
+				}
+				found = append(found, name)
+			}
+		}
+		return true
+	})
+
+	if len(found) == 0 {
+		t.Fatalf("no subcommand switch was found in %s, so this test checks nothing", file)
+	}
+	return found
+}
+
+// policy is the one command with subcommands, and they are written out in
+// its own usage text and in the README as well as in its switch.
+func TestEveryPolicySubcommandIsDescribed(t *testing.T) {
+	b, err := ioutil.ReadFile(filepath.Join("..", "..", "README.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	row := regexp.MustCompile("(?m)^\\| `zeroturn policy ([^`]+)`").FindStringSubmatch(string(b))
+	if row == nil {
+		t.Fatal("the README has no zeroturn policy row, so this test checks nothing")
+	}
+
+	for _, name := range subcommands(t, "cmd_policy.go", "args") {
+		if !regexp.MustCompile(`(?m)^  ` + name + ` `).MatchString(policyUsage) {
+			t.Errorf("zeroturn policy answers %q, and its help text does not list it", name)
+		}
+		if !strings.Contains(row[1], name) {
+			t.Errorf("zeroturn policy answers %q, and the README row does not name it: %s", name, row[1])
+		}
+	}
+}
+
 // readmeCommands reports the commands the README table names, by the first
 // word after zeroturn in each row.
 func readmeCommands(t *testing.T) map[string]bool {

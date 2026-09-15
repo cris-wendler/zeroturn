@@ -290,7 +290,7 @@ ZeroTurn makes no network requests of its own, calls no model, and runs no backg
 | Command | Purpose |
 | --- | --- |
 | `zeroturn status` | The session condition, or repository status outside a session |
-| `zeroturn policy show \| check \| set \| reset` | Read or change the guard thresholds |
+| `zeroturn policy show \| check \| set \| reset \| tune \| migrate` | Read or change the guard thresholds |
 | `zeroturn report current \| day \| week \| purge` | Summarise locally observed events, `--json` for machine output |
 | `zeroturn integrate claude --plan \| --apply \| --remove` | Show, install, or remove the harness integration |
 

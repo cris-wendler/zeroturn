@@ -49,6 +49,15 @@ func loadConfig(root string) (config.Config, error) {
 	}
 	c, err := config.Load(root)
 	if err != nil {
+		// A file from a newer ZeroTurn is not a broken file. Telling
+		// somebody to run init here would answer it by overwriting the
+		// policy they wrote, which is the one thing they cannot undo.
+		var newer config.ErrNewer
+		if errors.As(err, &newer) {
+			return config.Config{}, output.Errorf(output.ExitContractVersion,
+				"zeroturn stopped before doing anything", newer.Error(),
+				"upgrade ZeroTurn, which can read the newer file")
+		}
 		if ve, ok := err.(config.ValidationError); ok {
 			return config.Config{}, output.Errorf(output.ExitInvalidUsage,
 				"zeroturn stopped before doing anything",

@@ -78,12 +78,28 @@ func TestGateCountsSubagentsFromEvents(t *testing.T) {
 	}
 }
 
+// The Bash fixture carries no measurements, so a session built only from
+// it crosses nothing and Strict allows it anyway. That made this pass
+// whatever the tool filter did. The session is loaded with a reading past
+// every threshold first, so silence here can only come from the filter.
 func TestGateIgnoresOtherTools(t *testing.T) {
 	work, _ := repoWithConfig(t, func(c *config.Config) { c.Guard.Mode = config.ModeStrict })
+	statusline(t, work, "s", contextAt(99))
+
+	// The same session, on the tool ZeroTurn does gate, produces a
+	// decision. Without this the silence below proves nothing. Strict is
+	// not approved on this machine, so it asks rather than denies, which
+	// is the downgrade working and is beside the point here.
+	gated := run(t, work, claudeEvent(t, "claude/pretooluse-agent.json", work, "s", nil),
+		"event", "--harness", "claude", "--event", "PreToolUse")
+	if !strings.Contains(gated.stdout, "permissionDecision") {
+		t.Fatalf("the gated tool produced no decision, so this test cannot tell the filter apart: %+v", gated)
+	}
+
 	r := run(t, work, claudeEvent(t, "claude/pretooluse-bash.json", work, "s", nil),
 		"event", "--harness", "claude", "--event", "PreToolUse")
 	if r.code != 0 || r.stdout != "" {
-		t.Fatalf("%+v", r)
+		t.Fatalf("a tool ZeroTurn does not gate produced a decision: %+v", r)
 	}
 }
 

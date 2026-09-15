@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -19,12 +20,39 @@ import (
 // Three of those are descriptions written beside the thing they describe.
 // These read the registry and compare.
 
-func TestEveryWindowIsInTheHelpText(t *testing.T) {
+// The help text is generated from the registry, so comparing the two was
+// comparing a list with itself. What can drift is the registry and the
+// command: a window can be advertised and then not answered. This reads
+// the advertised names back out of the help text and asks the command to
+// resolve each one.
+func TestEveryWindowTheHelpTextOffersIsAnswered(t *testing.T) {
 	usage := reportUsage()
-	for _, w := range reportWindows {
-		if !strings.Contains(usage, "  "+w.Name+" ") {
-			t.Errorf("report answers %q, and the help text does not list it", w.Name)
+	offered := regexp.MustCompile(`(?m)^  ([a-z]+) {2,}[A-Z]`).FindAllStringSubmatch(usage, -1)
+	if len(offered) == 0 {
+		t.Fatal("the help text offers no windows, so this test checks nothing")
+	}
+
+	found := 0
+	for _, m := range offered {
+		name := m[1]
+		if name == "purge" {
+			continue
 		}
+		found++
+		span, resolved, err := resolveWindow(name, "")
+		if err != nil {
+			t.Errorf("the help text offers %q and the command refuses it: %v", name, err)
+			continue
+		}
+		if resolved != name {
+			t.Errorf("%q resolved to %q", name, resolved)
+		}
+		if name != "current" && span == 0 {
+			t.Errorf("%q resolved to no span at all", name)
+		}
+	}
+	if found != len(reportWindows) {
+		t.Errorf("the help text offers %d windows and the registry holds %d", found, len(reportWindows))
 	}
 	if !strings.Contains(usage, "--since") {
 		t.Error("the help text does not mention --since")

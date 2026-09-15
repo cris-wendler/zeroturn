@@ -217,12 +217,18 @@ func TestStripCredentials(t *testing.T) {
 	}
 }
 
+// Checking only that the credential is absent passed for a function that
+// failed and returned the bare remote name, which carries no credential
+// and no URL either. What it has to return is the destination, with only
+// the credential gone.
 func TestRemoteDisplayHidesCredentials(t *testing.T) {
 	testutil.Isolate(t)
 	work, _ := testutil.Remote(t)
 	testutil.Git(t, work, "remote", "add", "creds", "https://someone:hunter2hunter2@example.invalid/r.git")
 	r := open(t, work)
-	if got := r.RemoteDisplay(ctx, "creds"); strings.Contains(got, "hunter2") {
-		t.Fatalf("display leaked %q", got)
+
+	got := r.RemoteDisplay(ctx, "creds")
+	if want := "https://example.invalid/r.git"; got != want {
+		t.Fatalf("RemoteDisplay is %q, want %q", got, want)
 	}
 }

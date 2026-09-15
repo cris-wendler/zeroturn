@@ -9,6 +9,10 @@ import (
 
 // The scanner reads files chosen by someone else. Whatever it is handed,
 // it must finish, never panic, and never put a value in a finding.
+// A key the scanner really detects, split so this file does not read as
+// one itself.
+const hostileKey = "AKIA" + "ZXCVBNMASDFGHJKL"
+
 func TestHostileContent(t *testing.T) {
 	cases := map[string][]byte{
 		"empty":                 {},
@@ -20,7 +24,14 @@ func TestHostileContent(t *testing.T) {
 		"a line of separators":  []byte(strings.Repeat("://@", 20000)),
 		"repeated anchor words": []byte(strings.Repeat("password=\n", 20000)),
 		"nul bytes in text":     []byte("password=hunter2hunter2\x00more text\n"),
+		// Every case above is refused or finds nothing, so the check that
+		// a finding never carries the value never ran on a finding. This
+		// one is hostile and scannable at the same time.
+		"a real secret among hostile input": []byte(
+			strings.Repeat("x", 4000) + "\naws_access_key_id = " + hostileKey + "\n" +
+				strings.Repeat("://@", 4000) + "\n"),
 	}
+	found := 0
 	for name, content := range cases {
 		start := time.Now()
 		func() {
@@ -33,15 +44,21 @@ func TestHostileContent(t *testing.T) {
 			if err != nil && !strings.Contains(err.Error(), "token too long") {
 				t.Errorf("%s: %v", name, err)
 			}
+			found += len(findings)
 			for _, f := range findings {
-				if strings.Contains(f.String(), "hunter2") {
-					t.Errorf("%s: a finding carried the value", name)
+				if strings.Contains(f.String(), "hunter2") || strings.Contains(f.String(), hostileKey) {
+					t.Errorf("%s: a finding carried the value: %s", name, f.String())
 				}
 			}
 		}()
 		if took := time.Since(start); took > 20*time.Second {
 			t.Errorf("%s took %s", name, took)
 		}
+	}
+	// Without a finding anywhere, the check inside the loop asserted
+	// nothing at all.
+	if found == 0 {
+		t.Fatal("no hostile input produced a finding, so the value check never ran")
 	}
 }
 

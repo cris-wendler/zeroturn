@@ -138,10 +138,22 @@ func TestBackgroundWorkWarnsWithoutAsking(t *testing.T) {
 }
 
 // Missing measurements must never be treated as zero or as a crossing.
-func TestMissingMeasurementsAreIgnored(t *testing.T) {
+//
+// Inside this package the two cannot be told apart: a threshold is a
+// percentage between 1 and 100, so a reading of zero is below every one
+// of them and produces the same empty trigger list an absent reading
+// does. The claim is real and it is observable where the value is shown,
+// so it is asserted in internal/status, by
+// TestAMeasurementTheHarnessDidNotSendIsNotShownAsZero. What is left here
+// is the part this package can answer for: nothing is decided from
+// nothing.
+func TestMissingMeasurementsDecideNothing(t *testing.T) {
 	r := Evaluate(withMode(config.ModeStrict), state.Session{ContextPct: nil, FiveHourPct: nil, DurationMS: nil})
 	if len(r.Triggers) != 0 {
 		t.Fatalf("triggers from absent data: %+v", r.Triggers)
+	}
+	if r.Decision != DecisionAllow || r.Reason != "" {
+		t.Fatalf("absent data produced %s with reason %q", r.Decision, r.Reason)
 	}
 }
 

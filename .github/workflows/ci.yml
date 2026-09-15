@@ -59,3 +59,19 @@ jobs:
           cache: false
       - name: go test
         run: go test ${{ matrix.extra }} ./...
+
+  mutate:
+    name: changes the tests should notice
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+          cache: false
+      # One operator at a time is changed and the package's tests are run.
+      # A change the tests accept is behaviour nothing can fail for. The
+      # package list grows as packages are brought up to it; the ones that
+      # are not here yet are recorded in docs/decisions.md.
+      - name: go run ./scripts/mutate
+        run: go run ./scripts/mutate -packages internal/policy,internal/session -timeout 90s

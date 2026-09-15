@@ -106,9 +106,20 @@ func TestIntegrateInstallReinstallRemove(t *testing.T) {
 	}
 	after := readJSON(t, settingsFile(work))
 	got := zeroturnHooks(after)
-	want := map[string]int{}
-	for _, h := range claude.Hooks {
-		want[h.Event]++
+	// Written down rather than read from claude.Hooks. Building the
+	// expectation from the table the installer works from meant that
+	// deleting a hook removed it from both sides and changed nothing
+	// here, so ZeroTurn could have stopped installing one in silence.
+	want := map[string]int{
+		"PreToolUse":    2, // the subagent gate and the credential guard
+		"SubagentStart": 1,
+		"SubagentStop":  1,
+		"Stop":          1,
+		"SessionEnd":    1,
+	}
+	if len(want) != countEvents(claude.Hooks) {
+		t.Fatalf("ZeroTurn installs hooks for %d events and this test knows %d of them",
+			countEvents(claude.Hooks), len(want))
 	}
 	for ev, n := range want {
 		if got[ev] != n {
@@ -254,4 +265,15 @@ func TestIntegrateCopilotIsUnavailable(t *testing.T) {
 	if r.code != output.ExitNoIntegration {
 		t.Fatalf("%+v", r)
 	}
+}
+
+// countEvents reports how many distinct harness events ZeroTurn installs
+// for, so the written down expectation above can be checked for being out
+// of date without being derived from the thing it checks.
+func countEvents(hooks []claude.Hook) int {
+	seen := map[string]bool{}
+	for _, h := range hooks {
+		seen[h.Event] = true
+	}
+	return len(seen)
 }

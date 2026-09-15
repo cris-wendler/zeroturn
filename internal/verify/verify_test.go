@@ -158,9 +158,27 @@ func TestCancellationStopsChildProcesses(t *testing.T) {
 	}
 }
 
+// safeName turns a step name into part of a log file name. Checking only
+// that the result holds no separator passed for a function that returned
+// nothing at all, which would have sent every step to one log file.
 func TestSafeName(t *testing.T) {
 	if got := safeName("../x y"); strings.ContainsAny(got, "./ ") {
-		t.Fatalf("got %q", got)
+		t.Fatalf("got %q, which can escape the log directory", got)
+	}
+
+	// Two names have to stay two names, or one step overwrites another.
+	if safeName("vet") == safeName("test") {
+		t.Fatal("two step names produced one file name")
+	}
+	// And enough of the name has to survive to tell the logs apart by eye.
+	for name, want := range map[string]string{
+		"vet":        "vet",
+		"unit tests": "unit-tests",
+		"../x y":     "---x-y",
+	} {
+		if got := safeName(name); got != want {
+			t.Errorf("safeName(%q) is %q, want %q", name, got, want)
+		}
 	}
 }
 

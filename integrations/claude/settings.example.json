@@ -10,6 +10,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/usr/local/bin/zeroturn\" event --harness claude --event PreToolUse",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "SessionEnd": [

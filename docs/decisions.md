@@ -613,3 +613,21 @@ Decision: doctor gains a third level. A warning is something the reader can act 
 The rule is now a test rather than a habit: every warning doctor prints must name a ZeroTurn command to run. It found one more straight away, a warning that ended "run this again" instead of naming the command. Measured afterwards, a first run went from four warnings to one, and `init --yes` from seventy two lines to fifteen.
 
 The general form is worth keeping. A tool that reports everything it noticed at the same severity has not saved the reader any work; it has moved the sorting to them and called it transparency.
+
+## 44. An audit aimed at finding, rather than at building
+
+Date: 2026-09-14
+
+Every defect in the last three sessions was found while building something else. Five were already there. That is a poor way to find defects, so this pass went looking, with the hypotheses taken from the shapes this project has already been bitten by: drift, tests that cannot fail, platform assumptions, and output claiming more than the data supports.
+
+Two things were clean and are worth recording as such. The suite passes under the race detector, and it passes under three shuffled orderings, so no test depends on another's leftovers. Neither was run by anything before, so both now run on one continuous integration job rather than by hand.
+
+What the pass found in the first batch:
+
+`integrations/claude/settings.example.json` was missing the credential guard. The integration document tells a reader to copy the entries out of that file and replace the path, and the same document promises a `PreToolUse` entry with matcher `Read`. The file had five entries; the installer writes six. Anyone who installed by hand lost the credential guard with nothing to tell them, and no Go code had ever opened the file. It is now compared with `claude.Hooks` in both directions.
+
+The README's picture of the file `init` writes had lost a section. `report` was added to the configuration earlier the same day, and the same document tells a reader to change `report.retentionDays` in a file its own depiction did not contain. The picture is now compared with the `Config` type by reflection, and is also parsed and validated, so a block a reader copies has to be one ZeroTurn would accept.
+
+The rule written a few hours earlier, that every warning `doctor` prints must name a command to run, was enforced only on the checks that run without `--compat`. The `--compat` checks were never held to it and one of them said "Add --live" without naming the command that carries the flag. The rule now covers both.
+
+The lesson is not any one of these. It is that a pass aimed at finding, with the hypotheses written down first, turned up in one sitting more than three sessions of building had.

@@ -43,6 +43,10 @@ jobs:
             go: "1.17"
           - os: ubuntu-latest
             go: stable
+            # The race detector and a shuffled order run on one job
+            # rather than all four. Both were clean when they were first
+            # run by hand, and nothing was keeping them clean.
+            extra: "-race -shuffle=on"
           - os: macos-latest
             go: stable
           - os: windows-latest
@@ -54,4 +58,4 @@ jobs:
           go-version: ${{ matrix.go }}
           cache: false
       - name: go test
-        run: go test ./...
+        run: go test ${{ matrix.extra }} ./...

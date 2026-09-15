@@ -291,3 +291,76 @@ func join(path, name string) string {
 	}
 	return path + "." + name
 }
+
+// Unsupported reports every keyword in the schema that this validator
+// does not implement, wherever it appears.
+//
+// Validate only reaches the parts of a schema that the document it is
+// given exercises, so checking one empty document screened the root and
+// nothing else. A keyword on a field no sample happens to carry would
+// then be accepted in silence, and a contract would look checked when it
+// was not.
+func (s *Schema) Unsupported() []string {
+	var out []string
+	seen := map[string]bool{}
+	add := func(path, key string) {
+		msg := path + ": " + key
+		if seen[msg] {
+			return
+		}
+		seen[msg] = true
+		out = append(out, msg)
+	}
+
+	var node func(path string, n map[string]interface{})
+	var value func(path string, v interface{})
+
+	value = func(path string, v interface{}) {
+		if m, ok := v.(map[string]interface{}); ok {
+			node(path, m)
+		}
+	}
+
+	node = func(path string, n map[string]interface{}) {
+		for key, raw := range n {
+			if !supported[key] {
+				add(path, key)
+				continue
+			}
+			child := path + "/" + key
+			switch key {
+			// A map of names to schemas. The names are not keywords.
+			case "properties", "$defs", "definitions":
+				if m, ok := raw.(map[string]interface{}); ok {
+					for name, sub := range m {
+						value(child+"/"+name, sub)
+					}
+				}
+			// A schema, or in the case of additionalProperties a bool.
+			case "items", "additionalProperties":
+				value(child, raw)
+			// A list of schemas.
+			case "oneOf", "anyOf":
+				if list, ok := raw.([]interface{}); ok {
+					for i, sub := range list {
+						value(fmt.Sprintf("%s/%d", child, i), sub)
+					}
+				}
+			}
+			// Everything else is a value rather than a schema, so it is
+			// not walked: enum members and examples are documents.
+		}
+	}
+
+	node("", s.doc)
+	sortStrings(out)
+	return out
+}
+
+func sortStrings(s []string) {
+	for i := 1; i < len(s); i++ {
+		for j := i; j > 0 && s[j] < s[j-1]; j-- {
+			s[j], s[j-1] = s[j-1], s[j]
+		}
+	}
+}

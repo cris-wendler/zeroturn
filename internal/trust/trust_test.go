@@ -92,11 +92,21 @@ func TestUnreadableRecordIsUntrusted(t *testing.T) {
 	}
 }
 
+// Discarding the read error meant a record that was never written passed:
+// no file, no bytes, no path in them.
 func TestRecordStoresNoPath(t *testing.T) {
 	st, root, c := setup(t)
 	Approve(st, root, c)
-	b, _ := ioutil.ReadFile(filepath.Join(st.TrustDir(), state.RepoHash(root)+".json"))
+
+	b, err := ioutil.ReadFile(filepath.Join(st.TrustDir(), state.RepoHash(root)+".json"))
+	if err != nil {
+		t.Fatalf("approval wrote no record: %v", err)
+	}
 	if strings.Contains(string(b), root) {
-		t.Fatal("trust record contains the repository path")
+		t.Fatalf("the trust record contains the repository path: %s", b)
+	}
+	// It has to hold the thing it is for, or it is not a record.
+	if !strings.Contains(string(b), state.RepoHash(root)) {
+		t.Fatalf("the trust record does not name the repository it is for: %s", b)
 	}
 }

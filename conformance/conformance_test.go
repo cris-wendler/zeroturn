@@ -240,10 +240,11 @@ func TestEverySchemaIsSupported(t *testing.T) {
 			t.Errorf("%s: %v", name, err)
 			continue
 		}
-		for _, p := range s.Validate([]byte(`{}`)) {
-			if strings.Contains(p, "does not support") {
-				t.Errorf("%s: %s", filepath.Base(name), p)
-			}
+		// Validating one empty document screened the root of the schema
+		// and nothing else, because Validate only reaches the parts a
+		// document exercises. This walks the whole schema.
+		for _, p := range s.Unsupported() {
+			t.Errorf("%s uses %s, which this validator does not support", filepath.Base(name), p)
 		}
 	}
 }

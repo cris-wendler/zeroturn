@@ -21,8 +21,11 @@ func TestVersionPrefersWhatTheBuildSet(t *testing.T) {
 // From a checkout there is no module version to fall back to, so the
 // default stands rather than something misleading.
 func TestVersionFallsBackToTheDefault(t *testing.T) {
-	if got := version(); got == "" {
-		t.Fatal("version() is empty")
+	// Not empty and not the placeholder left every other answer passing,
+	// including one invented on the spot. In a test binary there is no
+	// module version, so the default is the answer.
+	if got := version(); got != Version {
+		t.Fatalf("version() is %q, want the default %q", got, Version)
 	}
 	if strings.Contains(version(), "(devel)") {
 		t.Fatalf("version() reports the Go placeholder: %q", version())

@@ -156,8 +156,14 @@ func TestAFileFromANewerBuildIsNotAnsweredByOverwritingIt(t *testing.T) {
 	// The smallest safe next action is the part that was wrong, and it is
 	// carried on the error rather than in its message.
 	assertNextAction(t, err, "upgrade ZeroTurn")
-	if strings.Contains(out, "zeroturn init") {
-		t.Errorf("the output still suggests overwriting the file:\n%s", out)
+	// The command returns before printing anything on this path, so
+	// checking stdout for the old advice checked an empty string. What a
+	// person reads is the error itself.
+	if out != "" {
+		t.Errorf("this path is expected to print nothing, and printed:\n%s", out)
+	}
+	if strings.Contains(err.Error(), "init") {
+		t.Errorf("the message still suggests overwriting the file: %v", err)
 	}
 
 	// Every other command has to say the same thing rather than call it a

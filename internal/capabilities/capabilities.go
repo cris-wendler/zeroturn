@@ -53,7 +53,7 @@ func Describe(version string) Doc {
 		Modes:           []string{"observe", "confirm", "strict"},
 		Commands: []string{
 			"init", "integrate", "status", "policy", "report",
-			"verify", "ship", "capabilities", "doctor", "version", "event",
+			"verify", "ship", "uninstall", "capabilities", "doctor", "version", "event",
 		},
 		EventTypes: []string{
 			events.TypeStatus, events.TypeSubagentPre, events.TypeFileRead, events.TypeSubagentStrt,

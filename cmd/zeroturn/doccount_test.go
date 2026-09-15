@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -36,6 +37,45 @@ func TestTheCountsInTheProseAreTheCountsInTheRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 	claimed(t, string(prose), `against ([0-9]+) schemas`, len(schemas), "schemas")
+
+	// The count this comment blames for going stale by a hundred was the
+	// only one still unchecked, and it was wrong again by the time anyone
+	// looked.
+	tests, files := countTests(t, root)
+	claimed(t, string(prose), `([0-9]+) tests across`, tests, "tests")
+	claimed(t, string(prose), `tests across ([0-9]+) files`, files, "test files")
+}
+
+// countTests counts the test functions in the module and the files that
+// hold them. Benchmarks are left out: the sentence says tests.
+func countTests(t *testing.T, root string) (tests, files int) {
+	t.Helper()
+	fn := regexp.MustCompile(`(?m)^func Test`)
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			if info.Name() == ".git" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(info.Name(), "_test.go") {
+			return nil
+		}
+		b, rerr := ioutil.ReadFile(path)
+		if rerr != nil {
+			return rerr
+		}
+		files++
+		tests += len(fn.FindAll(b, -1))
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return tests, files
 }
 
 // claimed reads one number out of the prose and compares it with what

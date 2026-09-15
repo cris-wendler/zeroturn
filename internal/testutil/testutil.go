@@ -32,6 +32,11 @@ func Isolate(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv("HOME", home)
+	// os.UserHomeDir reads USERPROFILE on Windows and HOME everywhere
+	// else. Setting only HOME left every test that reaches the user wide
+	// settings file writing into the real home directory of whoever ran
+	// it, which on Windows continuous integration is how it was found.
+	t.Setenv("USERPROFILE", home)
 	t.Setenv("NO_COLOR", "1")
 }
 

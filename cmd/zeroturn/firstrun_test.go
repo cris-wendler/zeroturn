@@ -76,9 +76,17 @@ func TestAFreshMachineHasOneThingToDo(t *testing.T) {
 	}
 }
 
-// A harness that is not on PATH is worth saying and is not worth warning
-// about: a harness invokes ZeroTurn, never the other way round.
-func TestAMissingHarnessIsANoteAndSaysWhyItDoesNotMatter(t *testing.T) {
+// A harness check is never a warning. A harness invokes ZeroTurn, never
+// the other way round, so one that is absent changes nothing about
+// whether the integration works.
+//
+// This asserted that both harnesses were notes, which passed only on a
+// machine with neither installed. It failed for anyone with Claude Code
+// on their PATH, which is most people who would run this at all. The
+// rule does not depend on what is installed, so neither does the test:
+// found means ok and says the version, absent means a note that says why
+// it does not matter, and neither is ever a warning.
+func TestAHarnessCheckIsNeverAWarning(t *testing.T) {
 	work := freshRepo(t)
 
 	found := 0
@@ -87,11 +95,18 @@ func TestAMissingHarnessIsANoteAndSaysWhyItDoesNotMatter(t *testing.T) {
 			continue
 		}
 		found++
-		if ck.Status != checkNote {
-			t.Errorf("%s is reported as %q, want a note", ck.Name, ck.Status)
-		}
-		if !strings.Contains(ck.Detail, "does not need it") {
-			t.Errorf("%s does not say why it does not matter: %s", ck.Name, ck.Detail)
+		switch ck.Status {
+		case checkOK:
+			// Installed. The detail is the version, or where it is.
+			if strings.TrimSpace(ck.Detail) == "" {
+				t.Errorf("%s is installed and the check says nothing about it", ck.Name)
+			}
+		case checkNote:
+			if !strings.Contains(ck.Detail, "does not need it") {
+				t.Errorf("%s does not say why it does not matter: %s", ck.Name, ck.Detail)
+			}
+		default:
+			t.Errorf("%s is reported as %q, and a harness is never worth warning about", ck.Name, ck.Status)
 		}
 	}
 	if found != 2 {

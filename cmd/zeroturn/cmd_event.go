@@ -67,11 +67,10 @@ func scanTarget(path string) ([]byte, bool) {
 // credentialGate scans the file a read tool is about to open. It reads
 // the file, never the prompt, and reports the file, the line, and the
 // category, never the value.
-func credentialGate(st *state.Store, e events.Event) error {
+func credentialGate(st *state.Store, cfg config.Config, e events.Event) error {
 	if e.FilePath == "" {
 		return nil
 	}
-	cfg := sessionGuard(st, e.CWD).Config()
 	if cfg.Guard.Credentials.Mode == config.CredentialOff {
 		return nil
 	}
@@ -102,11 +101,10 @@ func credentialGate(st *state.Store, e events.Event) error {
 // is held in memory for the length of the scan and is never stored,
 // logged, or included in the reason. The guard is off unless the
 // developer switched it on.
-func promptGate(st *state.Store, e events.Event) error {
+func promptGate(st *state.Store, cfg config.Config, e events.Event) error {
 	if e.Prompt == "" {
 		return nil
 	}
-	cfg := sessionGuard(st, e.CWD).Config()
 	findings, err := security.ScanBytes("message", []byte(e.Prompt))
 	if err != nil || len(findings) == 0 {
 		return nil
@@ -207,11 +205,17 @@ func cmdEvent(ctx context.Context, args []string) error {
 		return nil
 	}
 
+	// The policy is read once here rather than in each branch below. The
+	// automatic purge runs inside a write, so how long records are kept
+	// has to be known before anything is written.
+	guard := sessionGuard(st, e.CWD)
+	st.SetRetention(guard.Config().Report.RetentionDays)
+
 	if e.Type == events.TypeFileRead {
-		return credentialGate(st, e)
+		return credentialGate(st, guard.Config(), e)
 	}
 	if e.Type == events.TypePromptSubmit {
-		return promptGate(st, e)
+		return promptGate(st, guard.Config(), e)
 	}
 
 	if e.Type != events.TypeSubagentPre {
@@ -223,7 +227,6 @@ func cmdEvent(ctx context.Context, args []string) error {
 
 	// The gate folds the event and the decision into one state write,
 	// because it runs while the developer waits for the subagent.
-	guard := sessionGuard(st, e.CWD)
 	var res policy.Result
 	if _, uerr := st.Update(e.SessionID, session.RepoHashFor(e.CWD), func(s *state.Session) {
 		session.Apply(s, e)

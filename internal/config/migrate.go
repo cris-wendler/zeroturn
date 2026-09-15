@@ -17,9 +17,9 @@ import (
 // comparing the file with the key registry, so a setting added later is
 // migrated without anyone adding a case for it.
 
-// Report says what a migration found. Nothing in it is a failure: a file
-// can be read and still be worth telling somebody about.
-type Report struct {
+// Migration says what carrying a file forward found. Nothing in it is a
+// failure: a file can be read and still be worth telling somebody about.
+type Migration struct {
 	// From is the version the file declared. A file with no version at
 	// all reports 0, which is what a hand written fragment looks like.
 	From int
@@ -34,7 +34,7 @@ type Report struct {
 }
 
 // Changed reports whether rewriting the file would alter it.
-func (r Report) Changed() bool {
+func (r Migration) Changed() bool {
 	return r.From != Version || len(r.Filled) > 0 || len(r.Unknown) > 0
 }
 
@@ -55,16 +55,16 @@ func (e ErrNewer) Error() string {
 // file does not carry take the value a new file would have, which is what
 // makes a setting added in a later version readable by a file written
 // before it existed.
-func Migrate(raw []byte) (Config, Report, error) {
+func Migrate(raw []byte) (Config, Migration, error) {
 	var top map[string]json.RawMessage
 	if err := json.Unmarshal(raw, &top); err != nil {
-		return Config{}, Report{}, fmt.Errorf("%s is not valid JSON: %v", FileName, err)
+		return Config{}, Migration{}, fmt.Errorf("%s is not valid JSON: %v", FileName, err)
 	}
 
-	r := Report{}
+	r := Migration{}
 	if v, ok := top["version"]; ok {
 		if err := json.Unmarshal(v, &r.From); err != nil {
-			return Config{}, Report{}, ValidationError{"version", "value is not a whole number",
+			return Config{}, Migration{}, ValidationError{"version", "value is not a whole number",
 				"set version to " + fmt.Sprint(Version)}
 		}
 	}

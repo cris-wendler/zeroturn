@@ -573,3 +573,23 @@ Two things this separates that were the same before. Absent and empty: a missing
 `zeroturn policy migrate` writes the file in the current format, with `--plan` to see it first. It is never required: a file is read whether or not it has been migrated. It exists so a file can be made to say what ZeroTurn is already reading from it.
 
 The test that holds this walks the key registry. Every setting, one at a time, is removed from a complete file, and the file must still load with that setting at its default. Decoding into a zero value instead of the defaults fails it for twelve settings at once.
+
+## 42. A longer report window needed a shorter lie fixed first
+
+Date: 2026-09-14
+
+The build pipeline asked for richer report windows. `report` offered `current`, `day` and `week`. Adding `month` looked like three lines.
+
+It was not buildable. Session records older than seven days are deleted when a new session is first seen, so `week` was already the entire history. A thirty day window would have printed a heading over at most seven days of data, which is the same class of overstatement this project has twice called a defect in its own documents.
+
+Seven days was a deliberate privacy choice, so raising it quietly was not available either. How long a record of your own work survives on your own machine belongs to the person whose machine it is.
+
+Decision: retention becomes a setting, `report.retentionDays`, defaulting to the seven days it has always been, so nothing changes for anyone who does not ask. The store is told the value before it writes, because the automatic purge runs deep inside a write where the configuration is not in hand. A test fixes the two defaults together, so the number a new file holds and the number the store falls back to cannot drift apart.
+
+`month` and `--since` follow, `--since` reading a date, a number of days, or a duration. Every report that reaches back further than the records that survive now says so, and says how to change it. Saying it on every report would be noise, so it is said only when the window is longer than the retention. Both halves of that were shown failing.
+
+The published report gains `windowStart`. A document saying `"window": "week"` never said when the week began, and a span given with `--since` has no name at all.
+
+Three things this turned up, all the same shape as decision 33. The window names were written out in four places and only one of them was the code. The key registry described guard settings only, so a setting outside the guard had nowhere to live; it now describes the whole configuration, which also gave `git.remote` a name it can be set by for the first time. And `config.schema.json` was a second description of the type that nothing compared with it: the conformance suite validates the files in this repository against the schema, which catches a missing property only once a file on disk carries it. All three now read the code and compare, in both directions.
+
+`policy show --json` prints the whole configuration rather than the guard alone. A document holding only the guard would have claimed to be the policy while a setting sat outside it. This is the shape `config.schema.json` already described.

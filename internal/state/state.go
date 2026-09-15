@@ -19,12 +19,16 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/cris-wendler/zeroturn/internal/config"
 )
 
 const SchemaVersion = 1
 
-// DefaultRetentionDays bounds how long session records are kept.
-const DefaultRetentionDays = 7
+// DefaultRetentionDays bounds how long session records are kept when
+// nobody has chosen. The value lives in the configuration package, which
+// is where a person changes it.
+const DefaultRetentionDays = config.DefaultRetentionDays
 
 type Session struct {
 	SchemaVersion int    `json:"schemaVersion"`
@@ -106,7 +110,27 @@ type GateOutcome struct {
 // a history, and a record has to stay small.
 const maxOutcomes = 20
 
-type Store struct{ dir string }
+type Store struct {
+	dir string
+	// retentionDays is how long records are kept. It is zero until a
+	// caller that has read the configuration sets it, and a zero reads as
+	// the default, so a caller that never sets it still purges.
+	retentionDays int
+}
+
+// SetRetention tells the store how long to keep records. The automatic
+// purge runs deep inside a write, where the configuration is not in hand,
+// so a command that has read it says so here first.
+func (s *Store) SetRetention(days int) {
+	s.retentionDays = days
+}
+
+func (s *Store) retention() int {
+	if s.retentionDays < 1 {
+		return DefaultRetentionDays
+	}
+	return s.retentionDays
+}
 
 // DataDir returns the operating system's standard per user data location.
 func DataDir() (string, error) {
@@ -363,7 +387,7 @@ func (s *Store) Update(id, repoHash string, fn func(*Session)) (Session, error) 
 		sess = Session{SessionID: id, StartedAt: time.Now().UTC()}
 		// Retention is applied when a session is first seen, which bounds
 		// the work to once per session rather than once per repaint.
-		s.purgeLocked(DefaultRetentionDays)
+		s.purgeLocked(s.retention())
 	}
 	if repoHash != "" {
 		sess.RepoHash = repoHash

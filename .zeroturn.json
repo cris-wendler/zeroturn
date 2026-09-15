@@ -22,6 +22,9 @@
       "prompts": "off"
     }
   },
+  "report": {
+    "retentionDays": 7
+  },
   "verify": {
     "steps": [
       {

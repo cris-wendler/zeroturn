@@ -55,7 +55,15 @@ func cmdTune(ctx context.Context, args []string) error {
 func printTuning(r tune.Report, days int) {
 	c := output.NewColor(os.Stdout, "")
 	fmt.Println("ZEROTURN POLICY TUNE")
-	fmt.Printf("Observations from the last %d days in this repository.\n\n", days)
+	fmt.Printf("Observations from the last %s in this repository.\n",
+		output.Counted(days, "day", "%d days"))
+	// A window longer than the records that survive reads as a quiet
+	// month rather than as a month nobody kept. report says so; this
+	// asked for a span the same way and said nothing.
+	if note := retentionNote(time.Duration(days) * 24 * time.Hour); note != "" {
+		fmt.Println(note)
+	}
+	fmt.Println()
 	if r.Asks == 0 && r.Denied == 0 {
 		fmt.Println("The gate has not asked anything yet, so there is nothing to learn from.")
 		fmt.Println("Thresholds stay as they are. Run this again after a few sessions.")

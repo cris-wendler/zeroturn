@@ -311,7 +311,8 @@ func applyClaudeInstall(file *settings.File, hooks map[string][]json.RawMessage,
 			err.Error(), "the backup at "+p.Backup+" holds the previous content")
 	}
 	if len(p.RepairHooks) > 0 {
-		fmt.Printf("Repointed %d entries at %s\n", len(p.RepairHooks), exe)
+		fmt.Printf("Repointed %s at %s\n",
+			output.Counted(len(p.RepairHooks), "1 entry", "%d entries"), exe)
 	}
 	fmt.Printf("Wrote %s\n", file.Path)
 	if p.Exists {
@@ -342,7 +343,8 @@ func applyClaudeRemove(file *settings.File, hooks map[string][]json.RawMessage,
 	if removedStatus {
 		fmt.Println("                including the ZeroTurn status line")
 	}
-	fmt.Printf("would keep      %d entries written by you or another tool\n", p.KeepHooks)
+	fmt.Printf("would keep      %s written by you or another tool\n",
+		output.Counted(p.KeepHooks, "1 entry", "%d entries"))
 	fmt.Println()
 	ok, err := confirm("Remove the ZeroTurn entries?")
 	if err != nil {

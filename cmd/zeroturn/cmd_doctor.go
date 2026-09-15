@@ -108,10 +108,7 @@ func cmdDoctor(ctx context.Context, args []string) error {
 
 // countedChecks keeps doctor from reporting "1 checks failed".
 func countedChecks(n int) string {
-	if n == 1 {
-		return "1 check failed"
-	}
-	return fmt.Sprintf("%d checks failed", n)
+	return output.Counted(n, "1 check failed", "%d checks failed")
 }
 
 func checkExecutable(name, bin string, args ...string) check {
@@ -292,7 +289,7 @@ func checkSessionData(repoRoot string) check {
 		return check{"session data", checkWarn,
 			"no sessions recorded for this repository yet, so the status line could not be checked. Start a coding session, then run zeroturn doctor again"}
 	case withUsage == 0:
-		subject := fmt.Sprintf("all %d sessions recorded for this repository", seen)
+		subject := output.Counted(seen, "the 1 session recorded for this repository", "all %d sessions recorded for this repository")
 		if seen == 1 {
 			subject = "the one session recorded for this repository"
 		}

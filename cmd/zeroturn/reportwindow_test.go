@@ -242,3 +242,36 @@ func TestAWindowLongerThanTheRecordsKeptSaysSo(t *testing.T) {
 		t.Errorf("the window fits the retention now and it still complained:\n%s", longer)
 	}
 }
+
+// policy tune asks for a span the same way report does, and said nothing
+// when the span reached further back than the records that survive. It is
+// the defect decision 42 fixed in report, in the command next to it.
+func TestTuneSaysWhenItsWindowOutlivesTheRecords(t *testing.T) {
+	testutil.Isolate(t)
+	work, _ := testutil.Remote(t)
+	c := config.Default()
+	c.Report.RetentionDays = 7
+	if err := config.Save(work, c); err != nil {
+		t.Fatal(err)
+	}
+
+	long, err := capture(t, work, true, func() error {
+		return cmdTune(context.Background(), []string{"--days", "30"})
+	})
+	if err != nil {
+		t.Fatalf("policy tune --days 30: %v\n%s", err, long)
+	}
+	if !strings.Contains(long, "keeps records for 7 days") {
+		t.Errorf("a thirty day window over seven days of records said nothing:\n%s", long)
+	}
+
+	short, err := capture(t, work, true, func() error {
+		return cmdTune(context.Background(), []string{"--days", "3"})
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(short, "keeps records for") {
+		t.Errorf("a window inside the retention was called an overstatement:\n%s", short)
+	}
+}

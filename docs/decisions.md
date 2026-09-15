@@ -699,3 +699,17 @@ What is left is three documents: this file, `how-this-was-built.md`, and the Cla
 Deleting eleven documents left nine dead links behind, in files nobody had touched: the conformance suite's own README, the adapter template, and two of the documents that stayed. Nothing noticed, because nothing checked. A test now walks every Markdown file and fails when a relative link leads nowhere. It was shown failing by adding one link to a document that had just been deleted.
 
 The number worth recording: after removing eleven of fourteen documents, this file is seventy seven percent of what remains. The volume was never spread across the directory. It was always one document, and that document is the one worth keeping.
+
+## 48. The counted noun, fixed for the third time
+
+Date: 2026-09-15
+
+"Result: 1 checks passed" is the last line of `verify`, the most run command in the Direct Lane. It had read that way since the command was written.
+
+This class had already been fixed twice. Once for the gate prompt, which asked for approval with "1 subagents are active and 1 subagents started this session", the first sentence a developer would ever have read from this tool. Once for `doctor`, which reported "1 checks failed". Each fix added a helper, and each helper was used only at the place that prompted it. Eighteen other counted nouns had neither: `ship` saying a branch is "1 commits behind", `report purge` deleting "1 records older than 1 days", `uninstall` reporting "1 of 1 items", `integrate` repointing "1 entries", and five in `policy tune`.
+
+Decision: one helper, `output.Counted`, in the package the whole project already imports for formatting. The singular is written out in full rather than derived, because the verb changes with it: one step did not pass, two steps did not pass. `output.CountedPair` handles the "N of M" shape, where the noun agrees with the second number and that is the one that read as "1 of 1 steps". The copy in `internal/policy` is gone and its three call sites use the shared one.
+
+The fix that matters is not the helper, it is the test. A number followed by a plural noun, in a string a person reads, has to pass through `Counted`. The test parses every non test source file, finds string literals matching that shape, and fails for any that is not an argument to `Counted` or `CountedPair`. It found two the manual pass had missed and one false positive, a verb that ends in s, which is now in a short list of words that are not plural nouns. Putting one string back the way it was fails it by name.
+
+Two other things went with it. `policy tune --days 30` printed a thirty day heading over records that are deleted after seven, which is exactly the defect entry 42 fixed in `report`; the helper written for that was in the file next door and `tune` never called it. And the Claude Code integration document said "Every measurement the guard compares against a threshold arrives that way", which the next sentence in the same paragraph disproved: the subagent counts are compared against thresholds and arrive from hooks. It now names the three measurements that do come from the status line.

@@ -18,6 +18,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/cris-wendler/zeroturn/internal/output"
 )
 
 type Schema struct {
@@ -133,7 +135,8 @@ func (v *validator) check(path string, schema map[string]interface{}, value inte
 			}
 		}
 		if min, ok := schema["minItems"].(float64); ok && float64(len(value)) < min {
-			v.fail(path, "the list has %d entries, the schema requires at least %.0f", len(value), min)
+			v.fail(path, "the list has %s, the schema requires at least %.0f",
+				output.Counted(len(value), "1 entry", "%d entries"), min)
 		}
 	case string:
 		if min, ok := schema["minLength"].(float64); ok && float64(len(value)) < min {

@@ -166,7 +166,7 @@ FAIL  integration path       the settings point at /old/path/zeroturn, which is 
 
 If the status line shows `session data unavailable`, the harness has not sent context or usage values yet. They usually appear after the first response.
 
-If they never appear, check where you are running Claude Code. The status line is a terminal feature, so an editor extension never draws one and never invokes the command. Every measurement the guard compares against a threshold arrives that way, and no hook payload carries any of them, so in an extension the guard has nothing to read. The hooks still fire, which is why subagents are still counted and the credential guard still works, and why the integration looks installed. `zeroturn doctor` compares the sessions it has recorded and says how many carried measurements.
+If they never appear, check where you are running Claude Code. The status line is a terminal feature, so an editor extension never draws one and never invokes the command. Context use, the usage windows and session duration arrive that way, and no hook payload carries any of them, so in an extension the guard cannot read those. The hooks still fire, which is why subagents are still counted and the credential guard still works, and why the integration looks installed. `zeroturn doctor` compares the sessions it has recorded and says how many carried measurements.
 
 If the gate never asks, run `zeroturn policy check` in the repository to see which thresholds the current session has crossed.
 

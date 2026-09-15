@@ -114,7 +114,7 @@ func cmdVerify(ctx context.Context, args []string) error {
 	}
 	if res.Failed > 0 {
 		return output.Errorf(output.ExitPolicyFailure, "zeroturn verify failed",
-			fmt.Sprintf("%d of %d steps did not pass", res.Failed, len(res.Steps)),
+			output.CountedPair(res.Failed, len(res.Steps), "%d of %d %s did not pass", "step", "steps"),
 			"fix the failure above, then run zeroturn verify again")
 	}
 	return nil
@@ -169,7 +169,8 @@ func printVerifySummary(res verify.Result) {
 	}
 	fmt.Println()
 	if res.Failed == 0 && res.Skipped == 0 {
-		fmt.Printf("Result: %d checks passed in %.1fs\n", res.Passed, res.Seconds)
+		fmt.Printf("Result: %s in %.1fs\n",
+			output.Counted(res.Passed, "1 check passed", "%d checks passed"), res.Seconds)
 		return
 	}
 	fmt.Printf("Result: %d passed, %d failed, %d skipped in %.1fs\n",

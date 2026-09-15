@@ -31,8 +31,14 @@ type check struct {
 
 const (
 	checkOK   = "ok"
-	checkWarn = "warn"
 	checkFail = "fail"
+	// checkWarn is for something the person reading can act on. checkNote
+	// is for something true that they cannot: a harness they do not use,
+	// a decision this project made on their behalf. Before these were
+	// separate, a clean machine reported four warnings of which one was
+	// worth doing anything about, which teaches a reader to skip them.
+	checkWarn = "warn"
+	checkNote = "note"
 )
 
 const doctorUsage = `zeroturn doctor [--json] [--compat [--live]]
@@ -60,7 +66,7 @@ func cmdDoctor(ctx context.Context, args []string) error {
 	checks = append(checks, checkExecutable("copilot", "copilot", "--version"))
 	checks = append(checks, checkState())
 	checks = append(checks, checkRepo(ctx)...)
-	checks = append(checks, check{"short alias", checkWarn,
+	checks = append(checks, check{"short alias", checkNote,
 		"ZeroTurn does not install a zt alias, because zt is the naming convention of an unrelated project. Add your own shell alias if you want one."})
 
 	if *compat {
@@ -83,6 +89,8 @@ func cmdDoctor(ctx context.Context, args []string) error {
 	for _, ck := range checks {
 		label := c.Green("OK  ")
 		switch ck.Status {
+		case checkNote:
+			label = "NOTE"
 		case checkWarn:
 			label = c.Yellow("WARN")
 		case checkFail:
@@ -109,13 +117,15 @@ func countedChecks(n int) string {
 func checkExecutable(name, bin string, args ...string) check {
 	p, err := exec.LookPath(bin)
 	if err != nil {
-		status := checkWarn
-		detail := bin + " was not found on PATH"
 		if bin == "git" {
-			status = checkFail
-			detail = "git was not found on PATH, the Direct Lane cannot run without it"
+			return check{name, checkFail,
+				"git was not found on PATH, the Direct Lane cannot run without it"}
 		}
-		return check{name, status, detail}
+		// A harness invokes ZeroTurn, never the other way round, so a
+		// harness that is not on PATH changes nothing about whether the
+		// integration works. It only means the version cannot be read.
+		return check{name, checkNote,
+			bin + " was not found on PATH, so its version cannot be read. The integration does not need it."}
 	}
 	out, err := exec.Command(p, args...).Output()
 	v := strings.TrimSpace(string(bytes.SplitN(out, []byte("\n"), 2)[0]))
@@ -280,7 +290,7 @@ func checkSessionData(repoRoot string) check {
 	switch {
 	case seen == 0:
 		return check{"session data", checkWarn,
-			"no sessions recorded for this repository yet, so the status line could not be checked. Start a coding session and run this again"}
+			"no sessions recorded for this repository yet, so the status line could not be checked. Start a coding session, then run zeroturn doctor again"}
 	case withUsage == 0:
 		subject := fmt.Sprintf("all %d sessions recorded for this repository", seen)
 		if seen == 1 {

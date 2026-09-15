@@ -89,10 +89,13 @@ func cmdInit(ctx context.Context, args []string) error {
 	}
 	fmt.Println()
 
-	b, _ := json.MarshalIndent(c, "", "  ")
-	fmt.Printf("proposed %s:\n%s\n\n", config.FileName, string(b))
-
+	// The proposed file is what a person is being asked to approve, so it
+	// is printed for them to read. With --yes there is no question, and
+	// fifty lines of JSON is then the answer to one nobody asked.
 	if !*yes {
+		b, _ := json.MarshalIndent(c, "", "  ")
+		fmt.Printf("proposed %s:\n%s\n\n", config.FileName, string(b))
+
 		ok, cerr := confirm("Write this configuration?")
 		if cerr != nil {
 			return cerr

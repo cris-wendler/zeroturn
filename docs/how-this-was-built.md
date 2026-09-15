@@ -133,7 +133,7 @@ Written in the README, not buried:
 - The interactive approval prompt was observed on 2026-09-14, on Claude Code 2.1.270, and the refusal was honoured.
 - The integration has been used on macOS only, although the tests run on three systems.
 - The credential guards match high confidence patterns, so they reduce a common mistake rather than eliminate a class of them.
-- Whether the gate is useful in daily work is unknown until it has been used in daily work.
+- Full gate testing is still in progress. The default thresholds are starting points, and `zeroturn policy tune` suggests better ones from what the gate asked and what you answered.
 
 ## How decisions are recorded
 

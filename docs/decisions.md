@@ -674,4 +674,12 @@ Every one is now shown failing against the same break that exposed it.
 
 The more useful half is `scripts/mutate`. It changes one operator in the source at a time, runs the tests for that package, and reports the changes the tests accept. Finding twelve of these by hand took a session; the point of the tool is the thirteenth. It refuses to run against a dirty working tree, restores the file it edited even on an interrupt, and counts a change that does not compile as noticed rather than as a pass.
 
-Not every survivor is a defect: some operator changes alter nothing at all. The tool says so rather than pretending otherwise, and the reading is left to a person.
+Not every survivor is a defect: some operator changes alter nothing at all. Those are recorded in `scripts/mutate/accepted`, one per line with the reason, and an entry the tests later do notice is reported as out of date, so the file cannot quietly excuse a change made afterwards at the same place.
+
+Run against `internal/policy` it made 56 changes and the tests noticed 55. The one it did not notice alters nothing. Getting there took seven new tests, every one of them for a rule written into a condition that no test could disagree with: the minimum span a rate can be measured over, a window that resets exactly now, a window reporting exactly five hours left, a projection landing exactly on the limit, the sentence that separates asking from denying, counting the categories after the first, and lowering the first letter of a clause.
+
+The continuous integration job runs the packages that are clean, and the list grows as packages are brought up to it. Recorded and not yet done, measured on 2026-09-14:
+
+- `internal/security`: seven changes the tests accept, at security.go lines 122, 134, 153 twice, 229, 233 and 237. The last three are inside `Redact`, and one of them is the difference between redacting a value at the start of a line and leaving it there.
+- `internal/tune`: nine, at tune.go lines 105, 120, 124, 185, 188, 195, 202, 220 and 230. That matches what a separate pass over this package found: it is the least tested thing that produces a number a person acts on.
+- `internal/config`, `internal/state`, `internal/verify`, `internal/status`, `internal/git`, `internal/settings`, `internal/trust`, `internal/jsonschema` and `internal/harness/claude` are not measured yet.

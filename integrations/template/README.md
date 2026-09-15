@@ -14,4 +14,4 @@ With a session that has crossed a threshold and `guard.mode` set to `confirm`, i
 {"action":"confirm","message":"New subagent requires approval. Context is 82% and five hour usage is 81%."}
 ```
 
-The steps for writing your own are in [docs/adapter-authoring.md](../../docs/adapter-authoring.md), and the promises on both sides are in [docs/harness-contract.md](../../docs/harness-contract.md).
+The promises on both sides are the published schemas in [schemas/](../../schemas), checked by the suite in [conformance/](../../conformance). `zeroturn capabilities --json` reports the contract version a build supports.

@@ -2,7 +2,7 @@
 
 [![Tests on Linux, macOS, and Windows](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml/badge.svg)](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml)
 [![Go 1.17+](https://img.shields.io/badge/go-1.17%2B-00ADD8?logo=go&logoColor=white)](go.mod)
-[![No dependencies](https://img.shields.io/badge/dependencies-none-success)](docs/dependency-licenses.md)
+![No dependencies](https://img.shields.io/badge/dependencies-none-success)
 [![License GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue)](LICENSE)
 
 Know when a coding session is under pressure. Keep routine development work local.
@@ -112,7 +112,7 @@ ZT  ctx 82%  5h 81%  7d 47%  session 3h12m  agents 2  ask
      context used in this conversation
 ```
 
-The status line and the gate each take about 8 ms on the machine they were measured on, including process start, and neither makes a network request or starts a background process. The method and the numbers are in [docs/benchmarks.md](docs/benchmarks.md).
+The status line and the gate each take about 8 ms on the machine they were measured on, including process start, and neither makes a network request or starts a background process. Measured over 50 runs on an Apple M4: status line 7.5 ms, gate 7.7 ms, startup 6.3 ms, binary 2.5 MB.
 
 ## Credential guard
 
@@ -184,7 +184,7 @@ cd zeroturn
 go build -o zeroturn ./cmd/zeroturn
 ```
 
-Release archives for macOS, Linux, and Windows are built by `scripts/build-release.sh` and attached to each release with their checksums. A Homebrew formula follows the first release. The steps are in [docs/release.md](docs/release.md).
+Release archives for macOS, Linux, and Windows are built by `scripts/build-release.sh` and attached to each release with their checksums. A Homebrew formula follows the first release.
 
 ### Setting it up
 
@@ -350,7 +350,7 @@ Tested on Claude Code 2.1.265 and 2.1.270. A denial was honoured in a real sessi
 
 Not supported yet. No adapter ships, and nothing here claims Copilot support.
 
-The reason it was cut has changed. A re-reading of the installed CLI, version 1.0.83, found hook events for tool use and subagents, a pre tool decision of allow, deny, or ask, quota snapshots, context window token counts, and a local telemetry file for token usage. The details, and what is still unverified, are in [docs/product-boundary.md](docs/product-boundary.md) and [docs/decisions.md](docs/decisions.md).
+The reason it was cut has changed. A re-reading of the installed CLI, version 1.0.83, found hook events for tool use and subagents, a pre tool decision of allow, deny, or ask, quota snapshots, context window token counts, and a local telemetry file for token usage. The details, and what is still unverified, are in [docs/decisions.md](docs/decisions.md).
 
 An adapter is planned. It will be described as supported when it has been run against a real session, and not before.
 
@@ -358,7 +358,7 @@ An adapter is planned. It will be described as supported when it has been run ag
 
 Other harnesses can send events in a normalized JSON form with `zeroturn event --harness normalized`. Each event names the contract `zeroturn.event/1`, and an event that names a different contract is refused with a clear message. `zeroturn capabilities --json` lists the commands, event types, recorded fields, and exit codes.
 
-[docs/harness-contract.md](docs/harness-contract.md) states what ZeroTurn promises an adapter and what an adapter must do in return: process invocation, event shapes, decisions, mutation classification, exit codes, cancellation, redaction, and how versions change. [docs/adapter-authoring.md](docs/adapter-authoring.md) is the practical guide, and [integrations/template/](integrations/template) holds a worked example you can copy.
+The contract is the published schemas in [schemas/](schemas) and the suite in [conformance/](conformance) that runs the real executable against them. [integrations/template/](integrations/template) holds a worked example to copy, and `zeroturn capabilities --json` reports what a build supports, including the contract version and every exit code.
 
 ## Safety
 
@@ -400,14 +400,14 @@ ZeroTurn shows and gates what the harness reports. It cannot see usage the harne
 
 ## Roadmap
 
-Current: everything described above, including both credential guards, plus contributor documents, the harness contract with published schemas and a conformance suite, and continuous integration on Linux, macOS, and Windows. A run against this repository, showing each behavior with real output, is in [docs/dogfood.md](docs/dogfood.md).
+Current: everything described above, including both credential guards, plus contributor documents, the harness contract with published schemas and a conformance suite, and continuous integration on Linux, macOS, and Windows.
 
 Planned:
 
-- a Homebrew formula after the first release, following [docs/release.md](docs/release.md)
+- a Homebrew formula after the first release
 - a Copilot adapter once Copilot exposes session values to hooks
 
-Not planned: `zeroturn sync`. The reasoning is in [docs/decisions.md](docs/decisions.md). The research behind the product boundary is in [docs/product-boundary.md](docs/product-boundary.md).
+Not planned: `zeroturn sync`. The reasoning, and the research behind the product boundary, are in [docs/decisions.md](docs/decisions.md).
 
 ## How this was built
 
@@ -415,14 +415,14 @@ The research came before the code, the differentiator was tested before the rest
 
 One finding is worth naming here, because it outlived the feature it came from. Six defects in this project had the same shape: a description kept by hand beside the thing it described, drifting away from it. The permitted fields beside the record type, the adapter shape beside the event, the policy keys in three copies, the counts in the documentation, the platform claims, and a branch rule requiring a check that a change had just removed. Nine tests here now derive the description from the thing instead, by reflection over a type, by comparing one implementation of a contract with the other, or by counting what is on disk. Every drift with such a check was caught automatically. Every drift without one was caught by luck. That gap matters more when a coding agent writes the changes, because it holds no memory of the parallel lists and makes more changes in a day than a person does. The full account is in [docs/decisions.md](docs/decisions.md), entry 33.
 
-Two findings about the harness interface itself, rather than about this project, are written up separately in [docs/agent-guardrail-findings.md](docs/agent-guardrail-findings.md): a decision of `ask` can be permanently disabled from inside the prompt it produces, and a control that reads session state fails open and silently outside a terminal. Both were found by running the guard rather than by reading the documentation, and both have a reproduction.
+Two findings about the harness interface itself, rather than about this project, are in [docs/how-this-was-built.md](docs/how-this-was-built.md): a decision of `ask` can be permanently disabled from inside the prompt it produces, and a control that reads session state fails open and silently outside a terminal. Both were found by running the guard rather than by reading the documentation, and both have a reproduction.
 
-The code has also been reviewed against itself. [docs/architecture-review.md](docs/architecture-review.md) is that review: what the layering gets right, the defects it found with the reproduction for each one, and the order they are worth fixing in. A hook that could spin on a processor forever, a privacy test unable to fail, and a published contract a second harness cannot use were all found there rather than by a user.
+The code has also been reviewed against itself, and against its own tests. A hook that could spin on a processor forever, two privacy tests that could not fail, a published contract a second harness could not use, and twelve more tests that passed with the behavior they named removed were all found that way rather than by a user. Each one is recorded in [docs/decisions.md](docs/decisions.md) with the reproduction and the test that now fails for it.
 
 ## License
 
 ZeroTurn is free software under `GPL-3.0-only`. The full text is in
 [LICENSE](LICENSE); [COPYING](COPYING) is the traditional GNU name for the same
 file. Contributions are accepted under the same license, with no contributor
-license agreement, and there are no dependencies to license: see
-[docs/dependency-licenses.md](docs/dependency-licenses.md).
+license agreement, and there are no dependencies to license: the
+executable is built from the Go standard library alone.

@@ -6,7 +6,7 @@ A record of the decisions behind ZeroTurn, written for someone reviewing the wor
 
 The first work was not a prototype. It was a search for a reason not to build this.
 
-Sixteen maintained projects were examined: usage reporters, status lines, context guards, budget gates, Git safety wrappers, and local validation runners. Each one was recorded with its purpose, maintainer activity, license, install method, overlap, and difference, in [product-boundary.md](product-boundary.md), with the date each claim was checked.
+Sixteen maintained projects were examined: usage reporters, status lines, context guards, budget gates, Git safety wrappers, and local validation runners. Each one was recorded with its purpose, maintainer activity, license, install method, overlap, and difference, with the date each claim was checked.
 
 Six stop conditions were written down first, and a decision to abandon the project was the expected outcome if any of them held:
 
@@ -46,7 +46,7 @@ Those constraints cost something, and the cost was paid rather than avoided:
 | Release archives for five platforms | A release tool | `scripts/build-release.sh`, twenty lines around `go build` |
 | Enforce the writing rules | A prose linter | `scripts/lint-copy.sh`, which fails the build on a banned phrase |
 
-`docs/dependency-licenses.md` has one row: the Go standard library.
+The dependency list has one row: the Go standard library.
 
 ## Refusals are part of the design
 
@@ -61,10 +61,10 @@ Two refusals shaped the code more than any feature:
 
 | Claim | Where it is checked |
 | --- | --- |
-| It behaves as documented | 377 tests across 58 files, run on Linux with both supported Go releases, on macOS, and on Windows |
+| It behaves as documented | 378 tests across 59 files, run on Linux with both supported Go releases, on macOS, and on Windows |
 | Output matches the published contract | `conformance/`, which runs the real executable against 9 schemas |
-| It is fast enough to sit in a hook | [benchmarks.md](benchmarks.md): status line 7.5 ms, gate 7.7 ms, measured over 50 runs |
-| It does what the documents say | [dogfood.md](dogfood.md): twelve behaviors demonstrated against this repository |
+| It is fast enough to sit in a hook | `scripts/bench`: status line 7.5 ms, gate 7.7 ms, measured over 50 runs |
+| A change the tests would not notice | `scripts/mutate` alters one operator at a time and runs that package's tests; on `internal/policy` it makes 56 changes and 55 are noticed |
 | It keeps nothing private | Tests that walk the state directory after each kind of event |
 
 ## The tests found real defects
@@ -105,6 +105,27 @@ In a single afternoon: changing the continuous integration matrix left three doc
 
 That is the argument for deriving rather than maintaining, and it is stronger now than it was before agents wrote code. A check that reads the type is the only kind that cannot be forgotten, because there is nothing to remember.
 
+## Two ways this kind of guardrail fails
+
+Found by running the guard against Claude Code 2.1.257, 2.1.265 and 2.1.270, not by reading the documentation. The interface works as documented; neither is a defect in the harness. They are the difference between what a hook can decide and what a person ends up experiencing, and anyone building a control on this interface inherits both.
+
+**A decision of `ask` can be disabled from inside its own prompt.** The harness renders the reason and three answers, not two. The second is "Yes, and don't ask again for this tool in this directory". It records a permanent permission, it appears at the one moment the control is inconvenient and the person is most willing to take it, and the hook is never told. The guard then cannot tell a session where its thresholds were never crossed from one where it was switched off in the first hour. Both look like nothing happened.
+
+The consequence for anyone building this: a control that must hold cannot be built on `ask`, because `ask` is a request the person can permanently withdraw. A guard that stays on `ask` is advisory, should say so, and must not report an absence of prompts as an absence of risk.
+
+**A control that reads session state fails open, silently, outside a terminal.** Context use and the usage windows are carried by no hook payload. The only carrier is the status line, which the harness invokes to draw a line at the bottom of a terminal. An editor extension draws none and never invokes it. Every hook still fires, so the integration looks correct from every other angle, and the policy engine evaluates against measurements it never received. It cannot cross a threshold it cannot read, so it allows, quietly, for as long as the session runs.
+
+That was found by reading three days of stored records and noticing that every one held a harness name, subagent counts and credential warnings, and none held a context value, a usage window, a duration or a model. Seven sessions across two machines. Feeding the same code a recorded status line payload produced all of them, which ruled out the code.
+
+The fix was not to the logic. `doctor` now compares the sessions it recorded and reports how many carried measurements, which turns a silent failure into a visible one:
+
+```
+WARN  session data   6 of 7 recent sessions for this repository carried no
+                     context or usage values.
+```
+
+What the two have in common is that both are failures of a control's assumptions about its environment rather than of its logic, and neither is visible from inside the control. The first assumes an answer stays given. The second assumes an input will arrive. In both cases the guard reports success, because from where it sits nothing went wrong. A guardrail built on an agent harness needs to state which of its inputs are optional, and to report when one it depends on has never arrived.
+
 ## What is still unproven
 
 Written in the README, not buried:
@@ -116,4 +137,4 @@ Written in the README, not buried:
 
 ## How decisions are recorded
 
-46 entries in [decisions.md](decisions.md), each with the decision, the evidence, and the consequence. They include the ones that cut scope: `sync` dropped, Copilot deferred, goreleaser refused, and the license text left untouched. A decision that turns out to be wrong is meant to be replaced there, with its reason, rather than quietly reversed.
+47 entries in [decisions.md](decisions.md), each with the decision, the evidence, and the consequence. They include the ones that cut scope: `sync` dropped, Copilot deferred, goreleaser refused, and the license text left untouched. A decision that turns out to be wrong is meant to be replaced there, with its reason, rather than quietly reversed.

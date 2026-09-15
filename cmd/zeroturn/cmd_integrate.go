@@ -82,7 +82,7 @@ func cmdIntegrate(ctx context.Context, args []string) error {
 		return output.Errorf(output.ExitNoIntegration,
 			"zeroturn integrate changed nothing",
 			"the Copilot integration is experimental and is not installed by this command",
-			"follow docs/integrations/copilot.md, which explains what Copilot exposes today")
+			"run zeroturn capabilities --json, which reports what each harness supports")
 	default:
 		return output.Errorf(output.ExitNoIntegration, "zeroturn integrate changed nothing",
 			"ZeroTurn has no integration named "+harness, "run zeroturn integrate --help")

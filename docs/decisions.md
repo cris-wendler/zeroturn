@@ -727,3 +727,17 @@ Decision: the contract is 2.0.0, and the comment on it says what moved and why. 
 Nobody is broken by it: no forks, no other installs, and the only consumer is this repository. The cost of pretending otherwise would have been a published number that says a promise was kept when it was not.
 
 Two things went with it. The changelog had no 0.1.0 section: everything was still under "Unreleased, first prototype, nothing has been released yet", four days after the release. The release checklist says to move it and nobody did. And the version a build from a checkout reports was written twice, once as the value and once as the string it is compared with, so bumping one and not the other would have made every development build claim to be a release. It is one constant now.
+
+## 50. A test that passed only on a machine without the harness
+
+Date: 2026-09-15
+
+`TestAMissingHarnessIsANoteAndSaysWhyItDoesNotMatter` asserted that the `claude` and `copilot` checks in `doctor` are both notes. It passed on this machine, and on all four continuous integration runners, because none of them has Claude Code on `PATH`. It failed for anyone who does, which is most people who would run ZeroTurn at all: the check finds the executable, reports its version, and is an ok rather than a note.
+
+It was written the same day, in the change that gave `doctor` a third level, and it encoded the machine it was written on rather than the rule.
+
+The rule does not depend on what is installed. A harness invokes ZeroTurn, never the other way round, so a harness that is absent changes nothing about whether the integration works, and is never worth a warning. The test says that now: found means ok and says something about it, absent means a note that says why it does not matter, and neither is ever a warning. It passes with the harness on `PATH` and without it.
+
+How it was found is the part worth recording. Continuous integration could not find it, because no runner has the harness installed and adding one is not straightforward. It was found by specgap, the evaluation environment in the repository next door, which ran ZeroTurn's own test suite inside an agent workspace with `PATH` set differently. The environment built to look for gaps in how an agent solves a problem found a defect in the project it was pointed at instead.
+
+The first report of it was also wrong, and that is worth recording too. specgap printed `visible 100%, 402 of 403`, which rounded a failure away, and recorded only which hidden tests had failed, so the visible one had no name. Re-running by hand appeared to pass, and it was written off as flaky. It was not flaky. It was deterministic and depended on `PATH`, which differed between the two runs. Both faults in the environment are fixed, and the second run named the test immediately.

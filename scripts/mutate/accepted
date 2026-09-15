@@ -3,4 +3,4 @@
 # A line here that the tests now notice is reported as out of date, so
 # this file cannot quietly excuse a change made later at the same place.
 
-internal/policy/policy.go:186 >->=  picking the last of several equal ranks gives the same level as picking the first
+internal/policy/policy.go:186 > becomes >=  picking the last of several equal ranks gives the same level as picking the first

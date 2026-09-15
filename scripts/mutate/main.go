@@ -109,7 +109,7 @@ func main() {
 				fmt.Fprintf(os.Stderr, "mutate: %v\n", err)
 				os.Exit(2)
 			}
-			id := fmt.Sprintf("%s:%d %s->%s", m.file, m.line, m.from, m.to)
+			id := fmt.Sprintf("%s:%d %s becomes %s", m.file, m.line, m.from, m.to)
 			if survived {
 				if _, ok := accepted[id]; ok {
 					stillThere[id] = true

@@ -593,3 +593,23 @@ The published report gains `windowStart`. A document saying `"window": "week"` n
 Three things this turned up, all the same shape as decision 33. The window names were written out in four places and only one of them was the code. The key registry described guard settings only, so a setting outside the guard had nowhere to live; it now describes the whole configuration, which also gave `git.remote` a name it can be set by for the first time. And `config.schema.json` was a second description of the type that nothing compared with it: the conformance suite validates the files in this repository against the schema, which catches a missing property only once a file on disk carries it. All three now read the code and compare, in both directions.
 
 `policy show --json` prints the whole configuration rather than the guard alone. A document holding only the guard would have claimed to be the policy while a setting sat outside it. This is the shape `config.schema.json` already described.
+
+## 43. A warning nobody can act on teaches people to skip warnings
+
+Date: 2026-09-14
+
+The last item in the build pipeline was a quieter first run. Nothing had measured it, so the first step was to install ZeroTurn in an empty home directory and an empty repository and run what a new reader runs.
+
+Two things were wrong, and neither was the amount of output as such.
+
+`zeroturn doctor` on a machine with nothing wrong with it reported four warnings out of seven checks. Three of them could not be acted on: the Claude CLI not being on PATH, the Copilot CLI not being on PATH, and an explanation of why no `zt` alias is installed. That last one can never become anything else, however long you use the tool. A reader who finds that three of four warnings are not worth reading has been taught to skip the fourth, which was the only one that mattered: no configuration yet.
+
+The harness warnings were also wrong on the facts. A harness invokes ZeroTurn, never the other way round, so a harness that is not on PATH changes nothing about whether the integration works. On the machine this was written on, the Claude CLI is not on PATH and everything works.
+
+`zeroturn init --yes` printed seventy two lines, fifty five of them the configuration file it was about to write. `--yes` means do not ask me. Printing the file is how a person reads what they are approving, and with nothing to approve it is the answer to a question nobody asked.
+
+Decision: doctor gains a third level. A warning is something the reader can act on, and a note is something true that they cannot. The two harness checks and the alias explanation become notes, and the harness note says why it does not matter. `init --yes` prints what it detected and what it wrote, and not the file.
+
+The rule is now a test rather than a habit: every warning doctor prints must name a ZeroTurn command to run. It found one more straight away, a warning that ended "run this again" instead of naming the command. Measured afterwards, a first run went from four warnings to one, and `init --yes` from seventy two lines to fifteen.
+
+The general form is worth keeping. A tool that reports everything it noticed at the same severity has not saved the reader any work; it has moved the sorting to them and called it transparency.

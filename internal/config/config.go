@@ -50,11 +50,25 @@ const (
 	ModeStrict  = "strict"
 )
 
+// DefaultRetentionDays is how long session records are kept when nobody
+// has chosen. How long a record of your own work survives on your own
+// machine is a privacy decision, so it is a setting rather than a
+// constant, and this value is the one it has always had.
+const DefaultRetentionDays = 7
+
 type Config struct {
 	Version int    `json:"version"`
 	Guard   Guard  `json:"guard"`
+	Report  Report `json:"report"`
 	Verify  Verify `json:"verify"`
 	Git     Git    `json:"git"`
+}
+
+// Report controls what ZeroTurn keeps of what it observed.
+type Report struct {
+	// RetentionDays bounds how far back a report can reach, because a
+	// record older than this is deleted when a new session is first seen.
+	RetentionDays int `json:"retentionDays"`
 }
 
 type Guard struct {
@@ -125,6 +139,7 @@ func Default() Config {
 			Session:     Session{DurationWarnMinutes: 240, ActiveSubagentsWarn: 2, SubagentStartsWarn: 4},
 			Credentials: Credentials{Mode: CredentialAsk, Prompts: PromptsOff},
 		},
+		Report: Report{RetentionDays: DefaultRetentionDays},
 		Verify: Verify{Steps: []Step{}},
 		Git:    Git{Remote: "origin", ProtectedBranches: []string{"main", "master"}},
 	}
@@ -227,7 +242,7 @@ func (c Config) Validate() error {
 	// Every choice and every percentage is checked against the registry,
 	// so a setting added there is validated without being added here too.
 	for _, k := range keys {
-		if err := k.Check(c.Guard); err != nil {
+		if err := k.Check(c); err != nil {
 			return err
 		}
 	}
@@ -238,7 +253,7 @@ func (c Config) Validate() error {
 		if k.Kind != KindPercent {
 			continue
 		}
-		if err := pct(k.Name, *k.num(&c.Guard)); err != nil {
+		if err := pct(k.Name, *k.num(&c)); err != nil {
 			return err
 		}
 	}

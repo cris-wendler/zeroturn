@@ -7,6 +7,7 @@
   "required": [
     "version",
     "guard",
+    "report",
     "verify",
     "git"
   ],
@@ -133,6 +134,19 @@
               "description": "Whether ZeroTurn reads each message before it is sent, looking for credentials. off is the default. block stops a message that carries one, which the harness then erases."
             }
           }
+        }
+      }
+    },
+    "report": {
+      "type": "object",
+      "required": [
+        "retentionDays"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "retentionDays": {
+          "type": "integer",
+          "minimum": 1
         }
       }
     },

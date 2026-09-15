@@ -87,7 +87,7 @@ func TestEverySettingCanBeMissingFromTheFile(t *testing.T) {
 			t.Errorf("%s: a file without it does not load: %v", k.Name, err)
 			continue
 		}
-		if got, want := k.Value(c.Guard), k.Value(Default().Guard); got != want {
+		if got, want := k.Value(c), k.Value(Default()); got != want {
 			t.Errorf("%s: a file without it loaded as %q, want the default %q", k.Name, got, want)
 		}
 	}
@@ -124,10 +124,12 @@ func TestMigrationKeepsEveryValueTheFileCarries(t *testing.T) {
 		switch k.Kind {
 		case KindChoice:
 			for _, c := range k.Choices {
-				if c != k.Value(Default().Guard) {
+				if c != k.Value(Default()) {
 					v = c
 				}
 			}
+		case KindText:
+			v = k.Value(Default()) + "-other"
 		case KindPercent:
 			v = 42
 		default:
@@ -148,7 +150,7 @@ func TestMigrationKeepsEveryValueTheFileCarries(t *testing.T) {
 		t.Errorf("a complete file reported missing settings: %v", report.Filled)
 	}
 	for _, k := range Keys() {
-		if got := k.Value(c.Guard); got != want[k.Name] {
+		if got := k.Value(c); got != want[k.Name] {
 			t.Errorf("%s came back as %q, want %q", k.Name, got, want[k.Name])
 		}
 	}
@@ -172,7 +174,7 @@ func TestAFileWithNothingInItLoadsAsTheDefaults(t *testing.T) {
 		t.Fatalf("an empty object does not load: %v", err)
 	}
 	for _, k := range Keys() {
-		if got, want := k.Value(c.Guard), k.Value(Default().Guard); got != want {
+		if got, want := k.Value(c), k.Value(Default()); got != want {
 			t.Errorf("%s is %q, want the default %q", k.Name, got, want)
 		}
 	}

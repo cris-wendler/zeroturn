@@ -63,4 +63,5 @@ done
 
 echo
 echo "Archives and SHA256SUMS are in $out/. Nothing has been published."
-echo "Publishing a release is a separate, deliberate step: see docs/release.md."
+echo "Publishing a release is a separate, deliberate step. Pushing a tag"
+echo "opens a draft release; a person publishes it."

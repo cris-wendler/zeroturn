@@ -27,7 +27,15 @@ func TestEveryDocumentNamedInOutputExists(t *testing.T) {
 			}
 			return nil
 		}
-		if !strings.HasSuffix(p, ".go") || strings.HasSuffix(p, "_test.go") {
+		// Not only Go. A shell script and a workflow both print text a
+		// person reads, and build-release.sh pointed at a document that
+		// had been deleted for a day without anything noticing.
+		if strings.HasSuffix(p, "_test.go") {
+			return nil
+		}
+		switch filepath.Ext(p) {
+		case ".go", ".sh", ".yml", ".yaml":
+		default:
 			return nil
 		}
 		b, rerr := ioutil.ReadFile(p)

@@ -553,3 +553,23 @@ This had been true since the isolation was written. It surfaced only when the un
 Decision: `Isolate` sets both names, and a test in `internal/testutil` checks that the home directory after `Isolate` is not the real one and that both names agree with it. That test runs on every platform, so the next variable of this kind is caught on a developer's machine rather than by a lucky run on a runner. Removing either line fails it by name.
 
 The lesson is narrower than the Windows lock defects and worth separating from them. Those were about timing. This one is about a single value having two names on different platforms, where reading one of them succeeds everywhere and is correct in only some places.
+
+## 41. A configuration file is worth more than the format it is written in
+
+Date: 2026-09-14
+
+`.zeroturn.json` declares a version, and any value other than 1 was refused with this advice:
+
+> run zeroturn init to write a supported file, or set version to 1
+
+`init` overwrites the file. The advice for a file ZeroTurn could not read was to destroy the policy in it, which is the one action a person cannot undo. It was also given for a file written by a *newer* ZeroTurn, where the answer is to upgrade the program, and for a file with no version at all, which is what a fragment somebody typed by hand looks like.
+
+There was no way forward either. The first change to the schema would have made every existing file an error. What stood in for migration was three cases written by hand in `Load`, filling in `credentials.mode`, `credentials.prompts` and `limits.projection` when they were empty. A fourth setting added later would have loaded as zero and been refused as out of range, and nobody would have found out until somebody upgraded.
+
+Decision: `Migrate` decodes the file on top of the defaults rather than on top of a zero value. That one change is the whole migration: a setting the file does not carry keeps the value a new file would have, for every setting there is and every setting there will be, with nothing to remember. It reports what it filled and what it did not recognise, and refuses only a file from a newer build, by a distinct error type, so the advice can be to upgrade rather than to overwrite.
+
+Two things this separates that were the same before. Absent and empty: a missing string and `""` both read as empty in Go, so a mode somebody typed wrong used to become the default silently; now absence is a default and an empty value is refused. And unknown settings: at the current version one is a spelling mistake and is refused by name, while in an older file it is a setting a later version removed, so migration drops it after saying so.
+
+`zeroturn policy migrate` writes the file in the current format, with `--plan` to see it first. It is never required: a file is read whether or not it has been migrated. It exists so a file can be made to say what ZeroTurn is already reading from it.
+
+The test that holds this walks the key registry. Every setting, one at a time, is removed from a complete file, and the file must still load with that setting at its default. Decoding into a zero value instead of the defaults fails it for twelve settings at once.

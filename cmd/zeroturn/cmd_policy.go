@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -22,6 +24,20 @@ const policyUsage = `zeroturn policy <subcommand>
   set     Change one value, for example: zeroturn policy set guard.mode confirm
   reset   Restore the default thresholds
   tune    Suggest thresholds from what the gate asked and what you did
+  migrate Rewrite the file in the format this build writes
+`
+
+const policyMigrateUsage = `zeroturn policy migrate
+
+Rewrite .zeroturn.json in the format this build writes, keeping every
+value it already holds. Settings the file does not carry are written with
+the value a new file would have, and a setting this build does not have is
+named before it is dropped.
+
+  --plan   Show what would change, changing nothing
+
+A file is read whether or not it has been migrated. Running this only
+makes the file say what ZeroTurn is already reading from it.
 `
 
 const policyResetUsage = `zeroturn policy reset
@@ -61,6 +77,8 @@ func cmdPolicy(ctx context.Context, args []string) error {
 		return policyReset(ctx, args[1:])
 	case "tune":
 		return cmdTune(ctx, args[1:])
+	case "migrate":
+		return policyMigrate(ctx, args[1:])
 	default:
 		fmt.Fprint(os.Stderr, policyUsage)
 		return output.Errorf(output.ExitInvalidUsage,
@@ -339,6 +357,93 @@ func applyPolicyKey(c *config.Config, key, value string) error {
 		return output.Errorf(output.ExitInvalidUsage,
 			"zeroturn policy set changed nothing", ve.Detail, ve.Fix)
 	}
+	return nil
+}
+
+// policyMigrate rewrites the file in the format this build writes. It is
+// not needed to read a file: Load migrates in memory. It exists so that a
+// file can be made to say what ZeroTurn is already reading from it, and so
+// that a setting this build does not have is named rather than carried
+// around unread.
+func policyMigrate(ctx context.Context, args []string) error {
+	plan := false
+	for _, a := range args {
+		switch a {
+		case "--plan":
+			plan = true
+		case "--help", "-h":
+			fmt.Print(policyMigrateUsage)
+			return errHelp
+		default:
+			return output.Errorf(output.ExitInvalidUsage, "zeroturn policy migrate changed nothing",
+				"flag "+a+" is not one it accepts", "run zeroturn policy migrate --help")
+		}
+	}
+	repo, err := openRepo(ctx)
+	if err != nil {
+		return err
+	}
+	raw, err := ioutil.ReadFile(config.Path(repo.Root))
+	if err != nil {
+		return output.Errorf(output.ExitInvalidUsage, "zeroturn policy migrate changed nothing",
+			"there is no "+config.FileName+" in this repository",
+			"run zeroturn init to write one")
+	}
+
+	c, report, err := config.Migrate(raw)
+	if err != nil {
+		var newer config.ErrNewer
+		if errors.As(err, &newer) {
+			return output.Errorf(output.ExitContractVersion, "zeroturn policy migrate changed nothing",
+				newer.Error(), "upgrade ZeroTurn, which can read the newer file")
+		}
+		return output.Errorf(output.ExitInvalidUsage, "zeroturn policy migrate changed nothing",
+			err.Error(), "correct "+config.FileName+", then run the command again")
+	}
+	if err := c.Validate(); err != nil {
+		if ve, ok := err.(config.ValidationError); ok {
+			return output.Errorf(output.ExitInvalidUsage, "zeroturn policy migrate changed nothing",
+				ve.Field+" "+ve.Detail, ve.Fix)
+		}
+		return output.Errorf(output.ExitInvalidUsage, "zeroturn policy migrate changed nothing",
+			err.Error(), "correct "+config.FileName+", then run the command again")
+	}
+
+	if !report.Changed() {
+		fmt.Printf("%s is already in the format this build writes.\n", config.FileName)
+		return nil
+	}
+
+	// The plan and the run print the same list, so the only thing that
+	// differs is whether it has happened yet.
+	write, dropped := "writes", "drops"
+	if plan {
+		write, dropped = "would write", "would drop"
+	}
+	fmt.Println("ZEROTURN POLICY MIGRATE")
+	fmt.Printf("file            %s\n", config.Path(repo.Root))
+	fmt.Printf("version         %d to %d\n", report.From, config.Version)
+	for _, name := range report.Filled {
+		k, ok := config.Lookup(name)
+		if !ok {
+			continue
+		}
+		fmt.Printf("%-15s %s %s, the value a new file would hold\n", write, name, k.Display(c.Guard))
+	}
+	for _, name := range report.Unknown {
+		fmt.Printf("%-15s %s, which is not a ZeroTurn setting\n", dropped, name)
+	}
+	if plan {
+		fmt.Println()
+		fmt.Println("Nothing has changed. Run zeroturn policy migrate to write it.")
+		return nil
+	}
+
+	if err := config.Save(repo.Root, c); err != nil {
+		return output.Errorf(output.ExitInternal, "zeroturn could not write the configuration",
+			err.Error(), "check that "+config.FileName+" is writable")
+	}
+	fmt.Printf("\nWrote %s\n", config.Path(repo.Root))
 	return nil
 }
 

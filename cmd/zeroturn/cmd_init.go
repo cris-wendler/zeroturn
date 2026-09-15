@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/cris-wendler/zeroturn/internal/config"
@@ -257,7 +258,11 @@ func propose(root string) (language, pkgManager string, steps []config.Step) {
 		if pkgManager == "" {
 			pkgManager = "maven"
 		}
-		add("test", "mvn", "--batch-mode", "test")
+		runner := "mvn"
+		if w, ok := wrapper(root, "mvnw"); ok {
+			runner = w
+		}
+		add("test", runner, "--batch-mode", "test")
 	}
 	if has("build.gradle") || has("build.gradle.kts") {
 		language = appendLang(language, "java")
@@ -265,8 +270,8 @@ func propose(root string) (language, pkgManager string, steps []config.Step) {
 			pkgManager = "gradle"
 		}
 		runner := "gradle"
-		if has("gradlew") {
-			runner = filepath.Join(".", "gradlew")
+		if w, ok := wrapper(root, "gradlew"); ok {
+			runner = w
 		}
 		add("test", runner, "test")
 	}
@@ -372,4 +377,32 @@ func nodePackageManager(root string) string {
 		}
 	}
 	return "npm"
+}
+
+// wrapper returns the absolute path of a build wrapper a project ships
+// with it, such as gradlew or mvnw.
+//
+// The absolute path matters twice. exec.LookPath searches PATH for a bare
+// name, so "gradlew" was never found in the repository and the step was
+// dropped every time; and filepath.Join(".", "gradlew") cleans the "."
+// away, which is how that bare name arose. On Windows the wrapper that
+// runs is the .bat, because the extensionless file beside it is a POSIX
+// shell script that CreateProcess cannot start.
+func wrapper(root, name string) (string, bool) {
+	candidates := []string{name}
+	if runtime.GOOS == "windows" {
+		candidates = []string{name + ".bat", name + ".cmd"}
+	}
+	for _, c := range candidates {
+		p := filepath.Join(root, c)
+		info, err := os.Stat(p)
+		if err != nil || info.IsDir() {
+			continue
+		}
+		if abs, aerr := filepath.Abs(p); aerr == nil {
+			return abs, true
+		}
+		return p, true
+	}
+	return "", false
 }

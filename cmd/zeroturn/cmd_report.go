@@ -61,6 +61,10 @@ func reportUsage() string {
 	b.WriteString(`
   --since   Reach back a given span instead of naming a window, as a
             date (2026-09-01), a number of days (14d), or a duration (72h)
+  --all-repositories
+            Count sessions from every repository on this machine. Without
+            it a report covers the repository you are in, and outside a
+            repository it covers the machine and says so.
 
 A report can only reach as far back as records are kept. Run
 zeroturn policy show to see that setting.
@@ -70,8 +74,53 @@ zeroturn policy show to see that setting.
 
 const provenance = "Based only on events observed locally by ZeroTurn on this machine."
 
+// What a report counted. Records are stored for the machine, and the
+// repository is the scope every other command answers for.
+const (
+	scopeRepository = "repository"
+	scopeMachine    = "machine"
+)
+
+// reportScope decides which records to count. Outside a repository there
+// is nothing to narrow to, so the report covers the machine and says so
+// rather than reporting nothing.
+func reportScope(everywhere bool) (scope, root string) {
+	if everywhere {
+		return scopeMachine, ""
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		return scopeMachine, ""
+	}
+	r, ok := git.FindRoot(wd)
+	if !ok {
+		return scopeMachine, ""
+	}
+	return scopeRepository, r
+}
+
+// inScope keeps the records belonging to one repository. An empty root
+// means the whole machine was asked for.
+func inScope(sessions []state.Session, root string) []state.Session {
+	if root == "" {
+		return sessions
+	}
+	hash := state.RepoHash(root)
+	out := make([]state.Session, 0, len(sessions))
+	for _, s := range sessions {
+		if s.RepoHash == hash {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
 type reportJSON struct {
 	Window string `json:"window"`
+	// Scope says which records were counted. Without it a reader cannot
+	// tell a quiet repository from a busy machine, and every other part
+	// of this output speaks for one repository.
+	Scope string `json:"scope"`
 	// WindowStart says what the window actually covered. A name such as
 	// week does not say when the week began, and a span given with
 	// --since has no name at all.
@@ -172,6 +221,7 @@ func cmdReport(ctx context.Context, args []string) error {
 	all := fs.Bool("all", false, "with purge, delete every ZeroTurn session record")
 	retention := fs.Int("retention-days", config.DefaultRetentionDays, "with purge, keep records newer than this many days")
 	since := fs.String("since", "", "reach back a date, a number of days, or a duration")
+	everywhere := fs.Bool("all-repositories", false, "count sessions from every repository on this machine")
 	if err := parseFlags(fs, rest, reportUsage(), "report"); err != nil {
 		return err
 	}
@@ -191,6 +241,12 @@ func cmdReport(ctx context.Context, args []string) error {
 		return serr
 	}
 
+	// Records are kept for the whole machine, so a report has to say
+	// which of them it counted. Every other command that reads records
+	// answers for the repository it was run in; this one counted all of
+	// them and said "this repository" underneath.
+	scope, root := reportScope(*everywhere)
+
 	var sessions []state.Session
 	if span == 0 {
 		list, lerr := st.List()
@@ -198,11 +254,13 @@ func cmdReport(ctx context.Context, args []string) error {
 			return output.Errorf(output.ExitInternal, "zeroturn could not read its records", lerr.Error(),
 				"check that your user data directory is readable")
 		}
+		list = inScope(list, root)
 		if len(list) > 0 {
 			sessions = list[:1]
 		}
 	} else {
 		sessions, err = st.Since(span)
+		sessions = inScope(sessions, root)
 	}
 	if err != nil {
 		return output.Errorf(output.ExitInternal, "zeroturn could not read its records", err.Error(),
@@ -210,6 +268,7 @@ func cmdReport(ctx context.Context, args []string) error {
 	}
 
 	r := summarise(name, sessions)
+	r.Scope = scope
 	if span > 0 {
 		start := time.Now().UTC().Add(-span)
 		r.WindowStart = &start
@@ -218,7 +277,11 @@ func cmdReport(ctx context.Context, args []string) error {
 		return output.JSON(os.Stdout, r)
 	}
 
-	fmt.Println("ZEROTURN REPORT")
+	if r.Scope == scopeMachine {
+		fmt.Println("ZEROTURN REPORT (every repository on this machine)")
+	} else {
+		fmt.Println("ZEROTURN REPORT (this repository)")
+	}
 	rows := [][2]string{
 		{"Sessions observed", fmt.Sprintf("%d", r.Sessions)},
 	}
@@ -237,8 +300,14 @@ func cmdReport(ctx context.Context, args []string) error {
 		[2]string{"Direct Git operations", fmt.Sprintf("%d", r.DirectGitOps)},
 	)
 	fmt.Print(output.Table(rows))
-	if note := retentionNote(span); note != "" {
-		fmt.Println(note)
+	// The retention setting belongs to a repository, so the note only
+	// speaks when the report did too.
+	// The retention setting belongs to a repository, so the note speaks
+	// only when the report did too.
+	if r.Scope == scopeRepository {
+		if note := retentionNote(span); note != "" {
+			fmt.Println(note)
+		}
 	}
 	fmt.Println(provenance)
 	return nil

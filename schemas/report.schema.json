@@ -15,7 +15,8 @@
     "directGitOperations",
     "generatedAt",
     "provenance",
-    "credentialWarnings"
+    "credentialWarnings",
+    "scope"
   ],
   "additionalProperties": false,
   "properties": {
@@ -26,6 +27,12 @@
         "week",
         "month",
         "since"
+      ]
+    },
+    "scope": {
+      "enum": [
+        "repository",
+        "machine"
       ]
     },
     "windowStart": {

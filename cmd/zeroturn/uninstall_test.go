@@ -12,6 +12,7 @@ import (
 
 	"github.com/cris-wendler/zeroturn/internal/config"
 	"github.com/cris-wendler/zeroturn/internal/testutil"
+	"github.com/cris-wendler/zeroturn/internal/verify"
 )
 
 // installed puts ZeroTurn on a throwaway machine the way a person would:
@@ -268,5 +269,36 @@ func TestUninstallSaysWhereTheExecutableIs(t *testing.T) {
 	}
 	if !strings.Contains(out, selfPath()) {
 		t.Errorf("the plan does not say where the executable is:\n%s", out)
+	}
+}
+
+// verify keeps its logs inside the repository's Git directory, which is
+// the one place ZeroTurn writes that is neither its state directory nor a
+// settings file. The removal looked only where it stores its own records,
+// so the logs stayed behind on a machine reported as clean.
+func TestUninstallRemovesTheValidationLogs(t *testing.T) {
+	work := installed(t)
+	logs := verify.LogDir(work)
+	if err := os.MkdirAll(logs, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := ioutil.WriteFile(filepath.Join(logs, "20260914-000000-test.log"),
+		[]byte("output from a verify run\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := capture(t, work, true, func() error { return cmdUninstall(nil) })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, logs) {
+		t.Errorf("the plan does not name the validation logs:\n%s", out)
+	}
+
+	if _, err := capture(t, work, true, func() error { return cmdUninstall([]string{"--apply"}) }); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(logs); !os.IsNotExist(err) {
+		t.Errorf("the validation logs are still there: %v", err)
 	}
 }

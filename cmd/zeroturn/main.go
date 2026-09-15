@@ -48,6 +48,7 @@ Direct Lane
 
 Other
   init              Write .zeroturn.json for this repository
+  uninstall         List what ZeroTurn put on this machine, and remove it
   capabilities      Print the machine readable contract
   doctor            Check the local installation and harness support
   version           Print the version
@@ -90,6 +91,8 @@ func main() {
 		err = cmdVerify(ctx, args)
 	case "ship":
 		err = cmdShip(ctx, args)
+	case "uninstall":
+		err = cmdUninstall(args)
 	case "capabilities":
 		err = cmdCapabilities(ctx, args)
 	case "doctor":

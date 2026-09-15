@@ -527,3 +527,29 @@ The test written for it did not catch this. It performs the real sequence, and o
 Decision: the token carries a counter that increments once per acquisition, and the clock is read through a variable so a test can hold it still. With the clock frozen, a thousand tokens must all differ. Replacing the increment with a plain read fails it by name.
 
 The lesson is the one this project keeps relearning from the same file. Three defects in the state lock have now been found by Windows and by nothing else: a contended lock reported as access denied rather than as an existing file, a lock in the middle of being released appearing neither present nor absent, and now a clock too coarse to separate two acquisitions. A test that depends on timing resolution is a test that passes on the machine it was written on.
+
+## 39. A tool that installs itself has to be able to leave
+
+Date: 2026-09-14
+
+ZeroTurn wrote to four places and could take back one of them. `integrate claude --remove` took its entries out of a single settings file. The per repository policy file, the user wide settings file, the session records, and the trust approvals stayed, and nothing told a person where they were. Trust approvals are the worst of those to leave behind: an approval of Strict mode for a repository is a security decision that would apply again to a later install.
+
+Asking people to read the source to find four paths is not an uninstall. Neither is a command that deletes what it thinks it wrote, because a settings file also holds entries written by the person and by other tools.
+
+Decision: `zeroturn uninstall` surveys every location, prints what it found with a count beside each item, and changes nothing until `--apply`. It edits settings files rather than deleting them, keeping every entry ZeroTurn did not write, and it copies each one to a temporary directory first. It never deletes the executable: a running program cannot be deleted on Windows, and a binary placed by a package manager belongs to that manager, so the plan prints the path and the command instead.
+
+Each location comes from the package that writes there, not from a list in the uninstall code. The test that matters walks the disk after a full install and removal and fails if any file or directory still names ZeroTurn, so a location added later is covered without anyone remembering this file. Four separate breakages were introduced to confirm the tests fail: a removal that deletes nothing, one that deletes settings files whole, a plan that acts without `--apply`, and a declined answer that is ignored.
+
+Adding the command exposed the drift this project keeps finding. A command name is written in four places: the dispatch in `main.go`, the help text, the README table, and the `capabilities` document an adapter reads. Nothing compared them. The capabilities list was the one that mattered, because an adapter reads it and a person does not, and it was already missing a command before anyone looked. All three descriptions are now read back against the dispatch switch through the parser, in both directions. The count of tests stated in how-this-was-built.md was stale for the same reason and is now counted from the repository, which is what the paragraph in that document about hand-maintained lists was already saying.
+
+## 40. The test isolation hid the home directory on two platforms out of three
+
+Date: 2026-09-14
+
+`testutil.Isolate` exists so that no test can read or change the settings of the person running it. It set `HOME`. `os.UserHomeDir` reads `HOME` on Linux and macOS and `USERPROFILE` on Windows, so on Windows it hid nothing, and every test that reached the user wide settings file wrote into the real home directory of whoever ran the suite.
+
+This had been true since the isolation was written. It surfaced only when the uninstall work added the first test to install a user wide integration, and it surfaced on Windows continuous integration, which is now the fourth defect in this repository found there and nowhere else.
+
+Decision: `Isolate` sets both names, and a test in `internal/testutil` checks that the home directory after `Isolate` is not the real one and that both names agree with it. That test runs on every platform, so the next variable of this kind is caught on a developer's machine rather than by a lucky run on a runner. Removing either line fails it by name.
+
+The lesson is narrower than the Windows lock defects and worth separating from them. Those were about timing. This one is about a single value having two names on different platforms, where reading one of them succeeds everywhere and is correct in only some places.

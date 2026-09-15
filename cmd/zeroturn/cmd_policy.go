@@ -102,7 +102,11 @@ func policyShow(ctx context.Context, args []string) error {
 		return err
 	}
 	if *asJSON {
-		return output.JSON(os.Stdout, c.Guard)
+		// The whole configuration, not the guard alone. Retention is a
+		// setting outside the guard, so a document holding only the guard
+		// would say it is the policy and be wrong. This is the shape
+		// config.schema.json already describes.
+		return output.JSON(os.Stdout, c)
 	}
 	fmt.Println("ZEROTURN POLICY")
 	fmt.Print(policyTable(c))
@@ -118,7 +122,7 @@ func policyShow(ctx context.Context, args []string) error {
 func policyTable(c config.Config) string {
 	rows := make([][2]string, 0, len(config.Keys()))
 	for _, k := range config.Keys() {
-		rows = append(rows, [2]string{k.Label, k.Display(c.Guard)})
+		rows = append(rows, [2]string{k.Label, k.Display(c)})
 	}
 	return output.Table(rows)
 }
@@ -349,7 +353,7 @@ func applyPolicyKey(c *config.Config, key, value string) error {
 			"there is no policy key named "+key,
 			"run zeroturn policy show to list the keys")
 	}
-	if err := k.Set(&c.Guard, value); err != nil {
+	if err := k.Set(c, value); err != nil {
 		ve, isValidation := err.(config.ValidationError)
 		if !isValidation {
 			return err
@@ -428,7 +432,7 @@ func policyMigrate(ctx context.Context, args []string) error {
 		if !ok {
 			continue
 		}
-		fmt.Printf("%-15s %s %s, the value a new file would hold\n", write, name, k.Display(c.Guard))
+		fmt.Printf("%-15s %s %s, the value a new file would hold\n", write, name, k.Display(c))
 	}
 	for _, name := range report.Unknown {
 		fmt.Printf("%-15s %s, which is not a ZeroTurn setting\n", dropped, name)

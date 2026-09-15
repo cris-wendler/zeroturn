@@ -7,10 +7,12 @@ import (
 	"testing"
 )
 
-// leaves reads every guard setting out of the type itself, by the JSON
+// leaves reads every single value out of the type itself, by the JSON
 // path a person would type, so the tests below compare the registry
-// against the shape rather than against a list someone maintains.
-func leaves(g Guard) map[string]string {
+// against the shape rather than against a list someone maintains. A list
+// is not a leaf: the registry describes values that can be set by name,
+// and verify steps are not one of those.
+func leaves(c Config) map[string]string {
 	out := map[string]string{}
 	var walk func(v reflect.Value, prefix string)
 	walk = func(v reflect.Value, prefix string) {
@@ -20,7 +22,10 @@ func leaves(g Guard) map[string]string {
 			if name == "" || name == "-" {
 				continue
 			}
-			path := prefix + "." + name
+			path := name
+			if prefix != "" {
+				path = prefix + "." + name
+			}
 			f := v.Field(i)
 			switch f.Kind() {
 			case reflect.Struct:
@@ -29,32 +34,50 @@ func leaves(g Guard) map[string]string {
 				out[path] = strconv.FormatInt(f.Int(), 10)
 			case reflect.String:
 				out[path] = f.String()
+			case reflect.Slice:
+				// Not a setting. A list is edited in the file or by the
+				// command that owns it, not by name with one value.
 			default:
 				out[path] = "unsupported kind " + f.Kind().String()
 			}
 		}
 	}
-	walk(reflect.ValueOf(g), "guard")
+	walk(reflect.ValueOf(c), "")
 	return out
 }
 
+// notSettings are the values in the file that no key describes, each with
+// the reason. Anything else that is a single value has to be reachable by
+// name, or somebody can read it in the file and find no way to change it.
+var notSettings = map[string]string{
+	"version": "the file format marker, which migration owns",
+}
+
 // The registry has to cover the type in both directions. A setting added
-// to Guard with no key would be unreachable by name, and a key naming a
-// field that is gone would offer something that cannot be set.
-func TestEveryGuardSettingHasAKey(t *testing.T) {
-	inType := leaves(Default().Guard)
+// with no key would be unreachable by name, and a key naming a field that
+// is gone would offer something that cannot be set.
+func TestEverySettingHasAKey(t *testing.T) {
+	inType := leaves(Default())
 	inRegistry := map[string]bool{}
 	for _, name := range Names() {
 		inRegistry[name] = true
 	}
 	for path := range inType {
-		if !inRegistry[path] {
-			t.Errorf("%s is a guard setting with no key, so nobody can change it by name", path)
+		if inRegistry[path] || notSettings[path] != "" {
+			continue
 		}
+		t.Errorf("%s is a setting with no key, so nobody can change it by name", path)
 	}
 	for name := range inRegistry {
 		if _, ok := inType[name]; !ok {
-			t.Errorf("the registry offers %s, which is not a field of Guard", name)
+			t.Errorf("the registry offers %s, which is not a field of the configuration", name)
+		}
+	}
+	// An exception that no longer names anything real would hide the next
+	// setting that needs one.
+	for path := range notSettings {
+		if _, ok := inType[path]; !ok {
+			t.Errorf("%s is excused from having a key and is not in the configuration", path)
 		}
 	}
 }
@@ -64,18 +87,21 @@ func TestEveryGuardSettingHasAKey(t *testing.T) {
 // one setting it names and nothing else.
 func TestEachKeyWritesTheFieldItNames(t *testing.T) {
 	for _, k := range Keys() {
-		g := Default().Guard
+		g := Default()
 		before := leaves(g)
 
 		var next string
-		if k.Kind == KindChoice {
+		switch k.Kind {
+		case KindChoice:
 			for _, c := range k.Choices {
 				if c != before[k.Name] {
 					next = c
 					break
 				}
 			}
-		} else {
+		case KindText:
+			next = before[k.Name] + "-other"
+		default:
 			n, err := strconv.Atoi(before[k.Name])
 			if err != nil {
 				t.Errorf("%s: current value %q is not a number", k.Name, before[k.Name])
@@ -129,7 +155,7 @@ func TestRefusingAValueSaysWhatIsAccepted(t *testing.T) {
 			t.Errorf("%s is not in the registry", name)
 			continue
 		}
-		g := Default().Guard
+		g := Default()
 		err := k.Set(&g, c.value)
 		ve, isValidation := err.(ValidationError)
 		if !isValidation {
@@ -146,7 +172,7 @@ func TestRefusingAValueSaysWhatIsAccepted(t *testing.T) {
 			t.Errorf("%s: fix %q, want %q", name, ve.Fix, c.fix)
 		}
 		// A refused value leaves the setting alone.
-		if k.Value(g) != k.Value(Default().Guard) {
+		if k.Value(g) != k.Value(Default()) {
 			t.Errorf("%s: a refused value was written anyway", name)
 		}
 	}
@@ -156,23 +182,23 @@ func TestRefusingAValueSaysWhatIsAccepted(t *testing.T) {
 // command did before the registry.
 func TestAChoiceIsReadWithoutRegardToCase(t *testing.T) {
 	k, _ := Lookup("guard.mode")
-	g := Default().Guard
+	g := Default()
 	if err := k.Set(&g, "STRICT"); err != nil {
 		t.Fatal(err)
 	}
-	if g.Mode != ModeStrict {
-		t.Fatalf("mode %q", g.Mode)
+	if g.Guard.Mode != ModeStrict {
+		t.Fatalf("mode %q", g.Guard.Mode)
 	}
 }
 
 // A bare number in the table says nothing about what it counts.
 func TestDisplayCarriesTheUnit(t *testing.T) {
-	g := Default().Guard
+	g := Default()
 	want := map[string]string{
-		"guard.context.warn":                strconv.Itoa(g.Context.Warn) + "%",
-		"guard.session.durationWarnMinutes": strconv.Itoa(g.Session.DurationWarnMinutes) + " minutes",
-		"guard.session.activeSubagentsWarn": strconv.Itoa(g.Session.ActiveSubagentsWarn),
-		"guard.mode":                        g.Mode,
+		"guard.context.warn":                strconv.Itoa(g.Guard.Context.Warn) + "%",
+		"guard.session.durationWarnMinutes": strconv.Itoa(g.Guard.Session.DurationWarnMinutes) + " minutes",
+		"guard.session.activeSubagentsWarn": strconv.Itoa(g.Guard.Session.ActiveSubagentsWarn),
+		"guard.mode":                        g.Guard.Mode,
 	}
 	for name, w := range want {
 		k, ok := Lookup(name)
@@ -201,7 +227,7 @@ func TestEveryPercentKeyIsRangeChecked(t *testing.T) {
 			continue
 		}
 		c := Default()
-		if err := k.Set(&c.Guard, "0"); err != nil {
+		if err := k.Set(&c, "0"); err != nil {
 			t.Fatal(err)
 		}
 		err := c.Validate()
@@ -229,7 +255,7 @@ func TestAStoredChoiceIsCheckedAgainstTheRegistry(t *testing.T) {
 			continue
 		}
 		c := Default()
-		*k.str(&c.Guard) = "nonsense"
+		*k.str(&c) = "nonsense"
 		err := c.Validate()
 		ve, isValidation := err.(ValidationError)
 		if !isValidation {
@@ -241,7 +267,7 @@ func TestAStoredChoiceIsCheckedAgainstTheRegistry(t *testing.T) {
 			continue
 		}
 		// The same value typed at the command line says the same thing.
-		g := Default().Guard
+		g := Default()
 		typed := k.Set(&g, "nonsense").(ValidationError)
 		if typed.Detail != ve.Detail || typed.Fix != ve.Fix {
 			t.Errorf("%s: stored says %q/%q, typed says %q/%q",

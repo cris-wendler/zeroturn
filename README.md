@@ -279,7 +279,7 @@ Strict mode is never switched on by a file alone. `zeroturn policy set guard.mod
 
 Two things are read without being recorded, and only to look for credentials: the file the model is about to open, and, if you switch the prompt guard on, the message you are about to send. Both are scanned in memory and nothing from either is stored.
 
-Records stay on your machine, in `~/Library/Application Support/zeroturn` on macOS, `$XDG_DATA_HOME/zeroturn` or `~/.local/share/zeroturn` on Linux, and `%LOCALAPPDATA%\zeroturn` on Windows. Records older than seven days are removed when a new session starts. `zeroturn report purge --all` removes every ZeroTurn record and nothing else.
+Records stay on your machine, in `~/Library/Application Support/zeroturn` on macOS, `$XDG_DATA_HOME/zeroturn` or `~/.local/share/zeroturn` on Linux, and `%LOCALAPPDATA%\zeroturn` on Windows. Records older than `report.retentionDays` in `.zeroturn.json`, seven days by default, are removed when a new session starts. Change it with `zeroturn policy set report.retentionDays 30`. `zeroturn report purge --all` removes every ZeroTurn record and nothing else.
 
 ZeroTurn makes no network requests of its own, calls no model, and runs no background process. `zeroturn ship` contacts your Git remote because pushing requires it.
 
@@ -291,7 +291,7 @@ ZeroTurn makes no network requests of its own, calls no model, and runs no backg
 | --- | --- |
 | `zeroturn status` | The session condition, or repository status outside a session |
 | `zeroturn policy show \| check \| set \| reset \| tune \| migrate` | Read or change the guard thresholds |
-| `zeroturn report current \| day \| week \| purge` | Summarise locally observed events, `--json` for machine output |
+| `zeroturn report current \| day \| week \| month \| purge` | Summarise locally observed events, `--json` for machine output |
 | `zeroturn integrate claude --plan \| --apply \| --remove` | Show, install, or remove the harness integration |
 
 **Direct Lane**

@@ -12,6 +12,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/cris-wendler/zeroturn/internal/config"
 )
 
 func testStore(t *testing.T) *Store {
@@ -647,5 +649,56 @@ func TestATokenIsNeverRepeated(t *testing.T) {
 			t.Fatalf("token %q was produced twice with the clock held still", token)
 		}
 		seen[token] = true
+	}
+}
+
+// The automatic purge runs inside a write, where the configuration is not
+// in hand, so the store is told the retention first. A setting that no
+// code reads would be worse than no setting at all.
+func TestTheAutomaticPurgeFollowsTheRetentionItWasGiven(t *testing.T) {
+	cases := []struct {
+		name      string
+		retention int
+		kept      bool
+	}{
+		{"a short retention removes it", 1, false},
+		{"a long retention keeps it", 90, true},
+		{"nobody chose, so the default applies", 0, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			st := testStore(t)
+			st.Update("old", "", func(*Session) {})
+			old := time.Now().AddDate(0, 0, -30)
+			path := filepath.Join(st.SessionsDir(), "old.json")
+			if err := os.Chtimes(path, old, old); err != nil {
+				t.Fatal(err)
+			}
+
+			st.SetRetention(c.retention)
+			// The purge runs when a session is first seen, not on every
+			// write, so a new identifier is what triggers it.
+			if _, err := st.Update("new", "", func(*Session) {}); err != nil {
+				t.Fatal(err)
+			}
+
+			_, err := os.Stat(path)
+			if c.kept && err != nil {
+				t.Errorf("a record inside the retention was removed: %v", err)
+			}
+			if !c.kept && err == nil {
+				t.Error("a record older than the retention is still there")
+			}
+		})
+	}
+}
+
+// The default the store falls back to and the default a new configuration
+// file holds have to be the same number, or a person who changes nothing
+// gets one answer from the file and another from the store.
+func TestTheDefaultRetentionIsTheOneTheConfigurationWrites(t *testing.T) {
+	if DefaultRetentionDays != config.Default().Report.RetentionDays {
+		t.Fatalf("the store defaults to %d days and a new file holds %d",
+			DefaultRetentionDays, config.Default().Report.RetentionDays)
 	}
 }

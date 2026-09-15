@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -53,8 +54,42 @@ type Options struct {
 	OnStep func(StepResult)
 }
 
+// LogDir is where verify keeps a log for each step. It sits inside the
+// repository's Git directory, which is not always a directory called
+// .git: in a linked worktree and in a submodule, .git is a file holding
+// the path of the real one. Treating it as a directory made verify and
+// ship fail outright in both, with an error that said the directory was
+// not writable when the trouble was that it was not a directory.
 func LogDir(repoRoot string) string {
-	return filepath.Join(repoRoot, ".git", "zeroturn", "logs")
+	return filepath.Join(GitDir(repoRoot), "zeroturn", "logs")
+}
+
+// GitDir resolves the Git directory for a working tree. The one line
+// gitdir: form is what Git itself writes for a worktree and a submodule,
+// and reading it costs nothing, where asking Git would mean starting a
+// process on a path that runs for every verify step.
+func GitDir(repoRoot string) string {
+	p := filepath.Join(repoRoot, ".git")
+	if info, err := os.Stat(p); err == nil && info.IsDir() {
+		return p
+	}
+	b, err := ioutil.ReadFile(p)
+	if err != nil {
+		return p
+	}
+	line := strings.TrimSpace(strings.SplitN(string(b), "\n", 2)[0])
+	const prefix = "gitdir:"
+	if !strings.HasPrefix(line, prefix) {
+		return p
+	}
+	dir := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+	if dir == "" {
+		return p
+	}
+	if !filepath.IsAbs(dir) {
+		dir = filepath.Join(repoRoot, dir)
+	}
+	return filepath.Clean(dir)
 }
 
 // MissingExecutables reports configured steps whose executable is absent,

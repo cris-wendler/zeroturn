@@ -1,6 +1,6 @@
 # Conformance suite
 
-This checks that ZeroTurn keeps the promises in [docs/harness-contract.md](../docs/harness-contract.md): that every published output follows its schema in [schemas/](../schemas), that a valid normalized event is accepted, and that an event naming a different contract is refused with a message that says so.
+This checks that ZeroTurn keeps its published promises: that every output follows its schema in [schemas/](../schemas), that a valid normalized event is accepted, and that an event naming a different contract is refused with a message that says so.
 
 ```sh
 go test ./conformance

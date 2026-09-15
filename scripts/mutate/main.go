@@ -77,6 +77,9 @@ func main() {
 		os.Exit(2)
 	}
 	stillThere := map[string]bool{}
+	// Staleness can only be judged for packages that were actually run,
+	// or every entry looks out of date whenever a subset is mutated.
+	ranPkg := map[string]bool{}
 
 	var survivors []string
 	total, killed, skipped := 0, 0, 0
@@ -86,6 +89,7 @@ func main() {
 		if pkg == "" {
 			continue
 		}
+		ranPkg[pkg] = true
 		mutants, err := plan(pkg)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "mutate: %s: %v\n", pkg, err)
@@ -133,9 +137,13 @@ func main() {
 	// it would quietly excuse a future change at the same line.
 	var stale []string
 	for id := range accepted {
-		if !stillThere[id] {
-			stale = append(stale, id)
+		if stillThere[id] {
+			continue
 		}
+		if !ranPkg[filepath.Dir(strings.SplitN(id, ":", 2)[0])] {
+			continue
+		}
+		stale = append(stale, id)
 	}
 	sort.Strings(stale)
 

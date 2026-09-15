@@ -649,3 +649,29 @@ The Gradle wrapper step could never run, on any platform. `filepath.Join(".", "g
 `zeroturn uninstall`, shipped the same day, left the validation logs behind. They live in the repository's Git directory rather than in the state directory, so a removal that looked only where ZeroTurn keeps its own records reported a clean machine and was wrong. The package comment already stated the rule this broke: every location comes from the package that writes there. `internal/verify` was the writing package nobody had wired in.
 
 One finding from the audit is recorded and not fixed. `policy.Trigger` publishes an `Available` field, documented as false when the harness did not supply the measurement, and it is never set to false anywhere. It is a required property of two published schemas that can only ever be true. Removing it takes something away from a contract that has so far only added; implementing it would mean putting entries in the trigger list for thresholds that were not crossed, which changes what every reader of that list is looking at, including the sentence the gate shows a developer. It is the same question as telling "nothing happened" apart from "nothing was measured", which is worth answering properly rather than in passing.
+
+## 46. Twelve tests that could not fail, and something to find the next one
+
+Date: 2026-09-14
+
+This project's oldest written rule is that a test asserting an absence has to be shown failing before it is relied on. An audit aimed at that rule broke the code deliberately, one behaviour at a time, and ran the tests. Twelve tests passed with the behaviour they name removed. Six survived the whole suite: six things could be deleted outright and `go test ./...` stayed green.
+
+The shapes were the same few, repeated:
+
+A helper that decided the answer. The status line colour test built its own disabled colour and then checked that nothing was coloured, so it proved a disabled colour stays disabled and never called the function that decides. Terminal detection could be replaced with "always colour" and nothing noticed, which means escape codes in a pipe or a log file.
+
+An expectation derived from the thing it checks. The integration test built its list of hooks by walking the table the installer installs from, so deleting a hook removed it from both sides. The window help text test, written the same day as this audit, compared a generated string with the list it was generated from.
+
+An assertion satisfied by failure. `RemoteDisplay` returns the bare remote name when the Git call fails, and the test only asked that the result not contain the password. Breaking the Git call passed. The trust record test discarded the read error, so a record that was never written passed.
+
+An assertion the data never reached. The hostile input test checked that no finding carries the secret value, and no hostile case produced a finding at all. The tool filter test used a fixture with no measurements, so the session crossed nothing and Strict allowed it whatever the filter did.
+
+A claim not observable where it was made. "Missing measurements are never treated as zero" cannot fail inside `internal/policy`: a threshold is a percentage of at least 1, so a zero reading is below every one of them and produces the same empty trigger list an absent reading does. The claim is real and belongs where the value is shown, so it moved to `internal/status`, where reading absent as zero prints `ctx 0%`.
+
+A check that never reached the thing it checked. The schema support test validated one empty document, and the validator only screens keywords in the parts a document exercises, so it screened the root of each schema and nothing else. Four unsupported keywords added to a nested property passed everything. `jsonschema` gained `Unsupported`, which walks the whole tree.
+
+Every one is now shown failing against the same break that exposed it.
+
+The more useful half is `scripts/mutate`. It changes one operator in the source at a time, runs the tests for that package, and reports the changes the tests accept. Finding twelve of these by hand took a session; the point of the tool is the thirteenth. It refuses to run against a dirty working tree, restores the file it edited even on an interrupt, and counts a change that does not compile as noticed rather than as a pass.
+
+Not every survivor is a defect: some operator changes alter nothing at all. The tool says so rather than pretending otherwise, and the reading is left to a person.

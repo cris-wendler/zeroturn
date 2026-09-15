@@ -56,6 +56,7 @@ func main() {
 	pkgs := flag.String("packages", "", "comma separated package directories to mutate")
 	max := flag.Int("max", 0, "stop after this many mutants, 0 for all")
 	timeout := flag.String("timeout", "120s", "test timeout for each mutant")
+	acceptedPath := flag.String("accepted", "scripts/mutate/accepted", "file listing changes that alter nothing")
 	flag.Parse()
 
 	if *pkgs == "" {
@@ -69,6 +70,13 @@ func main() {
 		fmt.Fprintln(os.Stderr, "mutate: the working tree has uncommitted changes, and this edits files in place")
 		os.Exit(2)
 	}
+
+	accepted, err := readAccepted(*acceptedPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "mutate: %v\n", err)
+		os.Exit(2)
+	}
+	stillThere := map[string]bool{}
 
 	var survivors []string
 	total, killed, skipped := 0, 0, 0
@@ -101,9 +109,14 @@ func main() {
 				fmt.Fprintf(os.Stderr, "mutate: %v\n", err)
 				os.Exit(2)
 			}
+			id := fmt.Sprintf("%s:%d %s->%s", m.file, m.line, m.from, m.to)
 			if survived {
-				survivors = append(survivors, fmt.Sprintf("%s:%d  %s becomes %s", m.file, m.line, m.from, m.to))
-				fmt.Printf("SURVIVED  %s:%d  %s becomes %s\n", m.file, m.line, m.from, m.to)
+				if _, ok := accepted[id]; ok {
+					stillThere[id] = true
+					continue
+				}
+				survivors = append(survivors, id)
+				fmt.Printf("SURVIVED  %s\n", id)
 				continue
 			}
 			killed++
@@ -116,15 +129,60 @@ func main() {
 	}
 	fmt.Println()
 
+	// An accepted entry that is now noticed is out of date, and leaving
+	// it would quietly excuse a future change at the same line.
+	var stale []string
+	for id := range accepted {
+		if !stillThere[id] {
+			stale = append(stale, id)
+		}
+	}
+	sort.Strings(stale)
+
 	if len(survivors) > 0 {
 		fmt.Println("\nEach line below is a change to the code that every test accepted.")
-		fmt.Println("Some are changes that alter nothing; the rest are behaviour no test can fail for.")
+		fmt.Println("Read each one. If it alters behaviour, the behaviour has no test that")
+		fmt.Println("can fail for it. If it alters nothing, add it to " + *acceptedPath + " with the reason.")
 		sort.Strings(survivors)
 		for _, s := range survivors {
 			fmt.Println("  " + s)
 		}
+	}
+	if len(stale) > 0 && *max == 0 {
+		fmt.Println("\nThese are listed as altering nothing, and the tests now notice them.")
+		fmt.Println("Remove them from " + *acceptedPath + ".")
+		for _, s := range stale {
+			fmt.Println("  " + s)
+		}
+	}
+	if len(survivors) > 0 || (len(stale) > 0 && *max == 0) {
 		os.Exit(1)
 	}
+}
+
+// readAccepted loads the changes recorded as altering nothing. A line is
+// an identifier, two spaces, and the reason it is there.
+func readAccepted(path string) (map[string]string, error) {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return map[string]string{}, nil
+		}
+		return nil, err
+	}
+	out := map[string]string{}
+	for _, line := range strings.Split(string(b), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.SplitN(line, "  ", 2)
+		if len(parts) != 2 || strings.TrimSpace(parts[1]) == "" {
+			return nil, fmt.Errorf("%s: %q has no reason after it", path, line)
+		}
+		out[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
+	}
+	return out, nil
 }
 
 func workingTreeDirty() (bool, error) {

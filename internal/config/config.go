@@ -145,22 +145,17 @@ func Load(repoRoot string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	var c Config
-	dec := json.NewDecoder(strings.NewReader(string(b)))
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(&c); err != nil {
-		return Config{}, fmt.Errorf("%s is not valid ZeroTurn configuration: %v", FileName, err)
+	c, r, err := Migrate(b)
+	if err != nil {
+		return Config{}, err
 	}
-	// A file written before the credential guard existed has no mode.
-	// It reads as the default rather than as a fault.
-	if c.Guard.Credentials.Mode == "" {
-		c.Guard.Credentials.Mode = CredentialAsk
-	}
-	if c.Guard.Credentials.Prompts == "" {
-		c.Guard.Credentials.Prompts = PromptsOff
-	}
-	if c.Guard.Limits.Projection == "" {
-		c.Guard.Limits.Projection = ProjectionOn
+	// A setting this build does not have is two different things. In a
+	// file of the current version it is a spelling mistake, and ignoring
+	// it would leave somebody believing a value applies. In an older file
+	// it is a setting a later version removed, which migration drops.
+	if len(r.Unknown) > 0 && r.From >= Version {
+		return Config{}, ValidationError{r.Unknown[0], "is not a ZeroTurn setting",
+			"remove it, or run zeroturn policy migrate to rewrite the file"}
 	}
 	if err := c.Validate(); err != nil {
 		return Config{}, err
@@ -221,10 +216,13 @@ func pct(field string, v int) error {
 }
 
 func (c Config) Validate() error {
+	// Load never reaches this: Migrate carries an older file forward and
+	// refuses a newer one by name. It guards Save against writing a
+	// version this build cannot read back.
 	if c.Version != Version {
 		return ValidationError{"version",
-			fmt.Sprintf("file declares version %d, this build supports version %d", c.Version, Version),
-			"run zeroturn init to write a supported file, or set version to 1"}
+			fmt.Sprintf("value is %d, and this build writes version %d", c.Version, Version),
+			"run zeroturn policy migrate to rewrite the file"}
 	}
 	// Every choice and every percentage is checked against the registry,
 	// so a setting added there is validated without being added here too.

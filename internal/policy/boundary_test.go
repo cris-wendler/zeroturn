@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -45,7 +46,11 @@ func TestTheRateNeedsAFullMinimumSpan(t *testing.T) {
 // A window that has already reset, or one that reports more time left
 // than a five hour window can have, is not one to project from.
 func TestTheWindowHasToBeOneThatIsStillOpen(t *testing.T) {
-	now := time.Now().UTC()
+	// On an exact second, so that "exactly now" and "exactly five hours"
+	// are exact. The reset time is stored as whole seconds, and a now
+	// with a fraction in it puts every case just off the edge being
+	// checked, which is how these two edges went untested.
+	now := time.Now().UTC().Truncate(time.Second)
 
 	if _, ok := Project(projecting(t, now, time.Hour, time.Second, 10, 40), now); !ok {
 		t.Error("a window with a second left was refused")
@@ -152,8 +157,19 @@ func TestCountingTheOtherCategories(t *testing.T) {
 		if !block {
 			t.Errorf("%v: the prompt guard did not block", c.categories)
 		}
-		if !strings.Contains(prompt, c.want) && !strings.Contains(prompt, strings.TrimSuffix(c.want, ".")) {
-			t.Errorf("%v: prompt reason %q does not contain %q", c.categories, prompt, c.want)
+		if !strings.Contains(prompt, c.categories[0]) {
+			t.Errorf("%v: prompt reason %q does not name the category", c.categories, prompt)
+		}
+		// The prompt guard counts the others the same way, and got the
+		// same "and 0 more" wrong when it counted from the wrong place.
+		if len(c.categories) == 1 && strings.Contains(prompt, "more") {
+			t.Errorf("one category produced %q", prompt)
+		}
+		if len(c.categories) > 1 {
+			want := fmt.Sprintf("and %d more", len(c.categories)-1)
+			if !strings.Contains(prompt, want) {
+				t.Errorf("%v: prompt reason %q does not say %q", c.categories, prompt, want)
+			}
 		}
 	}
 }

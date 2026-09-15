@@ -75,7 +75,7 @@ func cmdDoctor(ctx context.Context, args []string) error {
 			checks = append(checks, compatLive(ctx)...)
 		} else {
 			checks = append(checks, check{"live harness test", checkWarn,
-				"not run. Add --live to start one short coding session and confirm the harness honours a denial."})
+				"not run, so nothing here has been confirmed against a real harness. Run zeroturn doctor --compat --live to start one short coding session and see whether a denial is honoured."})
 		}
 	}
 

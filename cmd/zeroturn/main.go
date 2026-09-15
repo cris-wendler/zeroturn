@@ -18,10 +18,16 @@ import (
 // go install carries no such value, so the module version recorded in
 // the executable is used instead, and a developer building from a
 // checkout keeps the default.
-var Version = "0.1.0-dev"
+// defaultVersion is what a build from a checkout reports. It was written
+// out twice, as the value and as the thing the value is compared with, so
+// bumping it in one place and not the other would have made every build
+// claim to be a release.
+const defaultVersion = "0.2.0-dev"
+
+var Version = defaultVersion
 
 func version() string {
-	if Version != "0.1.0-dev" {
+	if Version != defaultVersion {
 		return Version
 	}
 	info, ok := debug.ReadBuildInfo()

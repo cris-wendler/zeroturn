@@ -7,10 +7,21 @@ import (
 )
 
 // ContractVersion covers the command surface, the event shape, the JSON
-// output, and the exit codes together. 1.1.0 added the file.read event
-// and the credential guard. 1.2.0 added the rate projection: three
-// session fields and the projection trigger. Both take nothing away.
-const ContractVersion = "1.2.0"
+// output, and the exit codes together.
+//
+// 1.1.0 added the file.read event and the credential guard. 1.2.0 added
+// the rate projection: three session fields and the projection trigger.
+// Both took nothing away.
+//
+// 2.0.0 does take something away, which is why it is a major version.
+// `policy show --json` printed the guard, so a reader took `.mode` from
+// the top level. It now prints the whole configuration, so the same
+// value is at `.guard.mode`. The change was needed because retention is
+// a setting outside the guard, and a document calling itself the policy
+// while omitting a policy setting is wrong. Also in 2.0.0, and additive:
+// a report carries `scope`, saying whether it counted one repository or
+// the machine.
+const ContractVersion = "2.0.0"
 
 // ClaudeTestedVersion is the harness release on which allow and deny were
 // observed end to end. Other releases may work, and are reported as

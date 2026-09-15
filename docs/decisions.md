@@ -713,3 +713,17 @@ Decision: one helper, `output.Counted`, in the package the whole project already
 The fix that matters is not the helper, it is the test. A number followed by a plural noun, in a string a person reads, has to pass through `Counted`. The test parses every non test source file, finds string literals matching that shape, and fails for any that is not an argument to `Counted` or `CountedPair`. It found two the manual pass had missed and one false positive, a verb that ends in s, which is now in a short list of words that are not plural nouns. Putting one string back the way it was fails it by name.
 
 Two other things went with it. `policy tune --days 30` printed a thirty day heading over records that are deleted after seven, which is exactly the defect entry 42 fixed in `report`; the helper written for that was in the file next door and `tune` never called it. And the Claude Code integration document said "Every measurement the guard compares against a threshold arrives that way", which the next sentence in the same paragraph disproved: the subagent counts are compared against thresholds and arrive from hooks. It now names the three measurements that do come from the status line.
+
+## 49. The contract takes something away, so it is 2.0.0
+
+Date: 2026-09-15
+
+`zeroturn policy show --json` printed the guard. A reader took `.mode` from the top level of that document. Entry 42 changed it to print the whole configuration, because retention became a setting outside the guard and a document calling itself the policy while omitting a policy setting is wrong. The same value is now at `.guard.mode`.
+
+That is a change that takes something away, and the contract version stayed at 1.2.0, whose own comment said the versions before it took nothing away. So the comment had become false, which is the thing this project spends most of its time finding.
+
+Decision: the contract is 2.0.0, and the comment on it says what moved and why. The alternatives were worse. Emitting the guard fields at the top level and adding the new sections beside them keeps the number and produces a document that is half a guard and half a configuration. Reverting puts back the defect that a policy document does not contain one of the policy settings.
+
+Nobody is broken by it: no forks, no other installs, and the only consumer is this repository. The cost of pretending otherwise would have been a published number that says a promise was kept when it was not.
+
+Two things went with it. The changelog had no 0.1.0 section: everything was still under "Unreleased, first prototype, nothing has been released yet", four days after the release. The release checklist says to move it and nobody did. And the version a build from a checkout reports was written twice, once as the value and once as the string it is compared with, so bumping one and not the other would have made every development build claim to be a release. It is one constant now.

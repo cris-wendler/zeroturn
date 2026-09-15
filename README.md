@@ -211,6 +211,7 @@ Start a new coding session after `--apply`. The settings are read when a session
     "session": { "durationWarnMinutes": 240, "activeSubagentsWarn": 2, "subagentStartsWarn": 4 },
     "credentials": { "mode": "ask", "prompts": "off" }
   },
+  "report": { "retentionDays": 7 },
   "verify": {
     "steps": [
       { "name": "vet", "command": ["go", "vet", "./..."] },

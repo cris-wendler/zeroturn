@@ -25,21 +25,32 @@ func freshRepo(t *testing.T) string {
 func TestEveryWarningNamesWhatToDo(t *testing.T) {
 	work := freshRepo(t)
 
-	for _, stage := range []string{"before init", "after init"} {
-		if stage == "after init" {
+	// --compat adds checks of its own, and the rule holds for those too.
+	// It did not when this test was first written: one of them said "Add
+	// --live" without naming the command that carries the flag.
+	stages := []struct {
+		name string
+		args []string
+	}{
+		{"before init", []string{"doctor", "--json"}},
+		{"after init", []string{"doctor", "--json"}},
+		{"after init, with compat", []string{"doctor", "--json", "--compat"}},
+	}
+	for _, stage := range stages {
+		if strings.HasPrefix(stage.name, "after init") && !config.Exists(work) {
 			if err := inProcess(t, work, true, func() error {
 				return cmdInit(context.Background(), []string{"--yes"})
 			}); err != nil {
 				t.Fatal(err)
 			}
 		}
-		for _, ck := range doctorChecks(t, work, "doctor", "--json") {
+		for _, ck := range doctorChecks(t, work, stage.args...) {
 			if ck.Status != checkWarn {
 				continue
 			}
 			if !strings.Contains(ck.Detail, "zeroturn ") {
 				t.Errorf("%s: the warning %q names no command to run: %s",
-					stage, ck.Name, ck.Detail)
+					stage.name, ck.Name, ck.Detail)
 			}
 		}
 	}

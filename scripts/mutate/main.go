@@ -46,6 +46,12 @@ type mutant struct {
 	pkg  string
 	file string
 	line int
+	// fn is the function the change is inside. An accepted survivor is
+	// recorded by function rather than by line, because a line number
+	// moves whenever anything above it changes: deleting one helper
+	// shifted every entry in the file below it and reported them all as
+	// out of date at once.
+	fn   string
 	from string
 	to   string
 	// expr is the node to change, held so it can be put back.
@@ -113,14 +119,14 @@ func main() {
 				fmt.Fprintf(os.Stderr, "mutate: %v\n", err)
 				os.Exit(2)
 			}
-			id := fmt.Sprintf("%s:%d %s becomes %s", m.file, m.line, m.from, m.to)
+			id := fmt.Sprintf("%s %s %s becomes %s", m.file, m.fn, m.from, m.to)
 			if survived {
 				if _, ok := accepted[id]; ok {
 					stillThere[id] = true
 					continue
 				}
-				survivors = append(survivors, id)
-				fmt.Printf("SURVIVED  %s\n", id)
+				survivors = append(survivors, fmt.Sprintf("%s  (line %d)", id, m.line))
+				fmt.Printf("SURVIVED  %s  (line %d)\n", id, m.line)
 				continue
 			}
 			killed++
@@ -140,7 +146,7 @@ func main() {
 		if stillThere[id] {
 			continue
 		}
-		if !ranPkg[filepath.Dir(strings.SplitN(id, ":", 2)[0])] {
+		if !ranPkg[filepath.Dir(strings.SplitN(id, " ", 2)[0])] {
 			continue
 		}
 		stale = append(stale, id)
@@ -221,21 +227,27 @@ func plan(pkg string) ([]mutant, error) {
 			return nil, err
 		}
 		var found []mutant
-		ast.Inspect(f, func(n ast.Node) bool {
-			be, ok := n.(*ast.BinaryExpr)
-			if !ok {
-				return true
+		for _, decl := range f.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Body == nil {
+				continue
 			}
-			to, ok := swaps[be.Op]
-			if !ok {
+			ast.Inspect(fn.Body, func(n ast.Node) bool {
+				be, ok := n.(*ast.BinaryExpr)
+				if !ok {
+					return true
+				}
+				to, ok := swaps[be.Op]
+				if !ok {
+					return true
+				}
+				found = append(found, mutant{
+					pkg: pkg, file: name, line: fset.Position(be.OpPos).Line,
+					fn: fn.Name.Name, from: be.Op.String(), to: to.String(),
+				})
 				return true
-			}
-			found = append(found, mutant{
-				pkg: pkg, file: name, line: fset.Position(be.OpPos).Line,
-				from: be.Op.String(), to: to.String(),
 			})
-			return true
-		})
+		}
 		sort.SliceStable(found, func(i, j int) bool { return found[i].line < found[j].line })
 		out = append(out, found...)
 	}

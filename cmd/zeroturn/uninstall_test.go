@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -156,14 +157,19 @@ func TestUninstallWithoutApplyChangesNothing(t *testing.T) {
 	if !strings.Contains(out, "Nothing has changed") {
 		t.Errorf("the plan did not say it changed nothing:\n%s", out)
 	}
+	// The state directory is compared whole because the command reads it
+	// from the same environment variable this test set. The other three
+	// are matched on their last elements, on an item line: Windows hands
+	// a program the long form of a path and a test the short one, and
+	// both name the same file.
 	for _, want := range []string{
-		config.Path(work),
-		filepath.Join(home, ".claude", "settings.json"),
-		filepath.Join(work, ".claude", "settings.local.json"),
-		os.Getenv("ZEROTURN_STATE_DIR"),
+		`(?m)^  delete\s+.*` + regexp.QuoteMeta(config.FileName) + `$`,
+		`(?m)^  edit\s+.*` + regexp.QuoteMeta(filepath.Join(".claude", "settings.json")) + `$`,
+		`(?m)^  edit\s+.*` + regexp.QuoteMeta(filepath.Join(".claude", "settings.local.json")) + `$`,
+		`(?m)^  delete\s+` + regexp.QuoteMeta(os.Getenv("ZEROTURN_STATE_DIR")) + `$`,
 	} {
-		if !strings.Contains(out, want) {
-			t.Errorf("the plan does not name %s:\n%s", want, out)
+		if !regexp.MustCompile(want).MatchString(out) {
+			t.Errorf("the plan has no item matching %s:\n%s", want, out)
 		}
 	}
 }

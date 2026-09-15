@@ -50,6 +50,11 @@ type Sources struct {
 	// Only the current repository can be known, which is why the plan
 	// says so rather than claiming to have found them all.
 	ConfigFiles []string
+	// LogDirs hold the output verify keeps. They live inside the
+	// repository's Git directory rather than in the state directory, so
+	// a removal that looked only where ZeroTurn stores its own records
+	// left them behind.
+	LogDirs []string
 	// SettingsFiles are harness settings files to take entries out of.
 	SettingsFiles []string
 }
@@ -96,6 +101,21 @@ func Survey(s Sources) (Plan, error) {
 			What:   "repository policy",
 		})
 	}
+	for _, path := range s.LogDirs {
+		if !exists(path) {
+			continue
+		}
+		n, err := countFiles(path)
+		if err != nil {
+			return Plan{}, err
+		}
+		p.Items = append(p.Items, Item{
+			Path:   path,
+			Action: ActionDelete,
+			What:   "validation logs",
+			Detail: plural(n, "log"),
+		})
+	}
 	if s.StateDir != "" && exists(s.StateDir) {
 		detail, err := stateDetail(s.StateDir)
 		if err != nil {
@@ -137,6 +157,25 @@ func stateDetail(dir string) (string, error) {
 	return fmt.Sprintf("%s, %s",
 		plural(counts["sessions"], "session record"),
 		plural(counts["trust"], "trust approval")), nil
+}
+
+// countFiles counts what a directory holds, so the plan can say how much
+// is about to go rather than only where it is.
+func countFiles(dir string) (int, error) {
+	names, err := ioutil.ReadDir(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return 0, nil
+		}
+		return 0, err
+	}
+	n := 0
+	for _, e := range names {
+		if !e.IsDir() {
+			n++
+		}
+	}
+	return n, nil
 }
 
 func plural(n int, noun string) string {

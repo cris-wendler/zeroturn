@@ -1,6 +1,10 @@
 package main
 
 import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -77,10 +81,10 @@ func TestProjectDetection(t *testing.T) {
 			want: []string{"test: mvn --batch-mode test"},
 		},
 		{
-			name:     "gradle with a wrapper",
-			files:    map[string]string{"build.gradle.kts": "plugins {}\n", "gradlew": "#!/bin/sh\n"},
+			name:     "gradle without a wrapper",
+			files:    map[string]string{"build.gradle.kts": "plugins {}\n"},
 			language: "java", manager: "gradle",
-			want: []string{"test: gradlew test"},
+			want: []string{"test: gradle test"},
 		},
 		{
 			name:     "dotnet",
@@ -157,5 +161,75 @@ func TestProposalsAreValidConfiguration(t *testing.T) {
 	c.Verify.Steps = proposed
 	if err := c.Validate(); err != nil {
 		t.Fatalf("a proposed configuration does not validate: %v", err)
+	}
+}
+
+// A project that ships a build wrapper means the wrapper to be used: it
+// pins the build tool version. The proposal named it "gradlew", with no
+// separator, so exec.LookPath searched PATH, never found it in the
+// repository, and the step was dropped every time. The old test asserted
+// that broken value.
+func TestABuildWrapperIsProposedByThePathItCanBeRunFrom(t *testing.T) {
+	cases := []struct {
+		name, build, wrapper string
+	}{
+		{"gradle", "build.gradle.kts", "gradlew"},
+		{"maven", "pom.xml", "mvnw"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			dir := t.TempDir()
+			testutil.Write(t, dir, c.build, "\n")
+			name := c.wrapper
+			if runtime.GOOS == "windows" {
+				name += ".bat"
+			}
+			testutil.Write(t, dir, name, "#!/bin/sh\nexit 0\n")
+			// A wrapper committed to a repository carries the executable
+			// bit; testutil.Write does not set it.
+			if err := os.Chmod(filepath.Join(dir, name), 0700); err != nil {
+				t.Fatal(err)
+			}
+
+			_, _, steps := propose(dir)
+			var test config.Step
+			for _, s := range steps {
+				if s.Name == "test" {
+					test = s
+				}
+			}
+			if len(test.Command) == 0 {
+				t.Fatalf("no test step was proposed for a %s project", c.name)
+			}
+
+			runner := test.Command[0]
+			if !filepath.IsAbs(runner) {
+				t.Errorf("the step runs %q, which exec.LookPath will search PATH for rather than find in the repository", runner)
+			}
+			if !strings.Contains(runner, c.wrapper) {
+				t.Errorf("the step runs %q, and the project ships %s", runner, c.wrapper)
+			}
+			if _, err := os.Stat(runner); err != nil {
+				t.Errorf("the step runs %q, which is not there: %v", runner, err)
+			}
+			// detect drops a step whose executable cannot be found, which
+			// is what silently removed this one.
+			if _, err := exec.LookPath(runner); err != nil {
+				t.Errorf("the step would be dropped as missing: %v", err)
+			}
+		})
+	}
+}
+
+// Without a wrapper the plain tool is proposed, which is what happens on
+// a machine where the build tool is installed globally.
+func TestWithoutAWrapperThePlainToolIsProposed(t *testing.T) {
+	dir := t.TempDir()
+	testutil.Write(t, dir, "build.gradle", "\n")
+	_, _, steps := propose(dir)
+	for _, s := range steps {
+		if s.Name == "test" && s.Command[0] != "gradle" {
+			t.Errorf("the step runs %q, want gradle", s.Command[0])
+		}
 	}
 }

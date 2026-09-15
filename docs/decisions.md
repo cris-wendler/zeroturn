@@ -631,3 +631,21 @@ The README's picture of the file `init` writes had lost a section. `report` was 
 The rule written a few hours earlier, that every warning `doctor` prints must name a command to run, was enforced only on the checks that run without `--compat`. The `--compat` checks were never held to it and one of them said "Add --live" without naming the command that carries the flag. The rule now covers both.
 
 The lesson is not any one of these. It is that a pass aimed at finding, with the hypotheses written down first, turned up in one sitting more than three sessions of building had.
+
+## 45. What the audit found wrong, rather than merely undescribed
+
+Date: 2026-09-14
+
+The audit's first batch was drift. This is the half that made ZeroTurn give a wrong answer or not work at all. Each was reproduced before it was fixed, and each test was shown failing.
+
+`zeroturn report` counted every repository on the machine. Records are stored for the machine, and `status`, `doctor` and `policy tune` all narrow them to the repository they were run in. `report` did not, and nothing said so. Reproduced by planting one session record belonging to another repository and running `report day` inside a repository with no sessions of its own: it reported that session and its nine subagent starts. The retention line added to the same command hours earlier made it worse, printing "This repository keeps records for 7 days" under a machine wide count.
+
+A report now covers the repository it was run in. Outside a repository there is nothing to narrow to, so it covers the machine and the heading says which. `--all-repositories` asks for the machine deliberately, and the published document carries a `scope` field, because a reader who cannot tell a quiet repository from a busy machine has been given a number and no way to read it.
+
+`verify` and `ship` did not run at all in a linked worktree or a submodule. In both, `.git` is a file holding the path of the real Git directory, and the log directory was built as `<root>/.git/zeroturn/logs`. Creating it failed with "not a directory", and the message a person saw said the `.git` directory was not writable, which sends them to look at permissions. The Git directory is now resolved by reading the one line `gitdir:` form, which is what Git itself writes; a test checks that belief against Git rather than against the documentation of it.
+
+The Gradle wrapper step could never run, on any platform. `filepath.Join(".", "gradlew")` cleans the `.` away and returns `gradlew`, so `exec.LookPath` searched `PATH`, never found the wrapper in the repository, and the step was dropped every time. A project that ships a wrapper means the wrapper to be used, because it pins the build tool version. The test that existed asserted the broken value. Wrappers are now named by their absolute path, the Maven wrapper is honoured the same way, and on Windows the `.bat` is chosen because the extensionless file beside it is a shell script.
+
+`zeroturn uninstall`, shipped the same day, left the validation logs behind. They live in the repository's Git directory rather than in the state directory, so a removal that looked only where ZeroTurn keeps its own records reported a clean machine and was wrong. The package comment already stated the rule this broke: every location comes from the package that writes there. `internal/verify` was the writing package nobody had wired in.
+
+One finding from the audit is recorded and not fixed. `policy.Trigger` publishes an `Available` field, documented as false when the harness did not supply the measurement, and it is never set to false anywhere. It is a required property of two published schemas that can only ever be true. Removing it takes something away from a contract that has so far only added; implementing it would mean putting entries in the trigger list for thresholds that were not crossed, which changes what every reader of that list is looking at, including the sentence the gate shows a developer. It is the same question as telling "nothing happened" apart from "nothing was measured", which is worth answering properly rather than in passing.

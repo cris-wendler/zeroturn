@@ -12,6 +12,7 @@ import (
 	"github.com/cris-wendler/zeroturn/internal/output"
 	"github.com/cris-wendler/zeroturn/internal/state"
 	"github.com/cris-wendler/zeroturn/internal/uninstall"
+	"github.com/cris-wendler/zeroturn/internal/verify"
 )
 
 const uninstallUsage = `zeroturn uninstall [--apply]
@@ -130,6 +131,9 @@ func uninstallSources() (uninstall.Sources, string) {
 	s.SettingsFiles = append(s.SettingsFiles,
 		filepath.Join(root, ".claude", "settings.local.json"))
 	s.ConfigFiles = append(s.ConfigFiles, config.Path(root))
+	// verify writes here, and it is the one place ZeroTurn writes that is
+	// neither its state directory nor a settings file.
+	s.LogDirs = append(s.LogDirs, verify.LogDir(root))
 	return s, root
 }
 

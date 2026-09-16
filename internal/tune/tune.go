@@ -104,8 +104,29 @@ func Analyse(c config.Config, sessions []state.Session, repoHash string) Report 
 		t.Reason, t.Suggested = suggest(t, approvedAt[name], declinedAt[name])
 		r.Thresholds = append(r.Thresholds, t)
 	}
-	sort.Slice(r.Thresholds, func(i, j int) bool { return r.Thresholds[i].Asks > r.Thresholds[j].Asks })
+	sortThresholds(r.Thresholds)
 	return r
+}
+
+// sortThresholds puts the most asked first, and orders a tie by name.
+// Without the second test the order of a tie came out of the sort rather
+// than out of the data, so the same observations could print in a
+// different order twice running.
+func sortThresholds(t []Threshold) {
+	sort.Slice(t, func(i, j int) bool { return lessThreshold(t[i], t[j]) })
+}
+
+// lessThreshold orders two rows of the report. It is named rather than
+// written inline so that a test can ask it the question sort relies on
+// and cannot ask through a sorted list: a row is never less than itself.
+// A comparator that answers yes to that is invalid, and a sorted list
+// does not reveal it, because an invalid comparator still lands on the
+// right order for any particular input.
+func lessThreshold(a, b Threshold) bool {
+	if a.Asks != b.Asks {
+		return a.Asks > b.Asks
+	}
+	return a.Trigger < b.Trigger
 }
 
 func measurement(o state.GateOutcome, trigger string) (float64, bool) {

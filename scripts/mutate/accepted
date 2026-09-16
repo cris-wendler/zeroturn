@@ -7,3 +7,10 @@
 
 internal/policy/policy.go EvaluateAt > becomes >=  picking the last of several equal ranks gives the same level as picking the first
 internal/security/security.go LooksBinary > becomes >=  the length cap is applied either way at exactly the cap
+internal/security/security.go ScanReader > becomes >=  truncating a line at exactly the cap gives the same line
+internal/security/security.go ScanReader < becomes <=  the bound is on a submatch index that is always inside the match, so the two agree for every detector
+internal/security/security.go Redact > becomes >=  same bound, same reason: len(sub) is always one more than the value group for the only detector that has one
+internal/security/security.go Redact < becomes <=  the value is always found inside its own match, so the index is never negative and never zero for any detector whose value group does not start the pattern
+internal/tune/tune.go highest > becomes >=  the largest value in a list is the same whether ties replace the running answer or not
+internal/tune/tune.go lowest < becomes <=  the smallest value in a list is the same whether ties replace the running answer or not
+internal/tune/tune.go lessThreshold > becomes >=  it sits under a guard that the two counts differ, so the two operators cannot disagree there

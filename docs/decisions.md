@@ -741,3 +741,25 @@ The rule does not depend on what is installed. A harness invokes ZeroTurn, never
 How it was found is the part worth recording. Continuous integration could not find it, because no runner has the harness installed and adding one is not straightforward. It was found by specgap, the evaluation environment in the repository next door, which ran ZeroTurn's own test suite inside an agent workspace with `PATH` set differently. The environment built to look for gaps in how an agent solves a problem found a defect in the project it was pointed at instead.
 
 The first report of it was also wrong, and that is worth recording too. specgap printed `visible 100%, 402 of 403`, which rounded a failure away, and recorded only which hidden tests had failed, so the visible one had no name. Re-running by hand appeared to pass, and it was written off as flaky. It was not flaky. It was deterministic and depended on `PATH`, which differed between the two runs. Both faults in the environment are fixed, and the second run named the test immediately.
+
+## 51. Bringing two packages up to the mutation guard
+
+Date: 2026-09-16
+
+`scripts/mutate` ran in continuous integration against two packages, because those were the two where every change it could make was noticed. `internal/security` had seven changes the tests accepted and `internal/tune` had nine, both recorded with line numbers and neither looked at. Both are now at zero.
+
+The scanner is the one that mattered. Seven of fifteen possible changes to it went unnoticed, in the package that decides whether a credential reaches a model. Two were real:
+
+A value with almost no character variety is treated as a template rather than a secret, on a count of distinct characters. The count it turns on had nothing checking it, so moving the boundary by one changed which values are reported and no test disagreed.
+
+A detector that matches a whole value never asks whether the value looks like a template, because the shape already answered that. `AKIA` followed by sixteen capital As is a well formed key id with three distinct characters in it, and the template rule would throw it away if the template rule applied. Two of the seven changes made it apply. Nothing noticed, and the effect would have been a real key left in a log.
+
+The other five were changes that alter nothing, recorded with the reason: truncating a line at exactly the cap gives the same line, and three bounds sit on a submatch index that is always inside its own match.
+
+A test written the day before is worth naming here. It was written to hold exactly the case above, a value at the start of a line being left in place, and it used a detector whose value group is the whole match. That detector never reaches the code the test was written for. The test passed, the behaviour was untested, and the mutation run said so.
+
+`internal/tune` turned up one thing worth fixing rather than testing. Its report was sorted by how often a threshold was asked about, and nothing ordered a tie, so the same observations could print in a different order on two runs. It is ordered by name within a tie now.
+
+The comparator for that sort is the other thing worth recording. A change from `>` to `>=` makes it invalid, because sort requires that nothing is less than itself, and the order it then produces is undefined. It survived every test, including one written for it that sorted four different starting orders and required the same answer: an invalid comparator still lands on the right order for any particular input. It was named, moved out of the sort call, and asked the question directly. A row is not less than itself.
+
+`internal/config` and `internal/state` have been measured for the first time and have thirty eight between them, which is recorded here and not yet done.

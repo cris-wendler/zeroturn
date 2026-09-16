@@ -14,3 +14,12 @@ internal/security/security.go Redact < becomes <=  the value is always found ins
 internal/tune/tune.go highest > becomes >=  the largest value in a list is the same whether ties replace the running answer or not
 internal/tune/tune.go lowest < becomes <=  the smallest value in a list is the same whether ties replace the running answer or not
 internal/tune/tune.go lessThreshold > becomes >=  it sits under a guard that the two counts differ, so the two operators cannot disagree there
+internal/config/config.go Hash < becomes <=  a duplicate step name is refused by Validate, so the sort never sees two equal names and the tie break is never reached
+internal/state/state.go Update < becomes <=  clamping a count at zero leaves zero either way
+internal/state/state.go Update > becomes >=  a peak equal to the current value is the same peak whether it is reassigned or not
+internal/state/state.go RecordGate > becomes >=  trimming a list that is already exactly the limit takes the whole list, so the two agree at the boundary
+internal/state/state.go safeID > becomes >=  cutting a name that is already exactly the bound leaves the same name
+internal/state/state.go Lock < becomes <=  the backoff cap changes how long a retry sleeps and nothing else; both stop doubling in the same low milliseconds
+internal/state/state.go Lock > becomes >=  it gives up after one fewer consecutive missing reading; both bound the loop and neither spins, so the difference is one retry
+internal/state/state.go Lock > becomes >=  it differs only for a lock whose age is exactly the stale limit to the nanosecond, which no run can arrange
+internal/state/state.go Lock == becomes !=  the continue after a successful clear skips one sleep; without it the next pass creates the lock anyway, one backoff later

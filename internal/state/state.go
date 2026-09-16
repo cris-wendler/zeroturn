@@ -141,19 +141,30 @@ func DataDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	switch runtime.GOOS {
+	return dataDirFor(runtime.GOOS, home, os.Getenv), nil
+}
+
+// dataDirFor works out where records belong on one operating system.
+//
+// The operating system is a parameter rather than read here, so that
+// every branch can be exercised from any machine. While it read
+// runtime.GOOS directly, two of the three branches were unreachable
+// wherever the tests happened to run, and a change to either would have
+// gone unnoticed on that machine.
+func dataDirFor(goos, home string, env func(string) string) string {
+	switch goos {
 	case "darwin":
-		return filepath.Join(home, "Library", "Application Support", "zeroturn"), nil
+		return filepath.Join(home, "Library", "Application Support", "zeroturn")
 	case "windows":
-		if v := os.Getenv("LOCALAPPDATA"); v != "" {
-			return filepath.Join(v, "zeroturn"), nil
+		if v := env("LOCALAPPDATA"); v != "" {
+			return filepath.Join(v, "zeroturn")
 		}
-		return filepath.Join(home, "AppData", "Local", "zeroturn"), nil
+		return filepath.Join(home, "AppData", "Local", "zeroturn")
 	default:
-		if v := os.Getenv("XDG_DATA_HOME"); v != "" {
-			return filepath.Join(v, "zeroturn"), nil
+		if v := env("XDG_DATA_HOME"); v != "" {
+			return filepath.Join(v, "zeroturn")
 		}
-		return filepath.Join(home, ".local", "share", "zeroturn"), nil
+		return filepath.Join(home, ".local", "share", "zeroturn")
 	}
 }
 

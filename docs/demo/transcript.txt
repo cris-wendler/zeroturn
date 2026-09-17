@@ -27,10 +27,11 @@ guard.credentials.prompts off.
 $ zeroturn verify
 ZEROTURN VERIFY
 
-PASS  vet        0.3s
-PASS  test       0.3s
+PASS  vet        0.1s
+PASS  test       0.1s
 
-Result: 2 checks passed in 0.7s
+Result: 2 checks passed in 0.1s
+Evidence 19d72ae794c5e681 recorded for repository state 54a926e9cc78
 ---
 $ zeroturn ship --message "docs: add release notes" --files NOTES.md --dry-run
 ZEROTURN SHIP
@@ -40,10 +41,10 @@ message:  docs: add release notes
 branch:   docs-update
 remote:   origin  ../remote.git
 
-PASS  vet        0.3s
-PASS  test       0.3s
+PASS  vet        0.1s
+PASS  test       0.1s
 
-Result: 2 checks passed in 0.6s
+Result: 2 checks passed in 0.1s
 
 READY TO SHIP
 Dry run finished. Nothing was staged, committed, or pushed.

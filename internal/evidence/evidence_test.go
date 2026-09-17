@@ -474,24 +474,46 @@ func TestConcurrentWritesLeaveAReadableRecord(t *testing.T) {
 	hash := state.RepoHash(repo.Root)
 
 	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var writeErrs []error
 	for i := 0; i < 8; i++ {
 		wg.Add(1)
 		go func(n int) {
 			defer wg.Done()
+			fail := func(err error) {
+				mu.Lock()
+				writeErrs = append(writeErrs, err)
+				mu.Unlock()
+			}
 			r, err := Begin(st, hash, "test", snap, time.Now().Add(time.Duration(n)*time.Millisecond))
 			if err != nil {
+				fail(err)
 				return
 			}
-			Complete(st, r, passing(), time.Now())
+			if _, err := Complete(st, r, passing(), time.Now()); err != nil {
+				fail(err)
+			}
 		}(i)
 	}
-	// Reading while the writers run must never see a partial record.
+	// Reading while the writers run must never fail and never see a
+	// partial record. On Windows a plain open of a file being replaced
+	// fails outright, which is what this found.
+	var readErrs []error
 	for i := 0; i < 50; i++ {
 		if _, _, err := Load(st, hash); err != nil {
-			t.Fatalf("a concurrent read failed: %v", err)
+			readErrs = append(readErrs, err)
 		}
 	}
 	wg.Wait()
+
+	if len(readErrs) > 0 {
+		t.Errorf("%d of 50 concurrent reads failed, first: %v", len(readErrs), readErrs[0])
+	}
+	// A write losing to a reader is the same defect seen from the other
+	// side: verify would report that it could not record evidence.
+	if len(writeErrs) > 0 {
+		t.Errorf("%d concurrent writes failed, first: %v", len(writeErrs), writeErrs[0])
+	}
 
 	r, found, err := Load(st, hash)
 	if err != nil || !found {

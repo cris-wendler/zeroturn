@@ -801,3 +801,23 @@ What the digest cannot see is written down in the package, in the README, and in
 The status line does not compute any of this. It repaints constantly, and reading the repository there would cost more than the whole budget for a repaint. A test grows the working tree by two hundred files and requires that the status line does not get slower, so this cannot be wired in later by accident.
 
 Session Guard is unchanged and stays working. It is the half of this project with observed evidence behind it, and the new direction has none yet. Replacing it before the replacement has been used in real work would be the mistake this project has spent fifty two entries avoiding.
+
+## 54. A rename is atomic, and on Windows it is not uninterrupted
+
+Date: 2026-09-17
+
+Entry 53's evidence record is replaced by renaming a new file over it, the same way session records are written. That gives a reader the whole of one record or the whole of the one before, and it is what "atomic" is usually taken to mean.
+
+On Windows it means less than that. A file that is being replaced cannot be opened, and a file that is being read cannot be replaced, so an open or a rename that lands inside the other's window fails outright rather than returning either version. The reader does not see half a record. It sees an error.
+
+Windows continuous integration found it on the first run, with the test that puts eight writers and fifty readers on one record: "The process cannot access the file because it is being used by another process." The test had been written to prove that a concurrent read never sees a partial record, and it proved something the author had not thought to look for, which is the argument for writing it at all.
+
+This was not confined to the test. `zeroturn report` reads the record while `zeroturn verify` writes it, and the report answers a failure to read by leaving its validation section out entirely, so the section would have vanished with nothing said. The same window is open from the other side: a write losing to a reader would have made `verify` report that it could not record evidence for a run that had just passed.
+
+Both are now a short bounded retry, twenty five attempts two hundred microseconds apart. The window is measured in microseconds, so waiting it out closes it, and something genuinely unreadable still fails a few milliseconds later rather than never. A file that is absent is not retried, because absent is an answer.
+
+The test was strengthened rather than relaxed: it now collects the errors from both the readers and the writers and names how many of each failed, where before a writer's error was discarded by the goroutine that hit it.
+
+Worth recording for later: the session record store writes the same way and `List` reads without the lock, so the same window is open there. It has been open since the store was written and nothing has reported it, which is not evidence that it cannot happen. It is left alone here because this change is about evidence, and widening it to the shared write path would put every session record through an untested code path in the same pull request.
+
+This is the sixth defect in this project found by Windows and by nothing else.

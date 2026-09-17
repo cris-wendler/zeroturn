@@ -199,6 +199,41 @@ func resultOf(res verify.Result) string {
 	}
 }
 
+// contendedAttempts bounds how long a read or a write waits out another
+// process that holds the record open. See retry for what it is for.
+const contendedAttempts = 25
+
+// retry runs an operation that can fail only because another process is
+// touching the same record at that instant.
+//
+// The record is replaced by renaming a new file over it, which means a
+// reader sees the whole of one record or the whole of the one before.
+// That much holds everywhere. What does not hold everywhere is that the
+// operation succeeds at all: on Windows a file being replaced cannot be
+// opened, and a file being read cannot be replaced, so an open or a
+// rename that lands inside the other's window fails outright rather than
+// returning either version.
+//
+// This is not only a test condition. zeroturn report reads the record
+// while zeroturn verify writes it, and the report would then drop its
+// validation section with nothing said. Windows continuous integration
+// found it with eight writers and fifty readers.
+//
+// The window is measured in microseconds, so a short bounded wait closes
+// it. Something genuinely unreadable still fails, a few milliseconds
+// later rather than never.
+func retry(op func() error) error {
+	var err error
+	for i := 0; i < contendedAttempts; i++ {
+		err = op()
+		if err == nil || os.IsNotExist(err) {
+			return err
+		}
+		time.Sleep(200 * time.Microsecond)
+	}
+	return err
+}
+
 func Save(st *state.Store, r Record) error {
 	if err := os.MkdirAll(Dir(st), 0700); err != nil {
 		return err
@@ -207,10 +242,10 @@ func Save(st *state.Store, r Record) error {
 	if err != nil {
 		return err
 	}
-	// The same atomic write the session records use: the file is renamed
-	// into place, so a reader sees the whole of one record or the whole of
-	// the one before, never half of either.
-	return state.AtomicWrite(Path(st, r.RepoHash), append(b, '\n'), 0600)
+	data := append(b, '\n')
+	return retry(func() error {
+		return state.AtomicWrite(Path(st, r.RepoHash), data, 0600)
+	})
 }
 
 // PurgeAll removes every evidence record on this machine.
@@ -242,7 +277,12 @@ func PurgeAll(st *state.Store) (int, error) {
 }
 
 func Load(st *state.Store, repoHash string) (Record, bool, error) {
-	b, err := ioutil.ReadFile(Path(st, repoHash))
+	var b []byte
+	err := retry(func() error {
+		var rerr error
+		b, rerr = ioutil.ReadFile(Path(st, repoHash))
+		return rerr
+	})
 	if os.IsNotExist(err) {
 		return Record{}, false, nil
 	}

@@ -11,7 +11,7 @@ ZeroTurn shows context, usage windows, session duration, and subagent activity w
 
 ZeroTurn works with coding harnesses. It is not another coding harness.
 
-![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask because context, five hour usage, and active subagents are past their thresholds. The credential guard then stops a file that holds an aws access key id from being read, and, with the prompt guard switched on, stops a message carrying the same key from being sent. zeroturn verify passes two checks, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
+![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask because context, five hour usage, and active subagents are past their thresholds. The credential guard then stops a file that holds an aws access key id from being read, and, with the prompt guard switched on, stops a message carrying the same key from being sent. zeroturn verify passes two checks and records evidence for the repository state it ran against, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
 
 The recording is real output from the executable, made with [docs/demo/record.sh](docs/demo/record.sh) against a sample project. The session values are sample data, not a real account. The last word of the status line says what happens to the next subagent. Here it is `ask`, so the harness asks you before starting another one, with a short reason such as "New subagent requires approval. Context is 82% and five hour usage is 81%."
 
@@ -48,10 +48,11 @@ guard.credentials.prompts off.
 $ zeroturn verify
 ZEROTURN VERIFY
 
-PASS  vet        0.3s
-PASS  test       0.3s
+PASS  vet        0.1s
+PASS  test       0.1s
 
-Result: 2 checks passed in 0.7s
+Result: 2 checks passed in 0.1s
+Evidence 19d72ae794c5e681 recorded for repository state 54a926e9cc78
 
 $ zeroturn ship --message "docs: add release notes" --files NOTES.md --dry-run
 ZEROTURN SHIP
@@ -61,10 +62,10 @@ message:  docs: add release notes
 branch:   docs-update
 remote:   origin  ../remote.git
 
-PASS  vet        0.3s
-PASS  test       0.3s
+PASS  vet        0.1s
+PASS  test       0.1s
 
-Result: 2 checks passed in 0.6s
+Result: 2 checks passed in 0.1s
 
 READY TO SHIP
 Dry run finished. Nothing was staged, committed, or pushed.
@@ -201,6 +202,8 @@ The digest is taken over content rather than over the output of `git status`. Th
 
 **When it is checked.** When you ask: `zeroturn verify`, and `zeroturn report` for the repository you are in. There is no background process and no notification. The status line does not compute it, because the status line repaints constantly and reading the repository there would cost more than the whole repaint budget.
 
+`zeroturn ship` runs the same checks before it commits, and does not record evidence for them. Shipping is a decision about code you are sending somewhere, and what it should record is a question this has not answered yet. Until it does, only `zeroturn verify` writes evidence.
+
 **What is stored.** Step names, step statuses, exit codes, counts, times, the log file names, and the digests. One record per repository, in ZeroTurn's own state directory rather than in your project. Step output is not stored, because output carries whatever the tool printed; file contents are not stored, because the digest stands in for them; and the paths of your changed files are not stored either. `zeroturn uninstall` removes it with everything else, and so does `zeroturn report purge --all`.
 
 ## Installation
@@ -320,7 +323,7 @@ Two things are read without being recorded, and only to look for credentials: th
 
 Validation evidence is read from the repository and reduced to a digest before anything is written. The contents that go into that digest are never stored, and neither are the paths of the files they came from.
 
-Records stay on your machine, in `~/Library/Application Support/zeroturn` on macOS, `$XDG_DATA_HOME/zeroturn` or `~/.local/share/zeroturn` on Linux, and `%LOCALAPPDATA%\zeroturn` on Windows. Records older than `report.retentionDays` in `.zeroturn.json`, seven days by default, are removed when a new session starts. Change it with `zeroturn policy set report.retentionDays 30`. `zeroturn report purge --all` removes every ZeroTurn record and nothing else.
+Records stay on your machine, in `~/Library/Application Support/zeroturn` on macOS, `$XDG_DATA_HOME/zeroturn` or `~/.local/share/zeroturn` on Linux, and `%LOCALAPPDATA%\zeroturn` on Windows. Session records older than `report.retentionDays` in `.zeroturn.json`, seven days by default, are removed when a new session starts. Change it with `zeroturn policy set report.retentionDays 30`. Validation evidence is not aged out with them: there is one record per repository and it is replaced by the next run, because deleting it would report a repository as never validated when it had been. `zeroturn report purge --all` removes every ZeroTurn record, evidence included, and nothing else.
 
 ZeroTurn makes no network requests of its own, calls no model, and runs no background process. `zeroturn ship` contacts your Git remote because pushing requires it.
 

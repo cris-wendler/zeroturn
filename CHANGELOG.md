@@ -4,10 +4,6 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
-**Fixed**
-
-- `doctor` printed whatever a harness wrote to standard output as that harness's version. A program asked for its version answered `Install GitHub Copilot CLI? ['y/N']`, an installer offering to install the thing being looked for, and that went into the table as the version with an ok beside it. It claimed a harness was present when what was present was something offering to install it, and it put a question to a reader with no way to answer. A version has to name a number now, and anything else is reported as found without a version.
-
 ## 0.3.0, 2026-09-17
 
 **Added**
@@ -18,6 +14,7 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 **Fixed**
 
+- `doctor` printed whatever a harness wrote to standard output as that harness's version. A program asked for its version answered `Install GitHub Copilot CLI? ['y/N']`, an installer offering to install the thing being looked for, and that went into the table as the version with an ok beside it. It claimed a harness was present when what was present was something offering to install it, and it put a question to a reader with no way to answer. A version has to name a number now, and anything else is reported as found without a version.
 - `policy check` printed "No threshold has been crossed" whether the values behind those thresholds had been read and found below the limit or had never arrived at all. The two are the same sentence, and the second is the ordinary case in an editor extension, where the status line is never drawn and context, both usage windows, and session duration are all absent. It now names what was not measured, and says so plainly when nothing was.
 - `doctor` reported the status line as delivering measurements when it had sent a context value and neither usage window. `rate_limits` arriving as null is a real payload, not a broken one, and the check counted only the context value, so a gate with two thirds of its thresholds unreachable looked healthy. It now names what is missing from the most recent session.
 - `doctor` said "most recent" of whichever record happened to be listed last. Records are not listed in time order, so it now compares them.

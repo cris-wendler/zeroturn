@@ -81,6 +81,12 @@ func (c Color) wrap(code, s string) string {
 	return "\x1b[" + code + "m" + s + "\x1b[0m"
 }
 
+// Escapes reports whether this destination is one ZeroTurn already
+// writes escape sequences to. Anything beyond colour, such as moving the
+// cursor or erasing a row, belongs behind the same answer rather than
+// behind a second guess at what the terminal can do.
+func (c Color) Escapes() bool { return c.enabled }
+
 func (c Color) Dim(s string) string    { return c.wrap("2", s) }
 func (c Color) Green(s string) string  { return c.wrap("32", s) }
 func (c Color) Yellow(s string) string { return c.wrap("33", s) }

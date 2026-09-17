@@ -191,3 +191,50 @@ func TestOnStepStreamsEveryResult(t *testing.T) {
 		t.Fatalf("got %v", seen)
 	}
 }
+
+// A step that takes a minute reported nothing for a minute, because a
+// result only exists once the step has finished. Watching that, there is
+// no way to tell a slow check from a program that has stopped, and the
+// first person to run this on a real repository asked exactly that.
+//
+// So a step says it has started before it is waited on.
+func TestOnStartFiresBeforeEachStepRuns(t *testing.T) {
+	skipWithoutSh(t)
+	var order []string
+	Run(context.Background(), steps(sh("a", "exit 0"), sh("b", "exit 0")),
+		Options{
+			RepoRoot: repo(t),
+			OnStart:  func(name string) { order = append(order, "start:"+name) },
+			OnStep:   func(s StepResult) { order = append(order, "done:"+s.Name) },
+		})
+	// Each step announces itself, then finishes, before the next begins.
+	if strings.Join(order, ",") != "start:a,done:a,start:b,done:b" {
+		t.Fatalf("got %v", order)
+	}
+}
+
+// A step that never runs must not announce itself. After a failure the
+// rest are skipped, and saying they started would be a lie about work
+// that was not done.
+func TestOnStartIsSilentForStepsThatAreSkipped(t *testing.T) {
+	skipWithoutSh(t)
+	var started []string
+	res, _ := Run(context.Background(), steps(sh("a", "exit 1"), sh("b", "exit 0")),
+		Options{RepoRoot: repo(t), OnStart: func(name string) { started = append(started, name) }})
+	if res.Skipped != 1 {
+		t.Fatalf("this test needs a skipped step, got %d", res.Skipped)
+	}
+	if strings.Join(started, ",") != "a" {
+		t.Fatalf("steps announced: %v, want only the one that ran", started)
+	}
+}
+
+// Nothing may require the callback. It is absent for --json and in every
+// caller that is not drawing on a terminal.
+func TestRunWorksWithNoOnStart(t *testing.T) {
+	skipWithoutSh(t)
+	res, err := Run(context.Background(), steps(sh("a", "exit 0")), Options{RepoRoot: repo(t)})
+	if err != nil || res.Passed != 1 {
+		t.Fatalf("passed %d err %v", res.Passed, err)
+	}
+}

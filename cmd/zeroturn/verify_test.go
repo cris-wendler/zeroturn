@@ -133,3 +133,37 @@ func TestCapabilitiesJSON(t *testing.T) {
 		}
 	}
 }
+
+// A result is written over the start line it replaces, with only a
+// carriage return between them, so it has to be at least as wide or the
+// tail of the start line is left on the row.
+//
+// The first version blanked the row with spaces first, which solved that
+// and created a worse one: every result line then ended in the tail of
+// the padding. Trailing whitespace is invisible on a terminal and
+// travels the moment somebody copies a run into a message, which is how
+// it was found, in the first paste of real output.
+func TestNoStepLineEndsInWhitespace(t *testing.T) {
+	plain := output.Color{}
+	cases := []verify.StepResult{
+		{Name: "test", Status: verify.StatusPass, Seconds: 65.3},
+		{Name: "test", Status: verify.StatusFail, Seconds: 1.2, ExitCode: 2},
+		{Name: "test", Status: verify.StatusMissing, Excerpt: "go was not found on PATH"},
+		{Name: "test", Status: verify.StatusCancelled},
+		{Name: "test", Status: verify.StatusSkipped},
+		{Name: "a", Status: verify.StatusSkipped},
+		{Name: "a-very-long-step-name", Status: verify.StatusSkipped},
+	}
+	for _, s := range cases {
+		line := stepResultLine(plain, s)
+		if line != strings.TrimRight(line, " \t") {
+			t.Errorf("a %s result line ends in whitespace: %q", s.Status, line)
+		}
+		if strings.TrimSpace(line) == "" {
+			t.Errorf("a %s result line is empty", s.Status)
+		}
+		if !strings.Contains(line, s.Name) {
+			t.Errorf("a %s result line does not name the step: %q", s.Status, line)
+		}
+	}
+}

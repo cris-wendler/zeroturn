@@ -55,16 +55,16 @@ A list of things this project will not do is kept in [decisions.md](decisions.md
 Two refusals shaped the code more than any feature:
 
 - **Never read private content.** The event decoder declares only permitted fields, so anything else the harness sends cannot be bound to a variable. When the credential guard needed a file path, exactly one field was added, and the reason is recorded.
-- **Never claim enforcement that was not observed.** Confirm mode is documented as accepted by the harness but not seen end to end, because nobody has watched the approval prompt appear.
+- **Never claim enforcement that was not observed.** Confirm mode was documented as accepted by the harness and not tested end to end, because nobody had watched the approval prompt appear. It stayed worded that way for three days until somebody did, on 2026-09-14, and the claim changed then rather than in advance of the evidence.
 
 ## Evidence, not assertions
 
 | Claim | Where it is checked |
 | --- | --- |
-| It behaves as documented | 461 tests across 68 files, run on Linux with both supported Go releases, on macOS, and on Windows |
+| It behaves as documented | 467 tests across 70 files, run on Linux with both supported Go releases, on macOS, and on Windows |
 | Output matches the published contract | `conformance/`, which runs the real executable against 10 schemas |
 | It is fast enough to sit in a hook | `scripts/bench`: status line 7.5 ms, gate 7.7 ms, measured over 50 runs |
-| A change the tests would not notice | `scripts/mutate` alters one operator at a time and runs that package's tests; on `internal/policy` it makes 56 changes and 55 are noticed |
+| A change the tests would not notice | `scripts/mutate` alters one operator at a time and runs that package's tests, over six packages in continuous integration. Every change that survives is recorded in `scripts/mutate/accepted` with the reason it alters nothing, and a line there that the tests later notice is reported as out of date |
 | It keeps nothing private | Tests that walk the state directory after each kind of event |
 
 ## The tests found real defects
@@ -130,8 +130,8 @@ What the two have in common is that both are failures of a control's assumptions
 
 Written in the README, not buried:
 
-- The interactive approval prompt was observed on 2026-09-14, on Claude Code 2.1.270, and the refusal was honoured.
 - The integration has been used on macOS only, although the tests run on three systems.
+- Session Guard has no measurements outside a terminal. Context, the usage windows, and session duration reach ZeroTurn through the harness status line and through nothing else, and an editor extension draws none, so three days of use there measured nothing. Validation evidence does not depend on that interface.
 - The credential guards match high confidence patterns, so they reduce a common mistake rather than eliminate a class of them.
 - Full gate testing is still in progress. The default thresholds are starting points, and `zeroturn policy tune` suggests better ones from what the gate asked and what you answered.
 

@@ -54,6 +54,27 @@ func TestEveryWarningNamesWhatToDo(t *testing.T) {
 			}
 		}
 	}
+
+	// Every stage above stands inside a repository, so a warning that
+	// only appears outside one was never covered by this rule, and one of
+	// them named nothing to do for exactly as long as that was true.
+	// Running doctor is the first thing somebody does when a command did
+	// not behave, and doing it from the wrong directory is common.
+	outside := t.TempDir()
+	found := 0
+	for _, ck := range doctorChecks(t, outside, "doctor", "--json") {
+		if ck.Status != checkWarn {
+			continue
+		}
+		found++
+		if !strings.Contains(ck.Detail, "zeroturn ") {
+			t.Errorf("outside a repository: the warning %q names no command to run: %s",
+				ck.Name, ck.Detail)
+		}
+	}
+	if found == 0 {
+		t.Error("doctor warned about nothing outside a repository, so this half checks nothing")
+	}
 }
 
 // The first thing a reader sees has to point at the one thing to do. Four

@@ -147,7 +147,7 @@ Hook payloads also carry `transcript_path`, `tool_input` (which holds the subage
 
 ## Performance
 
-The status line reads one small file, starts no Git process, and makes no network request. On the machine used for the measurements it renders in 8.0 ms, of which about 6 ms is process start, and the gate answers in 7.7 ms. The method and the full table are in `scripts/bench`.
+The status line reads one small file, starts no Git process, and makes no network request, and most of what it spends is process start. The numbers are in the README and the method and the full table are in `scripts/bench`, which is where to read them from: this paragraph carried its own copy of them and the two documents drifted apart.
 
 ## When the executable moves
 

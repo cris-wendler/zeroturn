@@ -231,7 +231,7 @@ cd zeroturn
 go build -o zeroturn ./cmd/zeroturn
 ```
 
-Release archives for macOS, Linux, and Windows are built by `scripts/build-release.sh` and attached to each release with their checksums. A Homebrew formula follows the first release.
+Release archives for macOS, Linux, and Windows are built by `scripts/build-release.sh` and attached to each release with their checksums. `scripts/homebrew-formula.sh` generates a Homebrew formula from a release, and no tap is published yet, so `brew install` is not an option today.
 
 ### Setting it up
 
@@ -454,7 +454,7 @@ Current: everything described above, including both credential guards, plus cont
 
 Planned:
 
-- a Homebrew formula after the first release
+- a published Homebrew tap, so `brew install` works. The formula is generated already; the tap is not published
 - a Copilot adapter once Copilot exposes session values to hooks
 
 **Being explored, and not built.** Validation evidence is the first piece of a larger direction: making what an agent did reviewable by the engineer who is accountable for it. The pieces below are under evaluation and none of them exist. Nothing in this repository implements them, and the commands that would carry them are not there.

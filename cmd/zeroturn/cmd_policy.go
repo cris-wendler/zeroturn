@@ -314,10 +314,18 @@ func confirmStrict(c config.Config) error {
 			"the claude executable was not found, so there is no harness for Strict mode to act on",
 			"install the harness and run zeroturn integrate claude --plan, then try again")
 	}
-	if v == capabilities.ClaudeTestedVersion {
-		fmt.Printf("harness         claude %s, the version on which denial was tested\n", v)
+	tested := false
+	for _, t := range capabilities.ClaudeTestedVersions {
+		if v == t {
+			tested = true
+			break
+		}
+	}
+	if tested {
+		fmt.Printf("harness         claude %s, a version on which a decision was tested\n", v)
 	} else {
-		fmt.Printf("harness         claude %s, denial was tested on %s only\n", v, capabilities.ClaudeTestedVersion)
+		fmt.Printf("harness         claude %s, decisions were tested on %s only\n",
+			v, strings.Join(capabilities.ClaudeTestedVersions, " and "))
 	}
 	for _, ck := range compatFixtures() {
 		if ck.Status == checkFail {

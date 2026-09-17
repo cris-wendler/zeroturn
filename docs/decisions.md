@@ -18,7 +18,7 @@ Consequence: the command list is `init`, `integrate`, `status`, `policy`, `repor
 
 ## 2. The gate was proven before the rest was written
 
-Date: 2026-09-11
+Date: 2026-09-11. The open item below was closed by entry 32, which records the interactive prompt being observed.
 
 Decision: implementation beyond the gate waited for a live test of the harness response.
 
@@ -28,13 +28,13 @@ Method: one real session of the supported harness, run against a temporary setti
 | --- | --- |
 | deny | Honoured. The subagent did not start. |
 | allow | Honoured. The subagent started, and the start and stop events arrived with an agent identifier. |
-| ask | Accepted by the harness. In an unattended run the harness refused the call, which is the safe outcome. The interactive approval prompt itself was not observed. |
+| ask | Accepted by the harness. In an unattended run the harness refused the call, which is the safe outcome. The interactive approval prompt itself was observed later, on 2026-09-14; see entry 32. |
 
 The payload confirmed that the tool name is exactly `Agent`, so the matcher is an exact string. It also confirmed that the payload carries the subagent prompt, which ZeroTurn never binds to a variable.
 
 Follow up, 2026-09-11: `zeroturn doctor --compat --live` repeated the deny test through ZeroTurn itself, using the real gate, a temporary repository, and temporary ZeroTurn state. On Claude Code 2.1.265 the harness honoured the denial and no subagent started.
 
-Open item: the interactive approval prompt for `ask` has still not been observed. Until it is, Confirm mode is described as returning the native ask decision, not as tested end to end. The interactive check was not run because answering the harness workspace trust dialog for a temporary folder would write an entry into the user's global configuration.
+Open item, closed on 2026-09-14 by entry 32: the interactive approval prompt for `ask` had not been observed, and until it was, Confirm mode was described as returning the native ask decision rather than as tested end to end. The interactive check was not run at the time because answering the harness workspace trust dialog for a temporary folder would write an entry into the user's global configuration.
 
 ## 3. No `zt` alias
 

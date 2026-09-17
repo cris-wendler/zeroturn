@@ -110,7 +110,7 @@ func cmdVerify(ctx context.Context, args []string) error {
 			"check that git is installed and that this repository is readable")
 	}
 	repoHash := state.RepoHash(repo.Root)
-	rec, berr := evidence.Begin(st, repoHash, Version, snap, time.Now())
+	rec, berr := evidence.Begin(st, repoHash, version(), snap, time.Now())
 	if berr != nil {
 		return output.Errorf(output.ExitInternal, "zeroturn verify ran nothing",
 			"the evidence record could not be written: "+berr.Error(),

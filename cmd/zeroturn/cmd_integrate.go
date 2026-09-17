@@ -20,7 +20,7 @@ import (
 const integrateUsage = `zeroturn integrate <harness> --plan | --apply | --remove
 
   claude      Claude Code status line and subagent events
-  copilot     GitHub Copilot CLI, experimental and partial
+  copilot     GitHub Copilot CLI, planned, no adapter ships in this version
 
   --plan      Show what would change, changing nothing
   --apply     Write the change after confirmation
@@ -79,10 +79,14 @@ func cmdIntegrate(ctx context.Context, args []string) error {
 	case "claude":
 		return integrateClaude(ctx, mode, userWide, replaceStatus)
 	case "copilot":
+		// The advice here used to be to read capabilities --json, which
+		// reports the same refusal and installs nothing, so the reader
+		// was sent in a circle. There is no Copilot adapter to install,
+		// so the only thing to name is what this version can do.
 		return output.Errorf(output.ExitNoIntegration,
 			"zeroturn integrate changed nothing",
-			"the Copilot integration is experimental and is not installed by this command",
-			"run zeroturn capabilities --json, which reports what each harness supports")
+			"no Copilot adapter ships in this version, so there is nothing to install",
+			"run zeroturn integrate claude for the harness this version supports")
 	default:
 		return output.Errorf(output.ExitNoIntegration, "zeroturn integrate changed nothing",
 			"ZeroTurn has no integration named "+harness, "run zeroturn integrate --help")
@@ -104,10 +108,17 @@ func claudeSettingsPath(ctx context.Context, userWide bool) (string, error) {
 	if userWide {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			return "", err
+			return "", output.Errorf(output.ExitInternal,
+				"zeroturn integrate changed nothing", err.Error(),
+				"check that your home directory is readable")
 		}
 		return filepath.Join(home, ".claude", "settings.json"), nil
 	}
+	// openRepo already says what stopped, why, and what to do, with the
+	// exit code every other command uses for a directory that is not a
+	// repository. This used to be wrapped, which replaced that advice
+	// with advice about the home directory: the answer to the other
+	// branch, for somebody whose only mistake was where they stood.
 	repo, err := openRepo(ctx)
 	if err != nil {
 		return "", err
@@ -129,8 +140,7 @@ type claudePlan struct {
 func integrateClaude(ctx context.Context, mode string, userWide, replaceStatus bool) error {
 	path, err := claudeSettingsPath(ctx, userWide)
 	if err != nil {
-		return output.Errorf(output.ExitInternal, "zeroturn integrate changed nothing", err.Error(),
-			"check that your home directory is readable")
+		return err
 	}
 	file, err := settings.Read(path)
 	if err != nil {

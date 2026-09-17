@@ -9,6 +9,15 @@ on:
 permissions:
   contents: read
 
+# A newer push replaces an older check on the same branch. Without this,
+# pushing a correction while the previous run was still going left both
+# running, and the first one's answer was about code nobody would merge.
+# A run on the default branch is left alone to finish, because the badge
+# and the record of what main did are worth having for every commit.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   checks:
     name: format, vet, copy, commit messages
@@ -65,13 +74,46 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The comparison below needs the commit this change started
+          # from, which a shallow checkout does not have.
+          fetch-depth: 0
       - uses: actions/setup-go@v7
         with:
           go-version: stable
           cache: false
+      # This run changes Go source and asks whether the tests notice, so a
+      # change that touches no Go source cannot alter its answer. It is
+      # ten minutes, which is most of the time this workflow spends.
+      #
+      # The test matrix is NOT skipped for the same changes, and must not
+      # be: this project tests its documentation against its code, so a
+      # markdown change is exactly what those tests exist to fail on. The
+      # decision count in how-this-was-built.md is enforced by a Go test,
+      # and a documentation only change is the change most likely to get
+      # it wrong.
+      - name: did anything but documentation change
+        id: sources
+        run: |
+          base="${{ github.event.pull_request.base.sha || github.event.before }}"
+          # Anything unknown means run it. A skipped check that should
+          # have run is worse than ten minutes.
+          if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          files=$(git diff --name-only "$base" HEAD)
+          if [ -z "$files" ] || echo "$files" | grep -qv '\.md$'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Only markdown changed, so mutating Go source would answer a question nobody asked:"
+            echo "$files"
+          fi
       # One operator at a time is changed and the package's tests are run.
       # A change the tests accept is behaviour nothing can fail for. The
       # package list grows as packages are brought up to it; the ones that
       # are not here yet are recorded in docs/decisions.md.
       - name: go run ./scripts/mutate
+        if: steps.sources.outputs.changed == 'true'
         run: go run ./scripts/mutate -packages internal/policy,internal/session,internal/security,internal/tune,internal/config,internal/state -timeout 120s

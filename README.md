@@ -217,7 +217,13 @@ ZeroTurn is one executable with no runtime dependencies. Installing it needs Go 
 go install github.com/cris-wendler/zeroturn/cmd/zeroturn@latest
 ```
 
-That puts `zeroturn` in your `GOBIN`, or in `$(go env GOPATH)/bin` if that is not set. To build from a checkout instead:
+That puts `zeroturn` in your `GOBIN`, or in `$(go env GOPATH)/bin` if that is not set. That directory is not always on your `PATH`, and when it is not, every command below is reported as not found. Add it in your shell profile:
+
+```sh
+export PATH="$(go env GOPATH)/bin:$PATH"
+```
+
+`zeroturn doctor` checks this and names the line to add. To build from a checkout instead:
 
 ```sh
 git clone https://github.com/cris-wendler/zeroturn.git

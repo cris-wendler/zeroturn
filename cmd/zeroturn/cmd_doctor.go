@@ -127,10 +127,39 @@ func checkExecutable(name, bin string, args ...string) check {
 	}
 	out, err := exec.Command(p, args...).Output()
 	v := strings.TrimSpace(string(bytes.SplitN(out, []byte("\n"), 2)[0]))
-	if err != nil || v == "" {
-		return check{name, checkOK, "found at " + p}
+	// Whatever came back is not necessarily a version. A program asked
+	// for its version can write anything to standard output, and one on a
+	// real machine answered with "Install GitHub Copilot CLI? ['y/N']",
+	// an installer offering to install the thing being looked for. Echoed
+	// into this table it claimed the harness was present and put a
+	// question to a reader who has no way to answer it.
+	if err != nil || !looksLikeVersion(v) {
+		return check{name, checkOK, "found at " + p + ", and it did not report a version"}
 	}
 	return check{name, checkOK, v}
+}
+
+// looksLikeVersion is the smallest rule that separates the answers this
+// has ever had from the things that are not answers: a version names a
+// number. "git version 2.37.2" and "2.1.270 (Claude Code)" carry one,
+// and a prompt, a login notice, and a not found message do not.
+//
+// It is deliberately not a pattern for a version number. Harnesses word
+// this line differently and a stricter rule would start refusing real
+// answers, which is the worse failure: this check exists to report a
+// version, not to grade one.
+func looksLikeVersion(v string) bool {
+	v = strings.TrimSpace(v)
+	// Long enough to be prose rather than a version line.
+	if v == "" || len(v) > 120 {
+		return false
+	}
+	for _, r := range v {
+		if r >= '0' && r <= '9' {
+			return true
+		}
+	}
+	return false
 }
 
 // checkOnPath says whether this executable can be run by name.

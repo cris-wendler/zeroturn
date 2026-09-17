@@ -4,6 +4,10 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
+**Fixed**
+
+- `doctor` printed whatever a harness wrote to standard output as that harness's version. A program asked for its version answered `Install GitHub Copilot CLI? ['y/N']`, an installer offering to install the thing being looked for, and that went into the table as the version with an ok beside it. It claimed a harness was present when what was present was something offering to install it, and it put a question to a reader with no way to answer. A version has to name a number now, and anything else is reported as found without a version.
+
 ## 0.3.0, 2026-09-17
 
 **Added**

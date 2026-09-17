@@ -112,22 +112,37 @@ func isTTY(f *os.File) bool {
 	return info.Mode()&os.ModeCharDevice != 0
 }
 
+// unanswered reports that a confirmation was required and nothing
+// answered it. It is not a refusal: saying that a person declined states
+// a decision nobody made, and the advice to run the command again would
+// send the reader back to the same silent input.
+func unanswered() error {
+	return output.Errorf(output.ExitDeclined,
+		"zeroturn stopped before making any change",
+		"confirmation is required and nothing answered it",
+		"run the command from a terminal")
+}
+
 // confirm asks a yes or no question. It refuses rather than assumes when
-// no terminal is attached, so an unattended run can never self approve.
+// nothing can answer, so an unattended run can never self approve.
 // It is a variable only so in process tests can answer it; no flag or
 // environment value can replace it.
 var confirm = func(question string) (bool, error) {
 	if !isTTY(os.Stdin) {
-		return false, output.Errorf(output.ExitDeclined,
-			"zeroturn stopped before making any change",
-			"confirmation is required and no terminal is attached",
-			"run the command from a terminal, or use --dry-run to inspect it")
+		return false, unanswered()
 	}
 	fmt.Printf("%s [y/N]: ", question)
 	r := bufio.NewReader(os.Stdin)
 	line, err := r.ReadString('\n')
-	if err != nil {
-		return false, nil
+	// Input can pass the check above and still answer nothing. /dev/null
+	// is a character device, and it is the standard input of a scheduled
+	// job, a container started without an interactive flag, and a
+	// continuous integration step. Reading it ends at once, and reading a
+	// terminal ends the same way when somebody presses ctrl-D. A read
+	// that ended after delivering something is a real answer, however it
+	// ended, so only an empty one is unanswered.
+	if err != nil && line == "" {
+		return false, unanswered()
 	}
 	line = strings.ToLower(strings.TrimSpace(line))
 	return line == "y" || line == "yes", nil

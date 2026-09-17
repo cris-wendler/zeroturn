@@ -4,6 +4,27 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
+**Added**
+
+- `zeroturn verify` records what state the repository was in when the checks ran, and `zeroturn report` says whether that answer still covers the code on disk. The state is a digest over content: the commit, the blob hash Git holds for everything staged, the contents of every path the working tree disagrees with Git about, and the definition of the steps themselves. A result and whether it is current are separate, so a failure that has gone stale still reports as a failure. One record per repository, replaced by the next run. Step output and file contents are not stored. The contract version is 2.1.0 for this, and the addition is additive.
+- `doctor` says whether the executable can be run by name. `go install` puts it in `GOBIN`, nothing guarantees `GOBIN` is on `PATH`, and every instruction in the README names the command that way. Installed and not reachable names the line to add, with the directory filled in. Two installs where typing the name runs the other one is a warning. A build run from the source with `go run` is a note, because nothing was installed.
+- `report purge --all` removes the evidence record along with the session records, and `uninstall` removes it with the state directory.
+
+**Fixed**
+
+- `verify` and `ship` printed nothing while a step ran, because a result only exists once the step has finished. On a repository where the tests take a minute that was indistinguishable from a program that had hung. A step now announces itself before it is waited on, and only where ZeroTurn already writes escape sequences, so a pipe, a log, and the JSON output are unchanged.
+- Result lines ended in trailing whitespace. `SKIP` and `STOP` padded the step name and wrote nothing after it, in piped output as well.
+- A confirmation that nothing answered was reported as a refusal. `/dev/null` is a character device, so it passed the terminal check, and reading it ends at once: every command that asks before acting printed a prompt into nothing and then said the person had declined, advising them to run it again against the same silent input. All nine now say that nothing answered and name the one thing that works.
+- `doctor` reported the `claude` and `copilot` checks as notes on the assumption that neither was installed, and failed for anyone who has Claude Code on their `PATH`.
+- A record from an unknown schema version was read as current, and a file the record store does not own could be read as a record.
+- A well formed credential made of few distinct characters could be taken for a template and left in a log.
+- `policy tune` had no order for a tie, so the same observations could be reported in different orders.
+
+**Internal**
+
+- `scripts/mutate` covers six packages in continuous integration: `policy`, `session`, `security`, `tune`, `config`, `state`. 253 changes made, 234 noticed, none accepted.
+- A newer push on a branch cancels the older continuous integration run. The default branch is left to finish. The mutation job is skipped when only markdown changed, and the test matrix is not, because this project tests its documentation against its code.
+
 ## 0.2.0, 2026-09-15
 
 **Breaking**

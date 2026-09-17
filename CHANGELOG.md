@@ -4,6 +4,8 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
+## 0.3.0, 2026-09-17
+
 **Added**
 
 - `zeroturn verify` records what state the repository was in when the checks ran, and `zeroturn report` says whether that answer still covers the code on disk. The state is a digest over content: the commit, the blob hash Git holds for everything staged, the contents of every path the working tree disagrees with Git about, and the definition of the steps themselves. A result and whether it is current are separate, so a failure that has gone stale still reports as a failure. One record per repository, replaced by the next run. Step output and file contents are not stored. The contract version is 2.1.0 for this, and the addition is additive.

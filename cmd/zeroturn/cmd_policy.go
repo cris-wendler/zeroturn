@@ -176,13 +176,35 @@ func policyCheck(ctx context.Context, args []string) error {
 	fmt.Printf("decision   %s\n", res.Decision)
 	if len(res.Triggers) == 0 {
 		fmt.Println("No threshold has been crossed.")
-		return nil
+	} else {
+		fmt.Println("thresholds crossed:")
+		for _, t := range res.Triggers {
+			fmt.Printf("  %-16s %s (limit %.0f)\n", t.Name, t.Text, t.Limit)
+		}
 	}
-	fmt.Println("thresholds crossed:")
-	for _, t := range res.Triggers {
-		fmt.Printf("  %-16s %s (limit %.0f)\n", t.Name, t.Text, t.Limit)
+	// A threshold with no measurement behind it did not pass, it was
+	// never checked, and the two are the same sentence without this.
+	// doctor could already tell them apart and this command could not,
+	// which is the wrong way round: this is the one a person runs to ask
+	// what the gate would do.
+	if found {
+		printUnmeasured(policy.Unmeasured(sess), policy.AllUnmeasured(sess))
 	}
 	return nil
+}
+
+func printUnmeasured(absent []string, all bool) {
+	if len(absent) == 0 {
+		return
+	}
+	if all {
+		fmt.Println("Nothing was measured. This session carried no values from the harness status line, " +
+			"so the thresholds on " + output.List(absent) + " were not checked and cannot be crossed here. " +
+			"Subagent counts are ZeroTurn's own and are still real. Run the harness in a terminal for the gate to have anything to read.")
+		return
+	}
+	fmt.Println("Not measured in this session: " + output.List(absent) +
+		". Those thresholds were not checked, rather than checked and found below the limit.")
 }
 
 func policySet(ctx context.Context, args []string) error {

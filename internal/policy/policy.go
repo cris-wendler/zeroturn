@@ -294,3 +294,53 @@ func HumanMinutes(m float64) string {
 	}
 	return fmt.Sprintf("%dh%02dm", h, mm)
 }
+
+// measurements are the session values the gate reads through a pointer,
+// where nil means the harness never sent one rather than that the value
+// was zero. Every one of them arrives on the status line, so in an
+// interface that draws no status line all four are absent and the
+// thresholds built on them can never be crossed.
+//
+// The gate treats an absent value as a threshold that did not fire,
+// which is correct for a decision and wrong for a sentence: "no
+// threshold has been crossed" then reads as an all clear that was never
+// measured, and a reader cannot tell it apart from the same words after
+// a quiet session with every value in hand.
+//
+// Subagent counts are deliberately not here. ZeroTurn maintains those
+// itself from the harness start and stop events, so they are present
+// wherever hooks are, and zero means zero.
+var measurements = []struct {
+	// Field is the name on state.Session. A test compares this list with
+	// the nil checks in EvaluateAt, in both directions, so a measurement
+	// added to the gate cannot be left out of this answer.
+	Field   string
+	Label   string
+	Missing func(state.Session) bool
+}{
+	{"ContextPct", "context", func(s state.Session) bool { return s.ContextPct == nil }},
+	{"FiveHourPct", "the five hour usage window", func(s state.Session) bool { return s.FiveHourPct == nil }},
+	{"SevenDayPct", "the seven day usage window", func(s state.Session) bool { return s.SevenDayPct == nil }},
+	{"DurationMS", "session duration", func(s state.Session) bool { return s.DurationMS == nil }},
+}
+
+// Unmeasured names the values the gate had no reading for, so a caller
+// can say what was not checked rather than implying it was checked and
+// found below the limit. The order is fixed so the sentence does not
+// change between two runs that measured the same things.
+func Unmeasured(s state.Session) []string {
+	var out []string
+	for _, m := range measurements {
+		if m.Missing(s) {
+			out = append(out, m.Label)
+		}
+	}
+	return out
+}
+
+// AllUnmeasured reports that the gate had no reading for anything it
+// could have read. This is the editor extension case: hooks arrive and
+// the status line never does.
+func AllUnmeasured(s state.Session) bool {
+	return len(Unmeasured(s)) == len(measurements)
+}

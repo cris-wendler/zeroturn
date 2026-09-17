@@ -5,11 +5,29 @@
 ![No dependencies](https://img.shields.io/badge/dependencies-none-success)
 [![License GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue)](LICENSE)
 
-Know when a coding session is under pressure. Keep routine development work local.
+Know what your validation actually covered. ZeroTurn records the state your code was in when the checks passed, and says when that answer no longer applies to the code on disk.
 
-ZeroTurn shows context, usage windows, session duration, and subagent activity when the coding harness provides them. It can request approval before additional delegation and can run validation and safe Git workflows directly on your machine.
+It is for developers working with a coding agent, where the working tree can move between the moment the tests passed and the moment somebody reads the diff. A count of passing runs does not say which code passed.
 
-ZeroTurn works with coding harnesses. It is not another coding harness.
+ZeroTurn also shows context, usage windows, session duration, and subagent activity when the coding harness supplies them, and can ask for approval before further delegation. That half reads the harness status line, so it needs a terminal. The validation half does not, and works anywhere.
+
+ZeroTurn works with coding harnesses. It is not another coding harness. One executable, no dependencies, no network, no model calls, and it never reads your prompts, your messages, or your code.
+
+## Start here
+
+```sh
+go install github.com/cris-wendler/zeroturn/cmd/zeroturn@latest
+```
+
+Then, from inside a Git repository:
+
+```sh
+zeroturn init            # detect the project and propose .zeroturn.json
+zeroturn verify          # run the checks, and record what state they ran against
+zeroturn report current  # say whether that answer still covers the code
+```
+
+`go install` puts the executable in your `GOBIN`, which is not always on your `PATH`. `zeroturn doctor` checks that and names the line to add. The full instructions, including connecting it to a coding harness, are under [Installation](#installation).
 
 ![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask because context, five hour usage, and active subagents are past their thresholds. The credential guard then stops a file that holds an aws access key id from being read, and, with the prompt guard switched on, stops a message carrying the same key from being sent. zeroturn verify passes two checks and records evidence for the repository state it ran against, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
 
@@ -87,12 +105,60 @@ ZeroTurn does not promise to remove session limits, and it does not estimate sav
 
 ## How it works
 
-Two lanes, and they are independent. Session Guard watches the session
-and answers the harness when it asks whether a subagent may start. The
-Direct Lane runs your own commands on your machine, with no model turn
-involved at all.
+Two lanes, and they are independent. The Direct Lane runs your own
+commands on your machine, with no model turn involved at all, and
+records what state the code was in when they passed. Session Guard
+watches the session and answers the harness when it asks whether a
+subagent may start. The Direct Lane works anywhere; Session Guard needs
+a harness that draws a status line, which means a terminal.
 
 ![Diagram in two lanes. Session Guard: the coding harness sends events from its status line and hooks to ZeroTurn, which checks your thresholds, counts subagents, and keeps local records, then returns a decision for the next subagent: allow, ask you, or deny. The harness applies it before the subagent starts. Direct Lane: you run zeroturn verify or zeroturn ship, ZeroTurn runs only approved commands with a credential scan and safe Git rules, and acts on your project's tests, lint, build, commit, and push, on your machine without a model turn.](docs/img/how-it-works.svg)
+
+## Direct Lane
+
+`zeroturn verify` runs the checks listed in `.zeroturn.json` directly, without a shell and without a model turn. It prints one line per step and keeps the full output under `.git/zeroturn/logs/`.
+
+`zeroturn ship` stages only the files you name, scans them for credentials, runs the checks, fetches, refuses unsafe branch states, asks for confirmation, then commits with your message and pushes without force. `--dry-run` stops before anything changes.
+
+## Validation evidence
+
+A passing run answers a question about a particular state of the code. `zeroturn verify` writes down which state that was, so a later command can say whether the answer still applies.
+
+```text
+$ zeroturn verify
+ZEROTURN VERIFY
+
+PASS  vet        0.4s
+PASS  test     102.2s
+
+Result: 2 checks passed in 102.5s
+Evidence 91ef35e32bc212a8 recorded for repository state cab46d1b8898
+
+$ vim internal/policy/policy.go
+
+$ zeroturn report current
+...
+Validation  STALE
+  Validation is stale because the working tree changed after the last successful run. Run zeroturn verify again for the current code.
+  Evidence 91ef35e32bc212a8 recorded 2026-09-16 19:54 for repository state cab46d1b8898
+```
+
+**What is compared.** The repository state is a digest over the commit, the content Git holds for everything staged, the content of every path the working tree disagrees with Git about, and the definition of the validation steps themselves. Editing a step is a change of state like any other, so evidence recorded under different checks does not carry over.
+
+The digest is taken over content rather than over the output of `git status`. That output names paths and the category each one is in, and it does not move when you edit a file that was already modified. A digest built from it would report the second version of the code as the state the first version was tested against.
+
+**What it does not prove.** That the checks passed for that code on your machine, at that moment. Nothing more. It is not a claim that the code is correct, that it was reviewed, or that it will pass anywhere else. The digest does not cover:
+
+- Files Git ignores. A change to an ignored build input does not move the digest.
+- Contents inside a submodule. Git reports that a submodule changed, and that is recorded, but the files within it are not hashed.
+- Anything outside the repository: installed dependencies, environment variables, toolchain versions, services the tests reach.
+- A change that was made and then undone. The digest returns to its earlier value, because the code did too.
+
+**When it is checked.** When you ask: `zeroturn verify`, and `zeroturn report` for the repository you are in. There is no background process and no notification. The status line does not compute it, because the status line repaints constantly and reading the repository there would cost more than the whole repaint budget.
+
+`zeroturn ship` runs the same checks before it commits, and does not record evidence for them. Shipping is a decision about code you are sending somewhere, and what it should record is a question this has not answered yet. Until it does, only `zeroturn verify` writes evidence.
+
+**What is stored.** Step names, step statuses, exit codes, counts, times, the log file names, and the digests. One record per repository, in ZeroTurn's own state directory rather than in your project. Step output is not stored, because output carries whatever the tool printed; file contents are not stored, because the digest stands in for them; and the paths of your changed files are not stored either. `zeroturn uninstall` removes it with everything else, and so does `zeroturn report purge --all`.
 
 ## Session Guard
 
@@ -159,52 +225,6 @@ The command explains both consequences and asks you to confirm. With it on, in t
 > The harness erases a stopped message rather than handing it back, so a long message is lost. That is the cost of catching the key before it is sent.
 
 With it off, ZeroTurn never reads what you write, and the hook that would do so is not even installed.
-
-## Direct Lane
-
-`zeroturn verify` runs the checks listed in `.zeroturn.json` directly, without a shell and without a model turn. It prints one line per step and keeps the full output under `.git/zeroturn/logs/`.
-
-`zeroturn ship` stages only the files you name, scans them for credentials, runs the checks, fetches, refuses unsafe branch states, asks for confirmation, then commits with your message and pushes without force. `--dry-run` stops before anything changes.
-
-### Validation evidence
-
-A passing run answers a question about a particular state of the code. `zeroturn verify` writes down which state that was, so a later command can say whether the answer still applies.
-
-```text
-$ zeroturn verify
-ZEROTURN VERIFY
-
-PASS  vet        0.4s
-PASS  test     102.2s
-
-Result: 2 checks passed in 102.5s
-Evidence 91ef35e32bc212a8 recorded for repository state cab46d1b8898
-
-$ vim internal/policy/policy.go
-
-$ zeroturn report current
-...
-Validation  STALE
-  Validation is stale because the working tree changed after the last successful run. Run zeroturn verify again for the current code.
-  Evidence 91ef35e32bc212a8 recorded 2026-09-16 19:54 for repository state cab46d1b8898
-```
-
-**What is compared.** The repository state is a digest over the commit, the content Git holds for everything staged, the content of every path the working tree disagrees with Git about, and the definition of the validation steps themselves. Editing a step is a change of state like any other, so evidence recorded under different checks does not carry over.
-
-The digest is taken over content rather than over the output of `git status`. That output names paths and the category each one is in, and it does not move when you edit a file that was already modified. A digest built from it would report the second version of the code as the state the first version was tested against.
-
-**What it does not prove.** That the checks passed for that code on your machine, at that moment. Nothing more. It is not a claim that the code is correct, that it was reviewed, or that it will pass anywhere else. The digest does not cover:
-
-- Files Git ignores. A change to an ignored build input does not move the digest.
-- Contents inside a submodule. Git reports that a submodule changed, and that is recorded, but the files within it are not hashed.
-- Anything outside the repository: installed dependencies, environment variables, toolchain versions, services the tests reach.
-- A change that was made and then undone. The digest returns to its earlier value, because the code did too.
-
-**When it is checked.** When you ask: `zeroturn verify`, and `zeroturn report` for the repository you are in. There is no background process and no notification. The status line does not compute it, because the status line repaints constantly and reading the repository there would cost more than the whole repaint budget.
-
-`zeroturn ship` runs the same checks before it commits, and does not record evidence for them. Shipping is a decision about code you are sending somewhere, and what it should record is a question this has not answered yet. Until it does, only `zeroturn verify` writes evidence.
-
-**What is stored.** Step names, step statuses, exit codes, counts, times, the log file names, and the digests. One record per repository, in ZeroTurn's own state directory rather than in your project. Step output is not stored, because output carries whatever the tool printed; file contents are not stored, because the digest stands in for them; and the paths of your changed files are not stored either. `zeroturn uninstall` removes it with everything else, and so does `zeroturn report purge --all`.
 
 ## Installation
 

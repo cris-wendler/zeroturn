@@ -777,3 +777,47 @@ In the record store, twenty six. The ones worth naming: a record from a schema v
 `DataDir` was the interesting one. It read `runtime.GOOS` directly, so two of its three branches were unreachable wherever the tests happened to run, and a change to either would go unnoticed on that machine. The operating system is a parameter now, and every branch is exercised from any machine.
 
 Eight changes are recorded as altering nothing, each with the reason. Three of those are in the lock's retry loop and deserve to be read rather than skimmed: giving up after one fewer consecutive missing reading, a staleness test that differs only for a lock whose age is exactly the limit to the nanosecond, and a `continue` after a successful clear that skips one sleep. None of them changes whether the lock is acquired or whether the loop terminates. They are the kind of survivor that is worth writing down rather than testing, because a test for any of them would assert a timing rather than a behaviour.
+
+## 53. Validation evidence, and why the cheap digest is wrong
+
+Date: 2026-09-16
+
+Until now a validation run left behind a count. The session record held `directValidations`, one higher than before, which says that something was validated and nothing about what. A developer who ran the checks an hour and four commits ago had the same record as one who ran them a moment ago.
+
+So a run now writes down the state of the repository it ran against, and a later reading compares that state with the one on disk. This is the first phase of a larger direction and is deliberately the whole of it: no handoff record, no release approval, no deployment evidence, no editor extension. Those are under evaluation and the README says so in a section that says nothing in it is built.
+
+The part worth recording is how the repository state is identified. The cheap answer is to hash the output of `git status --porcelain`. It is wrong, and wrong in the direction that matters. That output names paths and the category each one is in. Edit a file that is already modified and every path and every category stays exactly as it was. A digest built from it would not move, and validation made against the earlier contents would still be presented as current. A digest that fails to change is worse than no digest, because it is believed.
+
+What is hashed instead is content: the commit, the blob hash Git already holds for every staged path, the contents of every path the working tree disagrees with Git about, and the plan digest that identifies the validation steps. Only the changed set is read, which is small, rather than the repository, which is not. The test for this asserts both halves. It fails if the digest stops covering content, and it also asserts that the porcelain output really is byte for byte identical across the edit, so the reason the content hash is needed is proved by the test rather than claimed in a comment. Degrading the implementation back to the cheap version fails three tests with that message.
+
+The plan digest is `config.Hash`, which trust approval is already bound to. Editing a verify step therefore withdraws the approval and makes earlier evidence stale, which are the same event described twice, and it would have been strange for one to happen without the other.
+
+Two decisions in the record shape. First, the result and whether it is still current are kept apart. A single word would have to choose between saying a run failed and saying its evidence is out of date, and choosing the second hides the first: a reader would see something waiting to be refreshed when what is waiting is a fix. The stored record keeps `result` and `current`, and derives the one word for people from both. Second, a record is written before the steps start and replaced when they finish, so a run that is killed halfway leaves behind a record saying a run started and never reported. Writing only at the end would report an interrupted run as though it had never happened, which is how somebody comes to believe the last successful run was the last run.
+
+What is not stored: step output, because output carries whatever the tool printed and the credential scanner is a filter rather than a guarantee; file contents, because the digest stands in for them; and the paths of changed files. The full output stays in the log under `.git`, and the record keeps the log's file name without its directory, so the failure is still findable without an absolute path into somebody's machine. A permitted field list holds this, derived from the type by reflection, the same way the session record's has been held since entry 23.
+
+What the digest cannot see is written down in the package, in the README, and in a test. Ignored files are outside it, so a change to an ignored build input does not move it. Contents inside a submodule are outside it, beyond Git's own report that the submodule changed. Anything outside the repository is outside it. And a change that was made and then undone returns the digest to where it was, which is correct rather than a limitation, and is written down because a reader could otherwise expect a digest to count edits.
+
+The status line does not compute any of this. It repaints constantly, and reading the repository there would cost more than the whole budget for a repaint. A test grows the working tree by two hundred files and requires that the status line does not get slower, so this cannot be wired in later by accident.
+
+Session Guard is unchanged and stays working. It is the half of this project with observed evidence behind it, and the new direction has none yet. Replacing it before the replacement has been used in real work would be the mistake this project has spent fifty two entries avoiding.
+
+## 54. A rename is atomic, and on Windows it is not uninterrupted
+
+Date: 2026-09-17
+
+Entry 53's evidence record is replaced by renaming a new file over it, the same way session records are written. That gives a reader the whole of one record or the whole of the one before, and it is what "atomic" is usually taken to mean.
+
+On Windows it means less than that. A file that is being replaced cannot be opened, and a file that is being read cannot be replaced, so an open or a rename that lands inside the other's window fails outright rather than returning either version. The reader does not see half a record. It sees an error.
+
+Windows continuous integration found it on the first run, with the test that puts eight writers and fifty readers on one record: "The process cannot access the file because it is being used by another process." The test had been written to prove that a concurrent read never sees a partial record, and it proved something the author had not thought to look for, which is the argument for writing it at all.
+
+This was not confined to the test. `zeroturn report` reads the record while `zeroturn verify` writes it, and the report answers a failure to read by leaving its validation section out entirely, so the section would have vanished with nothing said. The same window is open from the other side: a write losing to a reader would have made `verify` report that it could not record evidence for a run that had just passed.
+
+Both are now a short bounded retry, twenty five attempts two hundred microseconds apart. The window is measured in microseconds, so waiting it out closes it, and something genuinely unreadable still fails a few milliseconds later rather than never. A file that is absent is not retried, because absent is an answer.
+
+The test was strengthened rather than relaxed: it now collects the errors from both the readers and the writers and names how many of each failed, where before a writer's error was discarded by the goroutine that hit it.
+
+Worth recording for later: the session record store writes the same way and `List` reads without the lock, so the same window is open there. It has been open since the store was written and nothing has reported it, which is not evidence that it cannot happen. It is left alone here because this change is about evidence, and widening it to the shared write path would put every session record through an untested code path in the same pull request.
+
+This is the sixth defect in this project found by Windows and by nothing else.

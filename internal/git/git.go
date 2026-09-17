@@ -161,6 +161,82 @@ func (r Repo) Status(ctx context.Context) ([]Change, error) {
 	return ch, nil
 }
 
+// Head returns the commit HEAD points at and the branch it is on, in one
+// call because starting a git process costs far more than the work it
+// does. A repository with no commits yet has no HEAD, which is not a
+// failure: the commit is answered as an empty string so that a snapshot
+// of an empty repository is still a snapshot.
+func (r Repo) Head(ctx context.Context) (sha, branch string) {
+	out, _, err := r.git(ctx, "rev-parse", "HEAD", "--abbrev-ref", "HEAD")
+	if err != nil {
+		// Before the first commit there is no HEAD to resolve, and
+		// rev-parse fails whichever way it is asked, because it resolves
+		// revisions and there is none. The branch is still known: it is
+		// the reference HEAD points at, which symbolic-ref reads without
+		// needing anything to be committed to it.
+		name, _, berr := r.git(ctx, "symbolic-ref", "--short", "HEAD")
+		if berr != nil {
+			return "", ""
+		}
+		return "", name
+	}
+	lines := strings.Split(out, "\n")
+	if len(lines) < 2 {
+		return strings.TrimSpace(out), ""
+	}
+	return strings.TrimSpace(lines[0]), strings.TrimSpace(lines[1])
+}
+
+// IndexEntry is one line of the index: what Git has staged for a path.
+//
+// Blob is the hash of the content Git holds for it, so two entries with
+// the same blob hold the same bytes and a change to a staged file changes
+// the entry. Mode carries the executable bit and marks a submodule.
+type IndexEntry struct {
+	Mode  string
+	Blob  string
+	Stage string
+	Path  string
+}
+
+// IsSubmodule reports whether the entry is a gitlink rather than a file.
+// Git records the submodule's commit here and nothing about its contents.
+const submoduleMode = "160000"
+
+func (e IndexEntry) IsSubmodule() bool { return e.Mode == submoduleMode }
+
+// IndexEntries lists what Git has staged, with the content hash of each
+// path. The -z form is used for the same reason Status uses it: the line
+// form quotes unusual file names, and a quoted name is not the name.
+func (r Repo) IndexEntries(ctx context.Context) ([]IndexEntry, error) {
+	out, errText, err := r.git(ctx, "ls-files", "--stage", "-z")
+	if err != nil {
+		if errText == "" {
+			errText = "git ls-files returned a failure"
+		}
+		return nil, errors.New(errText)
+	}
+	var entries []IndexEntry
+	for _, record := range strings.Split(out, "\x00") {
+		if record == "" {
+			continue
+		}
+		// <mode> <object> <stage>\t<path>
+		tab := strings.IndexByte(record, '\t')
+		if tab < 0 {
+			continue
+		}
+		fields := strings.Fields(record[:tab])
+		if len(fields) != 3 {
+			continue
+		}
+		entries = append(entries, IndexEntry{
+			Mode: fields[0], Blob: fields[1], Stage: fields[2], Path: record[tab+1:],
+		})
+	}
+	return entries, nil
+}
+
 func (r Repo) IsClean(ctx context.Context) (bool, error) {
 	ch, err := r.Status(ctx)
 	if err != nil {

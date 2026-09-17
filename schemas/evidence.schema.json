@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cris-wendler/zeroturn/schemas/evidence.schema.json",
+  "title": "ZeroTurn validation evidence",
+  "description": "One validation run and the repository state it ran against. This is the record zeroturn verify writes and the one carried in the evidence field of zeroturn verify --json.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "evidenceId",
+    "repoHash",
+    "zeroturnVersion",
+    "snapshot",
+    "startedAt",
+    "result",
+    "passed",
+    "failed",
+    "skipped",
+    "seconds",
+    "steps"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "evidenceId": {
+      "type": "string",
+      "description": "Derived from the repository, the state digest and the start time, so a repeated write cannot produce a second name for one run."
+    },
+    "repoHash": {
+      "type": "string",
+      "description": "Identifies the repository without recording its path."
+    },
+    "zeroturnVersion": {
+      "type": "string"
+    },
+    "snapshot": {
+      "$ref": "#/$defs/snapshot"
+    },
+    "startedAt": {
+      "type": "string"
+    },
+    "finishedAt": {
+      "type": "string",
+      "description": "Absent while a run has not reported a result."
+    },
+    "result": {
+      "enum": [
+        "running",
+        "passed",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "passed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "failed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "skipped": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/step"
+      }
+    }
+  },
+  "$defs": {
+    "snapshot": {
+      "type": "object",
+      "description": "Identifies the exact repository state a result is evidence about. The digest covers the commit, the content of everything staged, the content of every path the working tree disagrees with Git about, and the validation step definitions.",
+      "required": [
+        "snapshotVersion",
+        "digest",
+        "planDigest",
+        "clean",
+        "trackedChanges",
+        "untrackedFiles"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "snapshotVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The digest format. Evidence recorded under a different one describes a different reading and is not compared against this one."
+        },
+        "digest": {
+          "type": "string"
+        },
+        "head": {
+          "type": "string",
+          "description": "Absent in a repository with no commits."
+        },
+        "planDigest": {
+          "type": "string",
+          "description": "Identifies the validation steps. Inside the digest as well, so editing a step makes earlier evidence stale."
+        },
+        "branch": {
+          "type": "string"
+        },
+        "clean": {
+          "type": "boolean"
+        },
+        "trackedChanges": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "untrackedFiles": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dirtySubmodules": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "description": "The safe summary of one step. The command is identified by planDigest and the output is not stored, because output carries whatever the tool printed.",
+      "required": [
+        "name",
+        "status",
+        "exitCode",
+        "seconds"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "pass",
+            "fail",
+            "skipped",
+            "missing",
+            "cancelled"
+          ]
+        },
+        "exitCode": {
+          "type": "integer"
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "logName": {
+          "type": "string",
+          "description": "The name of the log file inside the repository Git directory, without the directory, so no absolute path is stored."
+        }
+      }
+    }
+  }
+}

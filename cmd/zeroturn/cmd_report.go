@@ -10,8 +10,10 @@ import (
 	"time"
 
 	"github.com/cris-wendler/zeroturn/internal/config"
+	"github.com/cris-wendler/zeroturn/internal/evidence"
 	"github.com/cris-wendler/zeroturn/internal/git"
 	"github.com/cris-wendler/zeroturn/internal/output"
+	"github.com/cris-wendler/zeroturn/internal/snapshot"
 	"github.com/cris-wendler/zeroturn/internal/state"
 )
 
@@ -134,8 +136,48 @@ type reportJSON struct {
 	DeniedStarts       int        `json:"deniedSubagentStarts"`
 	DirectValidations  int        `json:"directValidations"`
 	DirectGitOps       int        `json:"directGitOperations"`
-	GeneratedAt        time.Time  `json:"generatedAt"`
-	Provenance         string     `json:"provenance"`
+	// Validation is the state of the recorded validation evidence for this
+	// repository. It is absent from a report covering the machine, because
+	// evidence belongs to one repository and there would be no way to say
+	// which. It is not affected by the window: evidence is the latest
+	// there is, not a count of what happened inside a span.
+	Validation  *evidence.Assessment `json:"validation,omitempty"`
+	GeneratedAt time.Time            `json:"generatedAt"`
+	Provenance  string               `json:"provenance"`
+}
+
+// validationFor reads the recorded evidence for a repository and compares
+// it with the repository as it is now.
+//
+// Anything that goes wrong here leaves the section out rather than
+// failing the report. A report is about what was observed, and being
+// unable to read one part of it is not a reason to withhold the rest.
+func validationFor(ctx context.Context, st *state.Store, root string) *evidence.Assessment {
+	if root == "" {
+		return nil
+	}
+	c, err := config.Load(root)
+	if err != nil {
+		return nil
+	}
+	rec, found, err := evidence.Load(st, state.RepoHash(root))
+	if err != nil {
+		return nil
+	}
+	if !found {
+		a := evidence.Assess(evidence.Record{}, false, snapshot.Snapshot{})
+		return &a
+	}
+	repo, err := git.Open(ctx, root)
+	if err != nil {
+		return nil
+	}
+	now, err := snapshot.Compute(ctx, repo, c.Hash())
+	if err != nil {
+		return nil
+	}
+	a := evidence.Assess(rec, true, now)
+	return &a
 }
 
 // resolveWindow turns what was typed into a span and the name the report
@@ -269,6 +311,7 @@ func cmdReport(ctx context.Context, args []string) error {
 
 	r := summarise(name, sessions)
 	r.Scope = scope
+	r.Validation = validationFor(ctx, st, root)
 	if span > 0 {
 		start := time.Now().UTC().Add(-span)
 		r.WindowStart = &start
@@ -300,6 +343,7 @@ func cmdReport(ctx context.Context, args []string) error {
 		[2]string{"Direct Git operations", fmt.Sprintf("%d", r.DirectGitOps)},
 	)
 	fmt.Print(output.Table(rows))
+	printValidation(r.Validation)
 	// The retention setting belongs to a repository, so the note only
 	// speaks when the report did too.
 	// The retention setting belongs to a repository, so the note speaks
@@ -311,6 +355,36 @@ func cmdReport(ctx context.Context, args []string) error {
 	}
 	fmt.Println(provenance)
 	return nil
+}
+
+// printValidation writes the validation state under the table. The reason
+// is a whole sentence rather than a word, because "stale" on its own
+// tells a reader something is wrong and not what to do about it.
+func printValidation(a *evidence.Assessment) {
+	if a == nil {
+		return
+	}
+	fmt.Println()
+	c := output.NewColor(os.Stdout, "")
+	label := strings.ToUpper(a.State)
+	switch a.State {
+	case evidence.StatePassed:
+		label = c.Green(label)
+	case evidence.StateFailed:
+		label = c.Red(label)
+	case evidence.StateStale, evidence.StateCancelled, evidence.StateRunning:
+		label = c.Yellow(label)
+	default:
+		label = c.Dim(label)
+	}
+	fmt.Printf("Validation  %s\n", label)
+	fmt.Printf("  %s\n", a.Reason)
+	if a.Evidence != nil {
+		fmt.Printf("  Evidence %s recorded %s for repository state %s\n",
+			a.Evidence.EvidenceID,
+			a.Evidence.StartedAt.Local().Format("2006-01-02 15:04"),
+			a.Evidence.Snapshot.Short())
+	}
 }
 
 // retentionNote says when a window asks for more history than is kept.
@@ -383,7 +457,17 @@ func reportPurge(st *state.Store, all bool, retention int) error {
 			return output.Errorf(output.ExitInternal, "zeroturn could not purge its records", perr.Error(),
 				"check that your user data directory is writable")
 		}
-		fmt.Printf("Deleted %d ZeroTurn session records. Harness transcripts and settings were not touched.\n", n)
+		// Validation evidence is a ZeroTurn record too. Leaving it behind
+		// would make "every ZeroTurn record" untrue in the one command a
+		// person runs when they mean it.
+		e, eerr := evidence.PurgeAll(st)
+		if eerr != nil {
+			return output.Errorf(output.ExitInternal, "zeroturn could not purge its records", eerr.Error(),
+				"check that your user data directory is writable")
+		}
+		fmt.Printf("Deleted %s and %s. Harness transcripts and settings were not touched.\n",
+			output.Counted(n, "1 ZeroTurn session record", "%d ZeroTurn session records"),
+			output.Counted(e, "1 validation evidence record", "%d validation evidence records"))
 		return nil
 	}
 	if retention < 0 {

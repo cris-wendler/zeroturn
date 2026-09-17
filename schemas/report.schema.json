@@ -82,6 +82,64 @@
       "type": "integer",
       "minimum": 0,
       "description": "How many times the credential guard asked or denied before a file was read."
+    },
+    "validation": {
+      "$ref": "#/$defs/assessment"
+    }
+  },
+  "$defs": {
+    "assessment": {
+      "type": "object",
+      "description": "Whether recorded validation evidence still covers the code that is in the repository now. Absent from a report covering the machine, because evidence belongs to one repository. Not affected by the report window: this is the latest evidence there is, not a count of what happened inside a span.",
+      "required": [
+        "state",
+        "result",
+        "current",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "enum": [
+            "never-run",
+            "running",
+            "passed",
+            "failed",
+            "cancelled",
+            "stale"
+          ],
+          "description": "The single word for a person. A reader deciding what to do should use result and current instead, which never lose the original outcome."
+        },
+        "result": {
+          "enum": [
+            "never-run",
+            "running",
+            "passed",
+            "failed",
+            "cancelled"
+          ],
+          "description": "What the recorded run concluded. A failed run that has since gone stale still reports failed here."
+        },
+        "current": {
+          "type": "boolean",
+          "description": "Whether the repository still matches the state the run was made against."
+        },
+        "changed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Which inputs differ from the recorded ones. Empty when the evidence is current."
+        },
+        "reason": {
+          "type": "string",
+          "description": "A whole sentence saying what the state means and what to do about it."
+        },
+        "evidence": {
+          "type": "object",
+          "description": "The record this assessment is about, as described by evidence.schema.json. Absent when no validation has been recorded."
+        }
+      }
     }
   }
 }

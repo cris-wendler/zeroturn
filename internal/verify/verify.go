@@ -52,6 +52,14 @@ type Options struct {
 	// OnStep, when set, receives each step result as soon as it is known,
 	// so progress streams one line per step instead of arriving at the end.
 	OnStep func(StepResult)
+	// OnStart, when set, is called with the step name before it runs.
+	//
+	// A result only arrives when a step finishes, so a step that takes a
+	// minute printed nothing for a minute and was indistinguishable from
+	// a program that had hung. The first person to run this on a real
+	// repository asked whether it was still working, which is the whole
+	// argument for saying a step has started before waiting on it.
+	OnStart func(name string)
 }
 
 // LogDir is where verify keeps a log for each step. It sits inside the
@@ -132,6 +140,9 @@ func Run(ctx context.Context, c config.Config, o Options) (Result, error) {
 			skipRest(c.Verify.Steps[i:], StatusCancelled)
 			res.Cancelled = true
 			break
+		}
+		if o.OnStart != nil {
+			o.OnStart(step.Name)
 		}
 		sr := runStep(ctx, step, o, stamp)
 		add(sr)

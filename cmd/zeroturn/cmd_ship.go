@@ -178,7 +178,8 @@ func cmdShip(ctx context.Context, args []string) error {
 				"these executables were not found on PATH: "+strings.Join(missing, ", "),
 				"install them, or run ship with --no-verify-steps")
 		}
-		res, rerr := verify.Run(ctx, c, verify.Options{RepoRoot: repo.Root, OnStep: printStep})
+		res, rerr := verify.Run(ctx, c, verify.Options{
+			RepoRoot: repo.Root, OnStep: printStep, OnStart: printStepStart})
 		if rerr != nil {
 			return output.Errorf(output.ExitInternal, "zeroturn ship changed nothing",
 				rerr.Error(), "check that the repository .git directory is writable")

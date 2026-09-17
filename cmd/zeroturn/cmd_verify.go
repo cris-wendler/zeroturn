@@ -122,6 +122,7 @@ func cmdVerify(ctx context.Context, args []string) error {
 		fmt.Println("ZEROTURN VERIFY")
 		fmt.Println()
 		opts.OnStep = printStep
+		opts.OnStart = printStepStart
 	}
 	res, rerr := verify.Run(ctx, c, opts)
 	if rerr != nil {
@@ -178,9 +179,40 @@ func printCommands(c config.Config) {
 	fmt.Println("They run directly, without a shell.")
 }
 
+// printStepStart says a step has begun, on a terminal only.
+//
+// A result arrives when a step finishes, so a step that takes a minute
+// printed nothing for a minute. The first person to run this on a real
+// repository asked whether it was still working.
+//
+// The line is written without a newline and overwritten by the result,
+// so a finished run reads exactly as it did before. That only works
+// where a carriage return means something, so nothing is written at all
+// when the output is a pipe, a log, or a test: there the step lines
+// arrive as they always have, and a reader of a log is not watching a
+// clock anyway.
+func printStepStart(name string) {
+	if !isTTY(os.Stdout) {
+		return
+	}
+	c := output.NewColor(os.Stdout, "")
+	fmt.Printf("%s  %-10s", c.Dim("RUN "), name)
+}
+
+// clearStepStart removes the start line before its result is written.
+// The spaces cover the line that was there, because a carriage return
+// moves the cursor without erasing what it passes over.
+func clearStepStart() {
+	if !isTTY(os.Stdout) {
+		return
+	}
+	fmt.Print("\r" + strings.Repeat(" ", 24) + "\r")
+}
+
 // printStep writes one result line. It is passed to verify.Run so each
 // line appears when its step finishes.
 func printStep(s verify.StepResult) {
+	clearStepStart()
 	c := output.NewColor(os.Stdout, "")
 	switch s.Status {
 	case verify.StatusPass:

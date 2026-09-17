@@ -195,10 +195,10 @@ The digest is taken over content rather than over the output of `git status`. Th
 
 **What it does not prove.** That the checks passed for that code on your machine, at that moment. Nothing more. It is not a claim that the code is correct, that it was reviewed, or that it will pass anywhere else. The digest does not cover:
 
-- files Git ignores, so a change to an ignored build input does not move it
-- contents inside a submodule, beyond the fact that Git reports the submodule changed
-- anything outside the repository: installed dependencies, environment variables, toolchain versions, services the tests reach
-- a change that was made and then undone, because the code is back where it was
+- Files Git ignores. A change to an ignored build input does not move the digest.
+- Contents inside a submodule. Git reports that a submodule changed, and that is recorded, but the files within it are not hashed.
+- Anything outside the repository: installed dependencies, environment variables, toolchain versions, services the tests reach.
+- A change that was made and then undone. The digest returns to its earlier value, because the code did too.
 
 **When it is checked.** When you ask: `zeroturn verify`, and `zeroturn report` for the repository you are in. There is no background process and no notification. The status line does not compute it, because the status line repaints constantly and reading the repository there would cost more than the whole repaint budget.
 
@@ -426,7 +426,7 @@ The contract is the published schemas in [schemas/](schemas) and the suite in [c
 
 Useful areas: harness adapters, event normalization, project detection, validation presets, platform support, security and redaction tests, terminal rendering, documentation, and conformance fixtures.
 
-Contributions that add any of the following will be redirected: a model SDK or model calls, model selection, a chat interface, a complete coding harness, transcript collection, prompt inspection, remote telemetry, a hosted dashboard, output compression, automatic handoff, automatic compaction or clearing, shell strings in configuration, automatic force pushing or rebasing, credential bypasses, silent changes to global settings, Python packaging, or containers without a demonstrated need.
+Contributions that add any of the following will be redirected: a model SDK or model calls, model selection, a chat interface, a complete coding harness, transcript collection, prompt inspection, remote telemetry, a hosted dashboard, output compression, automatic session handoff, automatic compaction or clearing, shell strings in configuration, automatic force pushing or rebasing, credential bypasses, silent changes to global settings, Python packaging, or containers without a demonstrated need.
 
 Before contributing, check that the feature is not already there and search the existing issues. Then open a bug report or feature proposal on GitHub, and a pull request once the approach is agreed. The steps, and how to build and test, are in [CONTRIBUTING.md](CONTRIBUTING.md). Security problems go through [SECURITY.md](SECURITY.md), not a public issue. The tests use temporary repositories and local bare remotes and never contact a real remote.
 
@@ -439,6 +439,7 @@ ZeroTurn shows and gates what the harness reports. It cannot see usage the harne
 - The background task count is as current as the last `Stop` event.
 - The interactive approval prompt for Confirm mode was observed on Claude Code 2.1.270. It can be bypassed from the prompt itself: the harness offers to stop asking for that tool in that directory, and ZeroTurn is not told when that is chosen.
 - Session Guard measurements require the terminal interface. In an editor extension the status line is never invoked, so context, the usage windows, and duration are absent and only the subagent counts and the credential guard work. Confirmed on Claude Code 2.1.257.
+- Validation evidence says the checks passed for one state of one repository on this machine, and nothing else. What the digest cannot see is listed under Validation evidence above. It has not yet been used long enough to say how often evidence goes stale in real work, or whether being told changes what anybody does.
 - The test suite runs on Linux with both supported Go releases, on macOS, and on Windows, for every change. On Windows, tests that need a POSIX shell are skipped. The harness integration has been used on macOS only.
 
 ## Roadmap
@@ -452,7 +453,7 @@ Planned:
 
 **Being explored, and not built.** Validation evidence is the first piece of a larger direction: making what an agent did reviewable by the engineer who is accountable for it. The pieces below are under evaluation and none of them exist. Nothing in this repository implements them, and the commands that would carry them are not there.
 
-- a repository handoff record, a durable checkpoint between automated implementation work and human review, holding the repository state, what was done, the decisions and assumptions behind it, the validation evidence, and what still needs a person
+- a repository handoff record, a durable checkpoint between automated implementation work and human review, holding the repository state, what was done, the decisions and assumptions behind it, the validation evidence, and what still needs a person. This is a file you ask for and read, and it is not the automatic session handoff in the list above, which changes a session behind your back
 - a review or release checkpoint that records a human decision against specific evidence
 - deployment evidence, which would need an adapter for each CI provider and, by the same rule the Copilot adapter follows, would be claimed only once it had run against a real one
 - an editor extension, so the state is visible where the work happens

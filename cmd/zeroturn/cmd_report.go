@@ -59,7 +59,8 @@ func reportUsage() string {
 	for _, w := range reportWindows {
 		fmt.Fprintf(&b, "  %-9s %s\n", w.Name, w.Help)
 	}
-	b.WriteString("  purge     Delete ZeroTurn session records\n")
+	b.WriteString("  purge     Delete ZeroTurn session records, and with --all the\n")
+	b.WriteString("            validation evidence as well\n")
 	b.WriteString(`
   --since   Reach back a given span instead of naming a window, as a
             date (2026-09-01), a number of days (14d), or a duration (72h)
@@ -67,6 +68,9 @@ func reportUsage() string {
             Count sessions from every repository on this machine. Without
             it a report covers the repository you are in, and outside a
             repository it covers the machine and says so.
+
+A report for the repository you are in also says whether the validation
+evidence zeroturn verify recorded still covers the code that is there.
 
 A report can only reach as far back as records are kept. Run
 zeroturn policy show to see that setting.

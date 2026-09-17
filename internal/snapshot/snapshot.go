@@ -70,9 +70,13 @@ type Snapshot struct {
 	DirtySubmodules int `json:"dirtySubmodules,omitempty"`
 }
 
-// Limits is what the digest does not cover. It is a list rather than a
-// paragraph because the documentation and the command output both print
-// it, and a promise kept in two places drifts apart.
+// Limits is what the digest does not cover.
+//
+// It is the one description of them. The README states the same list for
+// a reader, and a test requires the README to carry each sentence in
+// this one word for word, because a promise about what a check does not
+// see is exactly the kind that is quietly outgrown by the code it
+// describes.
 var Limits = []string{
 	"Files Git ignores. A change to an ignored build input does not move the digest.",
 	"Contents inside a submodule. Git reports that a submodule changed, and that is recorded, but the files within it are not hashed.",

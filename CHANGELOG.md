@@ -4,12 +4,6 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
-**Fixed**
-
-- `policy check` printed "No threshold has been crossed" whether the values behind those thresholds had been read and found below the limit or had never arrived at all. The two are the same sentence, and the second is the ordinary case in an editor extension, where the status line is never drawn and context, both usage windows, and session duration are all absent. It now names what was not measured, and says so plainly when nothing was.
-- `doctor` reported the status line as delivering measurements when it had sent a context value and neither usage window. `rate_limits` arriving as null is a real payload, not a broken one, and the check counted only the context value, so a gate with two thirds of its thresholds unreachable looked healthy. It now names what is missing from the most recent session.
-- `doctor` said "most recent" of whichever record happened to be listed last. Records are not listed in time order, so it now compares them.
-
 ## 0.3.0, 2026-09-17
 
 **Added**
@@ -20,6 +14,9 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 **Fixed**
 
+- `policy check` printed "No threshold has been crossed" whether the values behind those thresholds had been read and found below the limit or had never arrived at all. The two are the same sentence, and the second is the ordinary case in an editor extension, where the status line is never drawn and context, both usage windows, and session duration are all absent. It now names what was not measured, and says so plainly when nothing was.
+- `doctor` reported the status line as delivering measurements when it had sent a context value and neither usage window. `rate_limits` arriving as null is a real payload, not a broken one, and the check counted only the context value, so a gate with two thirds of its thresholds unreachable looked healthy. It now names what is missing from the most recent session.
+- `doctor` said "most recent" of whichever record happened to be listed last. Records are not listed in time order, so it now compares them.
 - `verify` and `ship` printed nothing while a step ran, because a result only exists once the step has finished. On a repository where the tests take a minute that was indistinguishable from a program that had hung. A step now announces itself before it is waited on, and only where ZeroTurn already writes escape sequences, so a pipe, a log, and the JSON output are unchanged.
 - Result lines ended in trailing whitespace. `SKIP` and `STOP` padded the step name and wrote nothing after it, in piped output as well.
 - `capabilities` and `verify` read the raw build version rather than the one the executable reports, so a published release described itself as a development build in the document adapter authors are told to read, and stamped that version into every evidence record. Both now read it the same way `version` does.

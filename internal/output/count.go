@@ -1,6 +1,9 @@
 package output
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Counted writes a counted noun in the right form.
 //
@@ -26,4 +29,20 @@ func CountedPair(n, of int, format, oneNoun, manyNoun string) string {
 		noun = oneNoun
 	}
 	return fmt.Sprintf(format, n, of, noun)
+}
+
+// List writes names as a person would read them: "a", "a and b", or
+// "a, b and c". Joining with commas alone produces "context, the five
+// hour usage window, session duration", which reads as an unfinished
+// sentence in the middle of a paragraph.
+func List(items []string) string {
+	switch len(items) {
+	case 0:
+		return ""
+	case 1:
+		return items[0]
+	case 2:
+		return items[0] + " and " + items[1]
+	}
+	return strings.Join(items[:len(items)-1], ", ") + " and " + items[len(items)-1]
 }

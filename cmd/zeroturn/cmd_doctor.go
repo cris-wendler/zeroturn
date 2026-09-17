@@ -375,15 +375,27 @@ func checkSessionData(repoRoot string) check {
 	}
 	hash := state.RepoHash(repoRoot)
 	seen, withUsage := 0, 0
-	var latest *float64
-	for _, s := range sessions {
+	// Since preserves the order the records were listed in, which is not
+	// time order, so the newest one is chosen rather than assumed to be
+	// last. The answer says "most recent" and now means it.
+	var newest *state.Session
+	for i := range sessions {
+		s := sessions[i]
 		if s.RepoHash != hash {
 			continue
 		}
 		seen++
-		if s.ContextPct != nil {
+		// Counting only ContextPct here reported the status line as
+		// delivering measurements when it had sent context and neither
+		// usage window, which is a real payload: rate_limits can be null.
+		// Whether anything arrived and whether everything did are two
+		// questions, and this answered the first while wording its answer
+		// as the second.
+		if !policy.AllUnmeasured(s) {
 			withUsage++
-			latest = s.ContextPct
+		}
+		if newest == nil || s.UpdatedAt.After(newest.UpdatedAt) {
+			newest = &sessions[i]
 		}
 	}
 	switch {
@@ -408,11 +420,26 @@ func checkSessionData(repoRoot string) check {
 		return check{"session data", checkWarn,
 			fmt.Sprintf("%d of %d recent sessions for this repository carried no context or usage values. "+
 				"Those ran with nothing for the guard to measure, which is what happens in an editor extension, "+
-				"where the status line is never drawn and so never invoked. The most recent measurement was %.0f%% context",
-				seen-withUsage, seen, *latest)}
+				"where the status line is never drawn and so never invoked. Run zeroturn policy check in a session to see what the gate has",
+				seen-withUsage, seen)}
+	}
+
+	// Every recent session carried something. The remaining question is
+	// whether the most recent one carried everything, because a value
+	// the status line does not send is a threshold that cannot fire.
+	if absent := policy.Unmeasured(*newest); len(absent) > 0 {
+		verb := "is"
+		if len(absent) > 1 {
+			verb = "are"
+		}
+		return check{"session data", checkWarn,
+			fmt.Sprintf("the status line is being invoked and is not sending everything: %s %s missing from the most recent session, "+
+				"so those thresholds cannot be crossed. Run zeroturn policy check to see what the gate has",
+				output.List(absent), verb)}
 	}
 	return check{"session data", checkOK,
-		fmt.Sprintf("the status line is delivering measurements in all %d recent sessions, most recently %.0f%% context", seen, *latest)}
+		fmt.Sprintf("the status line is delivering every measurement the gate reads, in %s",
+			output.Counted(seen, "the 1 recent session", "all %d recent sessions"))}
 }
 
 func compatFixtures() []check {

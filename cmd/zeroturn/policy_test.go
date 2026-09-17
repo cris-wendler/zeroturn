@@ -67,7 +67,7 @@ func TestPolicySetConfirmNeedsNoApproval(t *testing.T) {
 
 func TestStrictRequiresConfirmation(t *testing.T) {
 	work, _ := repoWithConfig(t, nil)
-	withHarness(t, capabilities.ClaudeTestedVersion, nil)
+	withHarness(t, capabilities.ClaudeTestedVersions[0], nil)
 	// The built binary uses the real harness lookup, so on a machine
 	// without the harness it stops earlier, with exit 8, which is also safe.
 	if r := run(t, work, "", "policy", "set", "guard.mode", "strict"); r.code != output.ExitDeclined && r.code != output.ExitNoIntegration {
@@ -105,7 +105,7 @@ func TestStrictRefusedWithoutHarness(t *testing.T) {
 
 func TestPolicyResetWithdrawsStrict(t *testing.T) {
 	work, _ := repoWithConfig(t, nil)
-	withHarness(t, capabilities.ClaudeTestedVersion, nil)
+	withHarness(t, capabilities.ClaudeTestedVersions[0], nil)
 	policyIn(t, work, true, "set", "guard.mode", "strict")
 	if err := policyIn(t, work, true, "reset"); err != nil {
 		t.Fatal(err)

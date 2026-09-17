@@ -250,7 +250,7 @@ func checkState() check {
 func checkRepo(ctx context.Context) []check {
 	repo, err := openRepo(ctx)
 	if err != nil {
-		return []check{{"repository", checkWarn, "not inside a Git repository, repository checks were skipped"}}
+		return []check{{"repository", checkWarn, "not inside a Git repository, so the repository checks were skipped. Change to a repository and run zeroturn doctor again, or run git init first"}}
 	}
 	out := []check{{"repository", checkOK, repo.Root}}
 

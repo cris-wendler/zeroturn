@@ -24,7 +24,7 @@ func cmdCapabilities(ctx context.Context, args []string) error {
 	if err := parseFlags(fs, args, capabilitiesUsage, "capabilities"); err != nil {
 		return err
 	}
-	doc := capabilities.Describe(Version)
+	doc := capabilities.Describe(version())
 	if *asJSON {
 		return output.JSON(os.Stdout, doc)
 	}

@@ -29,10 +29,15 @@ import (
 // field either output already had is where it was.
 const ContractVersion = "2.1.0"
 
-// ClaudeTestedVersion is the harness release on which allow and deny were
-// observed end to end. Other releases may work, and are reported as
+// ClaudeTestedVersions are the harness releases on which a decision was
+// observed end to end: allow and deny on the first, and the interactive
+// ask prompt on the second. Other releases may work, and are reported as
 // untested rather than refused.
-const ClaudeTestedVersion = "2.1.265"
+//
+// This was one release for as long as only one had been used, and it
+// stayed that way after a second was, so the published contract named an
+// older release than the README did.
+var ClaudeTestedVersions = []string{"2.1.265", "2.1.270"}
 
 type Harness struct {
 	Name            string   `json:"name"`
@@ -79,7 +84,7 @@ func Describe(version string) Doc {
 		Harnesses: []Harness{
 			{
 				Name: "claude", Status: "supported",
-				TestedVersions:  []string{ClaudeTestedVersion},
+				TestedVersions:  ClaudeTestedVersions,
 				Events:          []string{"statusLine", "PreToolUse(Agent)", "PreToolUse(Read)", "UserPromptSubmit when the prompt guard is on", "SubagentStart", "SubagentStop", "Stop", "SessionEnd"},
 				GateSupported:   true,
 				StatusSupported: true,

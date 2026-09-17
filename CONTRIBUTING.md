@@ -107,6 +107,8 @@ The tests build the executable, create temporary repositories with local bare re
 | `internal/git` | The only Git commands ZeroTurn runs |
 | `internal/security` | Credential detection and redaction |
 | `internal/trust` | Approval of repository commands and of Strict mode |
+| `internal/snapshot` | The digest that identifies one state of the repository |
+| `internal/evidence` | What a validation run proved, and whether it still covers the code on disk |
 | `schemas`, `conformance` | The published contract, and the suite that checks output against it |
 | `fixtures` | Harness payloads used by tests |
 | `docs/demo` | The README recording and its renderer |

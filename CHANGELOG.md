@@ -14,6 +14,11 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 - `verify` and `ship` printed nothing while a step ran, because a result only exists once the step has finished. On a repository where the tests take a minute that was indistinguishable from a program that had hung. A step now announces itself before it is waited on, and only where ZeroTurn already writes escape sequences, so a pipe, a log, and the JSON output are unchanged.
 - Result lines ended in trailing whitespace. `SKIP` and `STOP` padded the step name and wrote nothing after it, in piped output as well.
+- `capabilities` and `verify` read the raw build version rather than the one the executable reports, so a published release described itself as a development build in the document adapter authors are told to read, and stamped that version into every evidence record. Both now read it the same way `version` does.
+- `integrate` answered a directory that is not a Git repository with advice about the home directory and the exit code for an internal failure. It now answers it the way every other command does.
+- `integrate --help` called the Copilot integration experimental and partial while the README and `capabilities` both said no adapter ships. Running it then advised `capabilities --json`, which reports the same refusal and installs nothing.
+- `doctor` warned that it was not inside a Git repository and named nothing to do about it. The rule that every warning names a command was only ever checked inside a repository, so this one escaped it.
+- `capabilities` published one tested harness release after a second had been tested, so the contract named an older version than the README did.
 - A confirmation that nothing answered was reported as a refusal. `/dev/null` is a character device, so it passed the terminal check, and reading it ends at once: every command that asks before acting printed a prompt into nothing and then said the person had declined, advising them to run it again against the same silent input. All nine now say that nothing answered and name the one thing that works.
 - `doctor` reported the `claude` and `copilot` checks as notes on the assumption that neither was installed, and failed for anyone who has Claude Code on their `PATH`.
 - A record from an unknown schema version was read as current, and a file the record store does not own could be read as a record.
@@ -22,7 +27,7 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 **Internal**
 
-- `scripts/mutate` covers six packages in continuous integration: `policy`, `session`, `security`, `tune`, `config`, `state`. 253 changes made, 234 noticed, none accepted.
+- `scripts/mutate` covers six packages in continuous integration: `policy`, `session`, `security`, `tune`, `config`, `state`. Every change that survives is recorded in `scripts/mutate/accepted` with the reason it alters nothing.
 - A newer push on a branch cancels the older continuous integration run. The default branch is left to finish. The mutation job is skipped when only markdown changed, and the test matrix is not, because this project tests its documentation against its code.
 
 ## 0.2.0, 2026-09-15

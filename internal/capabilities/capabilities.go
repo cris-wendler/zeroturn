@@ -21,7 +21,13 @@ import (
 // while omitting a policy setting is wrong. Also in 2.0.0, and additive:
 // a report carries `scope`, saying whether it counted one repository or
 // the machine.
-const ContractVersion = "2.0.0"
+//
+// 2.1.0 adds validation evidence and takes nothing away. `verify --json`
+// carries `evidence`, which names the repository state the result was
+// made against, and `report --json` carries `validation`, which says
+// whether that state is still the one on disk. Both are additive: every
+// field either output already had is where it was.
+const ContractVersion = "2.1.0"
 
 // ClaudeTestedVersion is the harness release on which allow and deny were
 // observed end to end. Other releases may work, and are reported as
@@ -106,12 +112,17 @@ func Describe(version string) Doc {
 			"session duration", "subagent start count", "subagent stop count",
 			"active subagent count", "background task count",
 			"policy decisions", "direct command counts", "validation results", "repository hash",
+			"validation step names", "validation step exit codes", "validation log file names",
+			"repository state digest", "commit hash", "branch name", "validation plan digest",
+			"counts of changed and untracked files",
 		},
 		NeverRecords: []string{
 			"prompts", "responses", "source code", "diffs",
 			"tool arguments unrelated to ZeroTurn", "subagent instructions", "subagent responses",
 			"transcript contents", "credentials", "environment variables",
 			"absolute repository paths", "remote URLs containing credentials",
+			"validation step output", "file contents hashed for the repository state digest",
+			"paths of changed files",
 		},
 		Network:    false,
 		ModelCalls: false,

@@ -151,6 +151,80 @@ func TestVerifyOutputFollowsItsSchema(t *testing.T) {
 		t.Fatalf("exit %d: %s", code, errText)
 	}
 	mustFollow(t, "verify.schema.json", []byte(out))
+
+	// The evidence record has one description, in evidence.schema.json.
+	// The two outputs that carry it declare it as an object and it is
+	// checked here against that one description, rather than copied into
+	// both schemas where the copies would drift apart.
+	mustFollow(t, "evidence.schema.json", sub(t, []byte(out), "evidence"))
+}
+
+// TestValidationStateFollowsItsSchema covers the other half of the
+// contract: a run records evidence and the report says whether it still
+// covers the code that is there.
+func TestValidationStateFollowsItsSchema(t *testing.T) {
+	work := repo(t, config.ModeObserve)
+	approve(t, work)
+	if _, errText, code := run(t, work, "", "verify", "--json"); code != 0 {
+		t.Fatalf("verify: %s", errText)
+	}
+
+	out, errText, code := run(t, work, "", "report", "current", "--json")
+	if code != 0 {
+		t.Fatalf("exit %d: %s", code, errText)
+	}
+	mustFollow(t, "report.schema.json", []byte(out))
+
+	validation := sub(t, []byte(out), "validation")
+	mustFollow(t, "evidence.schema.json", sub(t, validation, "evidence"))
+
+	var a struct {
+		State   string `json:"state"`
+		Result  string `json:"result"`
+		Current bool   `json:"current"`
+	}
+	if err := json.Unmarshal(validation, &a); err != nil {
+		t.Fatal(err)
+	}
+	if a.State != "passed" || a.Result != "passed" || !a.Current {
+		t.Fatalf("straight after a passing run the state is %q, result %q, current %v",
+			a.State, a.Result, a.Current)
+	}
+
+	// Change the code and the same document must say so.
+	if err := ioutil.WriteFile(filepath.Join(work, "README.md"), []byte("changed\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out, _, code = run(t, work, "", "report", "current", "--json")
+	if code != 0 {
+		t.Fatal(code)
+	}
+	mustFollow(t, "report.schema.json", []byte(out))
+	if err := json.Unmarshal(sub(t, []byte(out), "validation"), &a); err != nil {
+		t.Fatal(err)
+	}
+	if a.State != "stale" || a.Current {
+		t.Fatalf("after a change the state is %q, current %v", a.State, a.Current)
+	}
+	// The recorded outcome survives the repository moving on.
+	if a.Result != "passed" {
+		t.Errorf("the recorded result became %q", a.Result)
+	}
+}
+
+// sub returns one named object out of a document, so it can be checked
+// against the schema that describes it.
+func sub(t *testing.T, doc []byte, name string) []byte {
+	t.Helper()
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(doc, &m); err != nil {
+		t.Fatalf("%v\n%s", err, doc)
+	}
+	raw, ok := m[name]
+	if !ok {
+		t.Fatalf("the document carries no %q:\n%s", name, doc)
+	}
+	return raw
 }
 
 func TestDecisionFollowsItsSchema(t *testing.T) {

@@ -165,6 +165,44 @@ With it off, ZeroTurn never reads what you write, and the hook that would do so 
 
 `zeroturn ship` stages only the files you name, scans them for credentials, runs the checks, fetches, refuses unsafe branch states, asks for confirmation, then commits with your message and pushes without force. `--dry-run` stops before anything changes.
 
+### Validation evidence
+
+A passing run answers a question about a particular state of the code. `zeroturn verify` writes down which state that was, so a later command can say whether the answer still applies.
+
+```text
+$ zeroturn verify
+ZEROTURN VERIFY
+
+PASS  vet        0.4s
+PASS  test     102.2s
+
+Result: 2 checks passed in 102.5s
+Evidence 91ef35e32bc212a8 recorded for repository state cab46d1b8898
+
+$ vim internal/policy/policy.go
+
+$ zeroturn report current
+...
+Validation  STALE
+  Validation is stale because the working tree changed after the last successful run. Run zeroturn verify again for the current code.
+  Evidence 91ef35e32bc212a8 recorded 2026-09-16 19:54 for repository state cab46d1b8898
+```
+
+**What is compared.** The repository state is a digest over the commit, the content Git holds for everything staged, the content of every path the working tree disagrees with Git about, and the definition of the validation steps themselves. Editing a step is a change of state like any other, so evidence recorded under different checks does not carry over.
+
+The digest is taken over content rather than over the output of `git status`. That output names paths and the category each one is in, and it does not move when you edit a file that was already modified. A digest built from it would report the second version of the code as the state the first version was tested against.
+
+**What it does not prove.** That the checks passed for that code on your machine, at that moment. Nothing more. It is not a claim that the code is correct, that it was reviewed, or that it will pass anywhere else. The digest does not cover:
+
+- files Git ignores, so a change to an ignored build input does not move it
+- contents inside a submodule, beyond the fact that Git reports the submodule changed
+- anything outside the repository: installed dependencies, environment variables, toolchain versions, services the tests reach
+- a change that was made and then undone, because the code is back where it was
+
+**When it is checked.** When you ask: `zeroturn verify`, and `zeroturn report` for the repository you are in. There is no background process and no notification. The status line does not compute it, because the status line repaints constantly and reading the repository there would cost more than the whole repaint budget.
+
+**What is stored.** Step names, step statuses, exit codes, counts, times, the log file names, and the digests. One record per repository, in ZeroTurn's own state directory rather than in your project. Step output is not stored, because output carries whatever the tool printed; file contents are not stored, because the digest stands in for them; and the paths of your changed files are not stored either. `zeroturn uninstall` removes it with everything else, and so does `zeroturn report purge --all`.
+
 ## Installation
 
 > [!IMPORTANT]
@@ -280,6 +318,8 @@ Strict mode is never switched on by a file alone. `zeroturn policy set guard.mod
 
 Two things are read without being recorded, and only to look for credentials: the file the model is about to open, and, if you switch the prompt guard on, the message you are about to send. Both are scanned in memory and nothing from either is stored.
 
+Validation evidence is read from the repository and reduced to a digest before anything is written. The contents that go into that digest are never stored, and neither are the paths of the files they came from.
+
 Records stay on your machine, in `~/Library/Application Support/zeroturn` on macOS, `$XDG_DATA_HOME/zeroturn` or `~/.local/share/zeroturn` on Linux, and `%LOCALAPPDATA%\zeroturn` on Windows. Records older than `report.retentionDays` in `.zeroturn.json`, seven days by default, are removed when a new session starts. Change it with `zeroturn policy set report.retentionDays 30`. `zeroturn report purge --all` removes every ZeroTurn record and nothing else.
 
 ZeroTurn makes no network requests of its own, calls no model, and runs no background process. `zeroturn ship` contacts your Git remote because pushing requires it.
@@ -292,14 +332,14 @@ ZeroTurn makes no network requests of its own, calls no model, and runs no backg
 | --- | --- |
 | `zeroturn status` | The session condition, or repository status outside a session |
 | `zeroturn policy show \| check \| set \| reset \| tune \| migrate` | Read or change the guard thresholds |
-| `zeroturn report current \| day \| week \| month \| purge` | Summarise events observed in this repository, `--all-repositories` for the machine, `--json` for machine output |
+| `zeroturn report current \| day \| week \| month \| purge` | Summarise events observed in this repository and whether its validation still covers the current code, `--all-repositories` for the machine, `--json` for machine output |
 | `zeroturn integrate claude --plan \| --apply \| --remove` | Show, install, or remove the harness integration |
 
 **Direct Lane**
 
 | Command | Purpose |
 | --- | --- |
-| `zeroturn verify` | Run the approved validation steps, `--approve` to review them first |
+| `zeroturn verify` | Run the approved validation steps and record what state they ran against, `--approve` to review them first |
 | `zeroturn ship --message ... --files ...` | Stage named files, check, commit, and push, `--dry-run` to stop before any change |
 
 **Setup and support**
@@ -406,6 +446,15 @@ Planned:
 
 - a Homebrew formula after the first release
 - a Copilot adapter once Copilot exposes session values to hooks
+
+**Being explored, and not built.** Validation evidence is the first piece of a larger direction: making what an agent did reviewable by the engineer who is accountable for it. The pieces below are under evaluation and none of them exist. Nothing in this repository implements them, and the commands that would carry them are not there.
+
+- a repository handoff record, a durable checkpoint between automated implementation work and human review, holding the repository state, what was done, the decisions and assumptions behind it, the validation evidence, and what still needs a person
+- a review or release checkpoint that records a human decision against specific evidence
+- deployment evidence, which would need an adapter for each CI provider and, by the same rule the Copilot adapter follows, would be claimed only once it had run against a real one
+- an editor extension, so the state is visible where the work happens
+
+Validation evidence is being used in real work before any of that is designed around it. What is being watched: how often evidence actually goes stale, whether the warning changes what anybody does, and whether computing the digest stays fast on a large repository. Staleness on its own is infrastructure. It does not yet demonstrate the larger idea, and it is not presented as though it does.
 
 Not planned: `zeroturn sync`. The reasoning, and the research behind the product boundary, are in [docs/decisions.md](docs/decisions.md).
 

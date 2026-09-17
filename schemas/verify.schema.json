@@ -38,6 +38,10 @@
     },
     "cancelled": {
       "type": "boolean"
+    },
+    "evidence": {
+      "type": "object",
+      "description": "The evidence record this run wrote, as described by evidence.schema.json. It names the repository state the result is evidence about, so a later command can say whether it still holds."
     }
   },
   "$defs": {

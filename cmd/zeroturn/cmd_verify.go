@@ -6,13 +6,24 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/cris-wendler/zeroturn/internal/config"
+	"github.com/cris-wendler/zeroturn/internal/evidence"
 	"github.com/cris-wendler/zeroturn/internal/output"
+	"github.com/cris-wendler/zeroturn/internal/snapshot"
 	"github.com/cris-wendler/zeroturn/internal/state"
 	"github.com/cris-wendler/zeroturn/internal/trust"
 	"github.com/cris-wendler/zeroturn/internal/verify"
 )
+
+// verifyJSON is the result with the evidence record beside it. The result
+// is embedded rather than nested, so every field a reader already takes
+// from this output is where it was.
+type verifyJSON struct {
+	verify.Result
+	Evidence *evidence.Record `json:"evidence,omitempty"`
+}
 
 const verifyUsage = `zeroturn verify [--json] [--approve]
 
@@ -84,6 +95,24 @@ func cmdVerify(ctx context.Context, args []string) error {
 			"install them, or change the commands in "+config.FileName)
 	}
 
+	// The snapshot is taken before the steps run. Taking it afterwards
+	// would fold whatever the steps wrote, a coverage file or a build
+	// directory that is not ignored, into the state the result claims to
+	// be evidence about.
+	snap, serr := snapshot.Compute(ctx, repo, c.Hash())
+	if serr != nil {
+		return output.Errorf(output.ExitInternal, "zeroturn verify ran nothing",
+			"the repository state could not be read: "+serr.Error(),
+			"check that git is installed and that this repository is readable")
+	}
+	repoHash := state.RepoHash(repo.Root)
+	rec, berr := evidence.Begin(st, repoHash, Version, snap, time.Now())
+	if berr != nil {
+		return output.Errorf(output.ExitInternal, "zeroturn verify ran nothing",
+			"the evidence record could not be written: "+berr.Error(),
+			"check that your user data directory is writable")
+	}
+
 	opts := verify.Options{RepoRoot: repo.Root}
 	if !*asJSON {
 		fmt.Println("ZEROTURN VERIFY")
@@ -96,16 +125,26 @@ func cmdVerify(ctx context.Context, args []string) error {
 			rerr.Error(), "check that the repository .git directory is writable")
 	}
 
+	rec, cerr := evidence.Complete(st, rec, res, time.Now())
+	if cerr != nil {
+		// The run happened and its result is on the screen. Losing the
+		// record is worth saying out loud, because the next command will
+		// report that no validation was recorded, and that would otherwise
+		// look like this run never took place.
+		fmt.Fprintln(os.Stderr, "ZeroTurn could not record evidence for this run: "+cerr.Error())
+	}
+
 	if sess, found := recentSession(st, repo.Root); found {
 		st.Update(sess.SessionID, "", func(s *state.Session) { s.DirectValidations++ })
 	}
 
 	if *asJSON {
-		if jerr := output.JSON(os.Stdout, res); jerr != nil {
+		if jerr := output.JSON(os.Stdout, verifyJSON{Result: res, Evidence: &rec}); jerr != nil {
 			return jerr
 		}
 	} else {
 		printVerifySummary(res)
+		fmt.Printf("Evidence %s recorded for repository state %s\n", rec.EvidenceID, snap.Short())
 	}
 
 	if res.Cancelled {

@@ -50,7 +50,9 @@ rather than replacing them.
 Transcript collection and prompt inspection are out because it never reads
 what you or the model wrote, and remote telemetry or a hosted dashboard
 because everything stays on the machine. Output compression, automatic
-handoff, compaction and clearing all change the session behind your back.
+session handoff, compaction and clearing all change the session behind
+your back. A handoff record written into a repository for a person to
+read is a different thing and is not covered by this.
 
 The rest are safety rules. Commands are argument arrays, so shell strings
 in configuration cannot smuggle in shell syntax. Git history is the

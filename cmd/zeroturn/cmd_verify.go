@@ -32,6 +32,10 @@ stopping at the first failure.
 
 The commands are approved once per repository on this machine. Nothing
 runs until they have been reviewed.
+
+The result is recorded as evidence, together with the state of the
+repository it ran against, so that zeroturn report can say later whether
+it still covers the code that is there.
 `
 
 func cmdVerify(ctx context.Context, args []string) error {

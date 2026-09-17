@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/cris-wendler/zeroturn/internal/capabilities"
+	"github.com/cris-wendler/zeroturn/internal/snapshot"
 )
 
 // A command is added in one place and listed in three others: the help
@@ -212,4 +213,113 @@ func TestTheReadmeNamesNoCommandThatIsGone(t *testing.T) {
 			t.Errorf("the README names zeroturn %s, which is not a command", name)
 		}
 	}
+}
+
+// What a check does not see is the claim most worth holding to the code,
+// because it is the one a reader relies on when deciding whether to
+// trust the result. The list lived twice: once in internal/snapshot and
+// once in the README, with nothing comparing them, which is the shape of
+// six defects already recorded here.
+//
+// The package holds the sentences. This requires the README to carry
+// each one word for word.
+func TestTheReadmeStatesEveryLimitOfTheRepositoryDigest(t *testing.T) {
+	b, err := ioutil.ReadFile(filepath.Join("..", "..", "README.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(b)
+	if len(snapshot.Limits) == 0 {
+		t.Fatal("the package lists no limits, so this test checks nothing")
+	}
+	for _, limit := range snapshot.Limits {
+		if !strings.Contains(text, limit) {
+			t.Errorf("the README does not tell a reader that the digest does not cover:\n  %s", limit)
+		}
+	}
+}
+
+// A command that writes or deletes evidence has to say so in its own
+// help. The README said all of it and the help text said none of it, and
+// one of them was worse than silent: report's help described purge as
+// deleting session records, which stopped being true when purge started
+// removing evidence as well.
+//
+// Help is read by somebody standing in front of the command, which is
+// later than the README and closer to the consequence. So this finds the
+// commands that reach for the evidence package and requires each one to
+// mention it, rather than trusting anybody to remember.
+func TestEveryCommandThatTouchesEvidenceSaysSoInItsHelp(t *testing.T) {
+	names, err := filepath.Glob("cmd_*.go")
+	if err != nil || len(names) == 0 {
+		t.Fatalf("no command files found: %v", err)
+	}
+	checked := 0
+	for _, path := range names {
+		b, rerr := ioutil.ReadFile(path)
+		if rerr != nil {
+			t.Fatal(rerr)
+		}
+		body := string(b)
+		// The import is what says this command reaches the evidence store.
+		if !strings.Contains(body, `zeroturn/internal/evidence"`) {
+			continue
+		}
+		checked++
+		// The help for a command lives in the same file, as a usage
+		// constant or a function that builds one.
+		help := helpTextIn(t, body)
+		if help == "" {
+			t.Errorf("%s touches evidence and has no help text to describe it", path)
+			continue
+		}
+		if !strings.Contains(strings.ToLower(help), "evidence") {
+			t.Errorf("%s writes or deletes evidence and its help never mentions it, "+
+				"so somebody reading the command is not told", path)
+		}
+	}
+	if checked == 0 {
+		t.Fatal("no command reaches the evidence package, so this test checks nothing")
+	}
+}
+
+// helpTextIn returns only the text a person is shown: the contents of
+// the raw quoted blocks, and the quoted strings a usage function writes
+// out. The code between them is excluded on purpose.
+//
+// The first version of this took every segment of the file that a split
+// on the quote character produced, which is the blocks and the code in
+// between. That made the check tautological, because a command file that
+// imports the evidence package necessarily contains the word evidence in
+// its code, so the test passed with the help text emptied out. It was
+// caught by deleting the help and watching the test still pass.
+func helpTextIn(t *testing.T, body string) string {
+	t.Helper()
+	var b strings.Builder
+	// A split on the quote character alternates outside, inside, outside.
+	// Only the odd positions are inside a block.
+	parts := strings.Split(body, "`")
+	for i := 1; i < len(parts); i += 2 {
+		// A struct tag is a quoted block too, and one of them carries the
+		// word this test looks for, which let the check pass with the help
+		// text deleted. Help spans lines; a tag never does.
+		if !strings.Contains(parts[i], "\n") {
+			continue
+		}
+		b.WriteString(parts[i])
+		b.WriteString("\n")
+	}
+	// A usage built up from ordinary quoted strings counts too, but only
+	// the quoted part of the line, not the call around it.
+	quoted := regexp.MustCompile(`"((?:[^"\\]|\\.)*)"`)
+	for _, line := range strings.Split(body, "\n") {
+		if !strings.Contains(line, "WriteString(") && !strings.Contains(line, "Fprintf(&b,") {
+			continue
+		}
+		for _, m := range quoted.FindAllStringSubmatch(line, -1) {
+			b.WriteString(m[1])
+			b.WriteString("\n")
+		}
+	}
+	return b.String()
 }

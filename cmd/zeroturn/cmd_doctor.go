@@ -64,6 +64,7 @@ func cmdDoctor(ctx context.Context, args []string) error {
 	checks = append(checks, checkExecutable("git", "git", "--version"))
 	checks = append(checks, checkExecutable("claude", "claude", "--version"))
 	checks = append(checks, checkExecutable("copilot", "copilot", "--version"))
+	checks = append(checks, checkOnPath())
 	checks = append(checks, checkState())
 	checks = append(checks, checkRepo(ctx)...)
 	checks = append(checks, check{"short alias", checkNote,
@@ -130,6 +131,107 @@ func checkExecutable(name, bin string, args ...string) check {
 		return check{name, checkOK, "found at " + p}
 	}
 	return check{name, checkOK, v}
+}
+
+// checkOnPath says whether this executable can be run by name.
+//
+// go install puts it in GOBIN, and nothing guarantees GOBIN is on PATH.
+// The first person to install this could not run zeroturn at all, and
+// every instruction in the README, and in this command's own output,
+// names it that way. The integration is unaffected, because the harness
+// calls the executable by its full path, so no other check here would
+// have noticed.
+func checkOnPath() check {
+	const name = "on your PATH"
+	self := selfPath()
+	temporary := isTemporaryBuild(self)
+	found, err := exec.LookPath("zeroturn")
+	if err != nil {
+		if temporary {
+			// go run builds into a temporary directory and deletes it
+			// afterwards, so telling somebody to put that on their PATH
+			// would be advice that stops working the moment it is taken.
+			//
+			// It is a note rather than a warning because nothing is
+			// wrong: somebody running from the source has not installed
+			// anything, and calling that a problem would give a fresh
+			// machine a second thing to do when it has one.
+			return check{name, checkNote,
+				"this build was run from the source and is not installed. " +
+					"Install it with go install ./cmd/zeroturn to run it by name"}
+		}
+		return check{name, checkWarn,
+			"zeroturn is at " + self + " and is not on your PATH, so the command is not found by name. " +
+				"Add its directory to PATH in your shell profile: export PATH=\"" +
+				filepath.Dir(self) + ":$PATH\""}
+	}
+	if resolved, rerr := filepath.EvalSymlinks(found); rerr == nil {
+		found = resolved
+	}
+	if found == self {
+		return check{name, checkOK, found}
+	}
+	// A build run straight from a checkout is not the installed one, and
+	// is not meant to be. Saying so is useful; calling it a problem would
+	// warn every contributor about the way they were told to work.
+	if temporary {
+		return check{name, checkNote,
+			"this build was run from the source. Typing zeroturn runs the installed one at " + found}
+	}
+	// Two installs, and the one running is not the one a person typing
+	// the name would get. Everything they do afterwards would act on the
+	// other one, which is worse than not finding it at all.
+	return check{name, checkWarn,
+		"this is " + self + ", and typing zeroturn runs " + found + " instead. " +
+			"Remove the one you do not want, or move its directory later in your PATH"}
+}
+
+// isTemporaryBuild reports whether the executable is one go run built to
+// use once, rather than one somebody installed.
+//
+// It lands in two different places. A cold build goes to a directory
+// under the system temporary one, and a warm build is run straight out
+// of the Go build cache, which is not temporary at all by name. Checking
+// only the first told every contributor following CONTRIBUTING that they
+// had two installs and should remove one.
+//
+// The locations are read from the environment rather than by running go,
+// which is not installed on every machine this has to answer on.
+func isTemporaryBuild(p string) bool {
+	var roots []string
+	roots = append(roots, os.TempDir())
+	if v := os.Getenv("GOCACHE"); v != "" {
+		roots = append(roots, v)
+	}
+	if dir, err := os.UserCacheDir(); err == nil {
+		roots = append(roots, filepath.Join(dir, "go-build"))
+	}
+	// Each root is compared both as it is written and as it resolves. The
+	// temporary directory is a symbolic link on macOS, so a path that has
+	// been resolved and one that has not do not share a prefix, and which
+	// of the two arrives depends on who asked.
+	for _, root := range roots {
+		// The temporary directory is given with a separator on the end on
+		// some systems, and joining that to the check below produced two
+		// of them, which nothing is ever a prefix of.
+		root = filepath.Clean(root)
+		if under(p, root) {
+			return true
+		}
+		if resolved, err := filepath.EvalSymlinks(root); err == nil && under(p, resolved) {
+			return true
+		}
+	}
+	return false
+}
+
+// under reports whether p sits inside dir. Each root is compared both as
+// it is written and as it resolves, because the temporary directory is a
+// symbolic link on macOS: a path that has been resolved and one that has
+// not do not share a prefix, and which of the two arrives depends on who
+// asked.
+func under(p, dir string) bool {
+	return strings.HasPrefix(p, filepath.Clean(dir)+string(filepath.Separator))
 }
 
 func checkState() check {

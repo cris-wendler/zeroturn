@@ -192,40 +192,75 @@ func printCommands(c config.Config) {
 // arrive as they always have, and a reader of a log is not watching a
 // clock anyway.
 func printStepStart(name string) {
-	if !isTTY(os.Stdout) {
+	c := output.NewColor(os.Stdout, "")
+	if !showsProgress(c) {
 		return
 	}
-	c := output.NewColor(os.Stdout, "")
-	fmt.Printf("%s  %-10s", c.Dim("RUN "), name)
+	fmt.Print(stepStartLine(c, name))
 }
 
-// clearStepStart removes the start line before its result is written.
-// The spaces cover the line that was there, because a carriage return
-// moves the cursor without erasing what it passes over.
-func clearStepStart() {
-	if !isTTY(os.Stdout) {
+// showsProgress reports whether a start line can be drawn and then taken
+// away again. It needs a terminal, and it needs one ZeroTurn is already
+// writing escape sequences to, because the row is erased with one. Where
+// either is false nothing is drawn, so there is nothing to erase and the
+// output is what it always was.
+func showsProgress(c output.Color) bool { return isTTY(os.Stdout) && c.Escapes() }
+
+// stepStartLine and stepResultLine build the two lines that occupy the
+// same row, one after the other. They are built rather than printed so
+// that the rule holding them together, that a result covers the start
+// line it replaces, can be checked instead of assumed.
+func stepStartLine(c output.Color, name string) string {
+	return fmt.Sprintf("%s  %-10s", c.Dim("RUN "), name)
+}
+
+func stepResultLine(c output.Color, s verify.StepResult) string {
+	// The step name is padded so the columns line up, and a status with
+	// nothing after the name then ends in that padding. Skipped and
+	// cancelled steps have printed trailing whitespace since before there
+	// was a start line to cover, in piped output as well as on a screen.
+	return strings.TrimRight(resultLine(c, s), " ")
+}
+
+func resultLine(c output.Color, s verify.StepResult) string {
+	switch s.Status {
+	case verify.StatusPass:
+		return fmt.Sprintf("%s  %-10s %.1fs", c.Green("PASS"), s.Name, s.Seconds)
+	case verify.StatusFail:
+		return fmt.Sprintf("%s  %-10s %.1fs  exit %d", c.Red("FAIL"), s.Name, s.Seconds, s.ExitCode)
+	case verify.StatusMissing:
+		return fmt.Sprintf("%s  %-10s %s", c.Red("MISS"), s.Name, s.Excerpt)
+	case verify.StatusCancelled:
+		return fmt.Sprintf("%s  %-10s", c.Yellow("STOP"), s.Name)
+	default:
+		return fmt.Sprintf("%s  %-10s", c.Dim("SKIP"), s.Name)
+	}
+}
+
+// clearStepStart takes the start line away before the result is written.
+//
+// The row is erased rather than covered. Writing spaces over it is the
+// obvious move and it is what this did first, which left the tail of
+// that padding on every result line: invisible on a terminal, and
+// carried along the moment somebody copies a run into a message, which
+// is how it was found. Covering it with the result instead only works
+// while every result happens to be the wider of the two, which is a
+// thing no one would remember when adding the next one.
+func clearStepStart(c output.Color) {
+	if !showsProgress(c) {
 		return
 	}
-	fmt.Print("\r" + strings.Repeat(" ", 24) + "\r")
+	// Return to the start of the row, then erase from the cursor to the
+	// end of it, so nothing of the start line survives in any column.
+	fmt.Print("\r\033[K")
 }
 
 // printStep writes one result line. It is passed to verify.Run so each
 // line appears when its step finishes.
 func printStep(s verify.StepResult) {
-	clearStepStart()
 	c := output.NewColor(os.Stdout, "")
-	switch s.Status {
-	case verify.StatusPass:
-		fmt.Printf("%s  %-10s %.1fs\n", c.Green("PASS"), s.Name, s.Seconds)
-	case verify.StatusFail:
-		fmt.Printf("%s  %-10s %.1fs  exit %d\n", c.Red("FAIL"), s.Name, s.Seconds, s.ExitCode)
-	case verify.StatusMissing:
-		fmt.Printf("%s  %-10s %s\n", c.Red("MISS"), s.Name, s.Excerpt)
-	case verify.StatusCancelled:
-		fmt.Printf("%s  %-10s\n", c.Yellow("STOP"), s.Name)
-	default:
-		fmt.Printf("%s  %-10s\n", c.Dim("SKIP"), s.Name)
-	}
+	clearStepStart(c)
+	fmt.Println(stepResultLine(c, s))
 }
 
 // printVerifySummary follows the streamed step lines with the failure

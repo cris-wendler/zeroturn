@@ -229,7 +229,7 @@ With it off, ZeroTurn never reads what you write, and the hook that would do so 
 ## Installation
 
 > [!IMPORTANT]
-> **Session Guard needs Claude Code running in a terminal.** Context use, the usage windows, and session duration reach ZeroTurn through the harness status line, and through nothing else: no hook payload carries them. An editor extension draws no status line, so it never runs the command, and the guard then has no measurements at all. Subagent counts and the credential guard still work there, because those come from hooks. `zeroturn doctor` reports which case you are in.
+> **Session Guard needs Claude Code running in a terminal.** Context use, the usage windows, and session duration reach ZeroTurn through the harness status line, and through nothing else: no hook payload carries them. An editor extension draws no status line, so it never runs the command, and the guard then has no measurements at all. Subagent counts and the credential guard still work there, because those come from hooks. `zeroturn doctor` reports which case you are in, and `zeroturn policy check` says so too rather than printing an all clear for thresholds nothing measured.
 
 ZeroTurn is one executable with no runtime dependencies. Installing it needs Go 1.17 or newer.
 
@@ -464,7 +464,7 @@ ZeroTurn shows and gates what the harness reports. It cannot see usage the harne
 - Subagent counts cover only subagents started while ZeroTurn was installed. One that never reports stopping is cleared when the turn ends.
 - The background task count is as current as the last `Stop` event.
 - The interactive approval prompt for Confirm mode was observed on Claude Code 2.1.270. It can be bypassed from the prompt itself: the harness offers to stop asking for that tool in that directory, and ZeroTurn is not told when that is chosen.
-- Session Guard measurements require the terminal interface. In an editor extension the status line is never invoked, so context, the usage windows, and duration are absent and only the subagent counts and the credential guard work. Confirmed on Claude Code 2.1.257.
+- Session Guard measurements require the terminal interface. In an editor extension the status line is never invoked, so context, the usage windows, and duration are absent and only the subagent counts and the credential guard work. Confirmed on Claude Code 2.1.257. `zeroturn policy check` and `zeroturn doctor` both say when this is the case and name which values were not measured, so an unread threshold is never reported as one that was checked and not crossed.
 - Validation evidence says the checks passed for one state of one repository on this machine, and nothing else. What the digest cannot see is listed under Validation evidence above. It has not yet been used long enough to say how often evidence goes stale in real work, or whether being told changes what anybody does.
 - The test suite runs on Linux with both supported Go releases, on macOS, and on Windows, for every change. On Windows, tests that need a POSIX shell are skipped. The harness integration has been used on macOS only.
 

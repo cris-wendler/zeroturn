@@ -160,20 +160,34 @@ func TestABuildRunFromTheSourceIsNotMistakenForAnInstall(t *testing.T) {
 	}
 }
 
-// Whatever the doctor says about this, it has to name a command or a
-// line the reader can act on. The check exists because somebody could
+// Whatever the doctor says about this, it has to say something, and a
+// warning has to name an action. The check exists because somebody could
 // not run zeroturn at all, so an answer they cannot act on is the one
 // failure mode that matters.
+//
+// The two levels are held to different rules on purpose. Entry 43 in the
+// decisions defines a note as something true that the reader cannot act
+// on, which is the whole reason the level exists, so requiring an action
+// from one contradicts it.
+//
+// This test used to demand an action from every answer that was not ok,
+// and it therefore depended on the machine it ran on. A checkout built
+// by go test is a temporary build, so on a machine with zeroturn
+// installed and on PATH the check correctly returns the note that says
+// which one typing the name would run, and the test failed on a true
+// answer. It passed on every continuous integration runner and in any
+// shell without the install directory on PATH, which is why it survived.
+// That is the shape of entry 50: assert the rule, not the machine.
 func TestThePathCheckAlwaysNamesSomethingToDo(t *testing.T) {
 	c := checkOnPath()
-	if c.Status == checkOK {
-		if c.Detail == "" {
-			t.Error("the check passed and said nothing about where the executable is")
-		}
-		return
+	if c.Detail == "" {
+		t.Fatalf("the check said nothing at all, at status %q", c.Status)
 	}
 	if !strings.Contains(c.Detail, "zeroturn") {
 		t.Errorf("the detail does not name the command it is about: %q", c.Detail)
+	}
+	if c.Status != checkWarn {
+		return
 	}
 	// The wording differs with the case, so what is required is an
 	// action, not a particular word. Asking for the word PATH failed the
@@ -182,6 +196,40 @@ func TestThePathCheckAlwaysNamesSomethingToDo(t *testing.T) {
 	if !strings.Contains(c.Detail, "export PATH=") &&
 		!strings.Contains(c.Detail, "go install") &&
 		!strings.Contains(c.Detail, "Remove") {
-		t.Errorf("the detail names nothing the reader can do: %q", c.Detail)
+		t.Errorf("the warning names nothing the reader can do: %q", c.Detail)
+	}
+}
+
+// The rule above is only as good as the answers it is applied to, and on
+// any one machine checkOnPath returns one of its four. This applies the
+// rule to all four, so a case nobody's machine happens to produce cannot
+// drift. It is the half the live check could never cover.
+func TestEveryAnswerThePathCheckCanGiveFollowsTheRule(t *testing.T) {
+	answers := []check{
+		{"on your PATH", checkOK, "/usr/local/bin/zeroturn"},
+		{"on your PATH", checkNote,
+			"this build was run from the source and is not installed. Install it with go install ./cmd/zeroturn to run it by name"},
+		{"on your PATH", checkNote,
+			"this build was run from the source. Typing zeroturn runs the installed one at /usr/local/bin/zeroturn"},
+		{"on your PATH", checkWarn,
+			"zeroturn is at /tmp/zeroturn and is not on your PATH, so the command is not found by name. " +
+				"Add its directory to PATH in your shell profile: export PATH=\"/tmp:$PATH\""},
+		{"on your PATH", checkWarn,
+			"this is /tmp/zeroturn, and typing zeroturn runs /usr/local/bin/zeroturn instead. " +
+				"Remove the one you do not want, or move its directory later in your PATH"},
+	}
+	for _, c := range answers {
+		if c.Detail == "" {
+			t.Errorf("%s: says nothing", c.Status)
+			continue
+		}
+		if c.Status != checkWarn {
+			continue
+		}
+		if !strings.Contains(c.Detail, "export PATH=") &&
+			!strings.Contains(c.Detail, "go install") &&
+			!strings.Contains(c.Detail, "Remove") {
+			t.Errorf("a warning names nothing the reader can do: %q", c.Detail)
+		}
 	}
 }

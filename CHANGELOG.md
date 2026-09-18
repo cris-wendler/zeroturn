@@ -4,6 +4,15 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
+**Fixed**
+
+- `schemas/policy-tune.schema.json` advertised a trigger named `backgroundTasks`, which `policy tune` cannot produce: a threshold is only reported for a measurement the tuner can read, and that is not one of them. An adapter reading the published contract would have written handling for a value that can never arrive. No output changes, because the value was never emitted.
+
+**Internal**
+
+- The trigger names in `schemas/policy-tune.schema.json` are compared with the names the code can emit, read out of the switch that decides them, in both directions.
+- `.zeroturn.example.json` is compared with `config.Default()` rather than only checked for loading, so the file somebody reads to see what the defaults are cannot quietly stop showing them. The validation steps are excluded and held by their own check, because they illustrate a JavaScript project on purpose.
+
 ## 0.3.0, 2026-09-17
 
 **Added**

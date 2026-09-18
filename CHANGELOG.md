@@ -4,6 +4,10 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
+**Added**
+
+- `status --json` and `policy check --json` carry `unmeasured`, the thresholds the gate could not check because the harness sent no reading for them. `triggers` still means the thresholds that were crossed, so a reader counting it to ask whether anything fired gets the answer it has always got. Every entry in `triggers` has `available` true and every entry in `unmeasured` has it false, which is what that field was declared for and never carried: nothing ever set it false. The contract version is 2.2.0 and nothing was taken away.
+
 **Fixed**
 
 - `schemas/policy-tune.schema.json` advertised a trigger named `backgroundTasks`, which `policy tune` cannot produce: a threshold is only reported for a measurement the tuner can read, and that is not one of them. An adapter reading the published contract would have written handling for a value that can never arrive. No output changes, because the value was never emitted.

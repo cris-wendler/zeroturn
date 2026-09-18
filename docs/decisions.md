@@ -869,3 +869,21 @@ The decision is to ship a plugin as a second install path rather than a replacem
 The manifest will be generated from the hook list in `internal/harness/claude` rather than written beside it. A hand maintained copy of that list is the pattern in entry 33, and it would be the seventh instance in this repository.
 
 Not decided, and recorded as not decided: whether the plugin is published to a marketplace at all, which is a distribution question and not this one. Nothing here authorises publishing.
+
+## 57. The field that could only say one thing
+
+Date: 2026-09-18. Resolves the open item in entry 45.
+
+`Trigger.Available` was published in two schemas as a required property, documented as false when the harness did not supply the measurement, and never set false anywhere. Every trigger was constructed with it true, because a trigger only existed when something had been read. An adapter author reading the contract would have written a branch that could not run.
+
+Entry 45 recorded the shape of the problem and left it open, because every answer cost something. Removing a required property takes something away from a contract that had only added. Implementing it meant putting entries in the trigger list for thresholds that were not crossed, which changes what every reader of that list sees, including the sentence the gate shows a developer.
+
+What settled it was that the question the field was invented for got a better answer in the meantime. `policy check` and `doctor` now say when nothing was measured and name which values are absent, in the place a person reads. That left the machine readable half as the only gap, and a narrower problem than the one entry 45 described.
+
+The entries go in a new array rather than in `triggers`. `triggers` still means the thresholds that were crossed, so a reader counting it to ask whether anything fired gets the answer it has always got. The new array carries the thresholds that could not be checked. Every entry in one has `available` true and every entry in the other has it false, which is the distinction the field was declared for. The contract is 2.2.0 and nothing was taken away.
+
+Three details are deliberate. The observation is absent rather than zero, because zero is a reading nobody took, so `observed` became optional and is omitted when there is nothing to report. The limit is present, because it is configured and therefore real. The level is `ok`, and the entries are attached after the level, the decision and the reason have all been computed from the crossed list alone.
+
+That last point is the whole risk of the change and it is held by a test rather than by care. Folding the entries into the list before the decision is computed makes the test fail, and the failure it prints is the reason why: the prompt a developer would have been shown becomes "New subagent requires approval. 3 subagents are active and no reading for the five hour usage window, so its threshold could not be checked."
+
+The entries are built from the same list the gate reads its measurements from, which a test compares against the nil checks in `EvaluateAt` in both directions, so a measurement added to the gate cannot be missing from this answer.

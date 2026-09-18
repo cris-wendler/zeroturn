@@ -27,7 +27,17 @@ import (
 // made against, and `report --json` carries `validation`, which says
 // whether that state is still the one on disk. Both are additive: every
 // field either output already had is where it was.
-const ContractVersion = "2.1.0"
+// 2.2.0 adds `unmeasured` to the policy document in `status --json` and
+// `policy check --json`, and takes nothing away. It carries the
+// thresholds the gate could not check because the harness sent no
+// reading for them. `triggers` still means what it always meant, the
+// thresholds that were crossed, so a reader counting it to ask whether
+// anything fired gets the answer it got before.
+//
+// This is what the `available` field was declared for. Nothing ever set
+// it false, so it could only ever say one thing; every entry in
+// `triggers` has it true and every entry in `unmeasured` has it false.
+const ContractVersion = "2.2.0"
 
 // ClaudeTestedVersions are the harness releases on which a decision was
 // observed end to end: allow and deny on the first, and the interactive

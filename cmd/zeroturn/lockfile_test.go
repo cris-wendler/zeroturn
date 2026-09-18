@@ -4,15 +4,25 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/cris-wendler/zeroturn/internal/testutil"
+	"io/ioutil"
+	"path/filepath"
 )
 
 // Ranging over a map is randomised, so the same files gave different
 // answers on different runs.
+// nodePackageManager only stats files, so these need a directory and
+// not a repository.
+func write(t *testing.T, dir, name string) {
+	t.Helper()
+	if err := ioutil.WriteFile(filepath.Join(dir, name), []byte("{}"), 0644); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestTwoLockfilesGiveTheSameAnswerEveryTime(t *testing.T) {
-	work, _ := testutil.Remote(t)
-	testutil.Write(t, work, "yarn.lock", "")
-	testutil.Write(t, work, "package-lock.json", "{}")
+	work := t.TempDir()
+	write(t, work, "yarn.lock")
+	write(t, work, "package-lock.json")
 
 	first := nodePackageManager(work)
 	for i := 0; i < 50; i++ {
@@ -45,9 +55,9 @@ func TestTheMoreSpecificLockfileWins(t *testing.T) {
 			continue // the winner is not on this machine, so it cannot be returned
 		}
 		ran++
-		work, _ := testutil.Remote(t)
+		work := t.TempDir()
 		for _, f := range c.files {
-			testutil.Write(t, work, f, "")
+			write(t, work, f)
 		}
 		if got := nodePackageManager(work); got != c.want {
 			t.Errorf("%s: got %q", c.name, got)
@@ -59,7 +69,7 @@ func TestTheMoreSpecificLockfileWins(t *testing.T) {
 }
 
 func TestNoLockfileFallsBackToNpm(t *testing.T) {
-	work, _ := testutil.Remote(t)
+	work := t.TempDir()
 	if got := nodePackageManager(work); got != "npm" {
 		t.Errorf("no lockfile gave %q", got)
 	}

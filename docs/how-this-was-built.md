@@ -2,6 +2,8 @@
 
 A record of the decisions behind ZeroTurn, written for someone reviewing the work rather than installing the tool. Everything here is checkable against the repository.
 
+It is in the order things happened, and the order matters: a search for a reason not to build it, one unknown tested before anything else was written, the thing built, and then the measurements that showed half of it did not work where it was being used. The last part changed the product rather than the wording. That section is [The evidence changed the product](#the-evidence-changed-the-product), and it is the one to read if you only read one.
+
 ## The question came before the code
 
 The first work was not a prototype. It was a search for a reason not to build this.
@@ -63,7 +65,7 @@ Two refusals shaped the code more than any feature:
 | --- | --- |
 | It behaves as documented | 483 tests across 74 files, run on Linux with both supported Go releases, on macOS, and on Windows |
 | Output matches the published contract | `conformance/`, which runs the real executable against 10 schemas |
-| It is fast enough to sit in a hook | `scripts/bench`: status line 7.5 ms, gate 7.7 ms, measured over 50 runs |
+| It is fast enough to sit in a hook | `scripts/bench`: status line 7.5 ms, gate 7.7 ms, over 50 runs on an Apple M4. Rerunning it on different hardware gives different numbers, which is why the machine is named |
 | A change the tests would not notice | `scripts/mutate` alters one operator at a time and runs that package's tests, over six packages in continuous integration. Every change that survives is recorded in `scripts/mutate/accepted` with the reason it alters nothing, and a line there that the tests later notice is reported as out of date |
 | It keeps nothing private | Tests that walk the state directory after each kind of event |
 
@@ -80,7 +82,23 @@ These were found by the project's own tests and continuous integration, not by a
 
 The performance work came from measurement as well: the first numbers were 31 ms and 53 ms, and two changes brought both to about 8 ms.
 
-## The same defect, six times
+## What the tests could not find
+
+The section above is the flattering half. This is the other one, and it is more useful.
+
+Once the tool was installed and used rather than worked on, a run of defects came out that no test here could have caught, because each depended on a condition the suite does not have:
+
+- **`verify` printed nothing for a minute.** A result only exists once a step has finished, so nothing was drawn while the slow one ran, which is indistinguishable from a hang. Every test asserts on final output, and the suite never watches a terminal. The person running it asked whether it was still working, which is the question the design should have answered.
+- **The fix for that left trailing whitespace on every line.** Invisible on screen. It became visible only when the output was pasted somewhere else. The test written for it then found the same fault in `SKIP` and `STOP` lines, shipped two versions earlier.
+- **After `go install`, the command could not be run at all.** `GOBIN` was not on the path. Every check was green, because the harness invokes the executable by its full path, so the integration was correct while the command was unusable by hand.
+- **`doctor` printed an installer prompt as a harness version.** Asked for its version, a program answered `Install GitHub Copilot CLI? ['y/N']`, and that went into the table as the version with an `OK` beside it. No runner has that program, so no runner could produce the string.
+- **A test failed only on a machine with this tool installed.** It demanded an action from every answer that was not `ok`, including the note that exists for answers with none. No continuous integration runner has ZeroTurn on its path, so it passed everywhere it ran and failed for the first person to run the suite on their own machine.
+
+The pattern is one thing: **every one of them depended on the environment rather than the logic**, and the suite has exactly one environment. A slow terminal, a populated `PATH`, a pasted buffer, a program that answers a question with a question. Testing harder would not have found any of them. Installing it and using it found all five in two days.
+
+That is also the argument for the tool itself. Three of the five were found because somebody ran a command and read what came back, which is the thing an agent working alone does least.
+
+## The same defect, again and again
 
 One failure kept coming back, and it was not noticed as a pattern until the sixth time. A description of something was kept by hand beside the thing it described, and the two drifted apart.
 
@@ -92,8 +110,14 @@ One failure kept coming back, and it was not noticed as a pattern until the sixt
 | The counts in this document | the repository |
 | The platform claims in the README | what the harness actually delivers |
 | The required checks in the branch ruleset | the jobs the workflow defines |
+| The version the released binary reported | the function that resolves it |
+| The values the gate can read | the checks in the gate itself |
+| The trigger names the published schema allows | the switch that decides them |
+| The example configuration file | the defaults a new file gets |
 
-Each one was written up on its own as a new lesson. Read together they are one lesson: a description maintained beside a thing will drift, and the answer is to derive it from the thing instead. Nine tests in this repository now do that. They compare against a type by reflection, against the other implementation of a contract, or against the files on disk, and they fail in both directions, so neither a missing entry nor a stale one survives.
+Each one was written up on its own as a new lesson. Read together they are one lesson: a description maintained beside a thing will drift, and the answer is to derive it from the thing instead. More than a dozen tests in this repository now do that. They compare against a type by reflection, against the source itself through the Go parser, against the other implementation of a contract, or against the files on disk, and they fail in both directions, so neither a missing entry nor a stale one survives.
+
+The last four rows are the part worth reading. They happened **after** the pattern was named, written up, and guarded by tests, by the same author who had just written the lesson. One of them is in this document: the count above said six for as long as it took to find four more. That is not a failure of understanding, it is the point being made: knowing about drift does not prevent it, and only a check that reads the thing does.
 
 The evidence for whether that works is in what happened next. Every drift with a derived check was caught automatically: three unlisted fields in the stored record, a contract version an adapter could not send, `--help` broken on seven commands, and the counts in this document twice within an hour of the check being written. Every drift without one was caught by luck: a test count out by a hundred, platform claims in three documents, and a branch rule requiring a check that no longer exists, which would have blocked every merge once it was applied.
 
@@ -126,6 +150,24 @@ WARN  session data   6 of 7 recent sessions for this repository carried no
 
 What the two have in common is that both are failures of a control's assumptions about its environment rather than of its logic, and neither is visible from inside the control. The first assumes an answer stays given. The second assumes an input will arrive. In both cases the guard reports success, because from where it sits nothing went wrong. A guardrail built on an agent harness needs to state which of its inputs are optional, and to report when one it depends on has never arrived.
 
+## The evidence changed the product
+
+The second failure above is not a detail. Session Guard's measurements arrive through one interface, that interface exists only in a terminal, and the author had been working in an editor extension. Three days of use measured nothing at all. Half the product did not work where it was being built.
+
+There were two honest responses. Narrow the claim, or build the half that does not depend on that interface. Both were done, in that order, and the second is what version 0.3.0 is named for.
+
+`zeroturn verify` now records which state of the repository the checks ran against, and `zeroturn report` says whether that answer still covers the code on disk. It needs no status line and no hooks, so it works everywhere the executable does.
+
+Three decisions inside it are worth reading:
+
+- **The state is a digest over content, not over `git status`.** The cheap version would hash the porcelain output, which names paths and the category each is in. That output does not move when you edit a file that was already modified, so validation against the first version of the code would report as current against the second. A test asserts that the porcelain output is byte identical across such an edit **and** that the digest moved, so the argument is in the suite rather than in a comment.
+- **The result and whether it is current are separate fields.** One word would hide a failure that had gone stale. A failed run that no longer matches the code reports `failed` and `stale`, not one of them.
+- **A record is written before the steps run and replaced after.** An interrupted run is therefore distinguishable from one that never happened.
+
+What it does not claim is written down beside what it does: that the checks passed for that code on that machine at that moment, and nothing more. Not that the code is correct, not that it was reviewed, not that it will pass anywhere else. Four things the digest cannot see are listed in the README, and a test requires that list to match the one in the code.
+
+The first real observation was not arranged. Evidence recorded at 01:16 went stale within twenty minutes because the code changed underneath it, which is exactly the situation the feature exists to report. It has been in use for days rather than months, and the README says so rather than implying more.
+
 ## What is still unproven
 
 Written in the README, not buried:
@@ -134,6 +176,7 @@ Written in the README, not buried:
 - Session Guard has no measurements outside a terminal. Context, the usage windows, and session duration reach ZeroTurn through the harness status line and through nothing else, and an editor extension draws none, so three days of use there measured nothing. Validation evidence does not depend on that interface.
 - The credential guards match high confidence patterns, so they reduce a common mistake rather than eliminate a class of them.
 - Full gate testing is still in progress. The default thresholds are starting points, and `zeroturn policy tune` suggests better ones from what the gate asked and what you answered.
+- Validation evidence has been in real use for days, not months. It is known to go stale in ordinary work, because it did so within twenty minutes of first being recorded. It is not yet known whether being told changes what anybody does about it, which is the question that decides whether the feature is worth having, and no amount of building answers it.
 
 ## How decisions are recorded
 

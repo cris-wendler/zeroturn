@@ -32,11 +32,13 @@ const (
 
 // Trigger records one threshold that has been crossed.
 type Trigger struct {
-	Name     string  `json:"name"`
-	Observed float64 `json:"observed"`
-	Limit    float64 `json:"limit"`
-	Level    string  `json:"level"`
-	Text     string  `json:"text"`
+	Name string `json:"name"`
+	// Observed is absent when Available is false: there is no reading to
+	// report, and zero would be one nobody took.
+	Observed *float64 `json:"observed,omitempty"`
+	Limit    float64  `json:"limit"`
+	Level    string   `json:"level"`
+	Text     string   `json:"text"`
 	// Available is false when the harness did not supply the measurement.
 	Available bool `json:"available"`
 }
@@ -47,6 +49,45 @@ type Result struct {
 	Decision string    `json:"decision"`
 	Reason   string    `json:"reason,omitempty"`
 	Triggers []Trigger `json:"triggers"`
+	// Unmeasured is the thresholds that could not be checked, because the
+	// harness supplied no reading for them. Triggers means what it has
+	// always meant, the thresholds that were crossed, so a reader counting
+	// it to ask whether anything fired gets the same answer as before.
+	//
+	// Every entry here has Available false and every entry in Triggers has
+	// it true, which is the distinction that field was declared for and
+	// never carried: nothing ever set it false, so it could only ever say
+	// one thing.
+	Unmeasured []Trigger `json:"unmeasured"`
+}
+
+// obs wraps a reading that was taken. It exists so the constructions
+// below stay one line each.
+func obs(v float64) *float64 { return &v }
+
+// unmeasured builds an entry for every threshold the gate could not
+// check, from the same list EvaluateAt reads, so a measurement added to
+// one cannot be missing from the other. The limit is real, because it is
+// configured; there is no observation, and none is reported.
+//
+// The level is ok. These must not move the decision: a threshold nobody
+// measured was not crossed, and reporting it as one would deny work on
+// the strength of a reading that never arrived.
+func unmeasuredTriggers(c config.Config, s state.Session) []Trigger {
+	out := []Trigger{}
+	for _, m := range measurements {
+		if !m.Missing(s) {
+			continue
+		}
+		out = append(out, Trigger{
+			Name:      m.Trigger,
+			Limit:     m.Limit(c),
+			Level:     LevelOK,
+			Text:      "No reading for " + m.Label + ", so its threshold could not be checked",
+			Available: false,
+		})
+	}
+	return out
 }
 
 func rank(level string) int {
@@ -122,13 +163,13 @@ func EvaluateAt(g Guard, s state.Session, now time.Time) Result {
 		v := *s.ContextPct
 		switch {
 		case v >= float64(c.Guard.Context.Critical):
-			t = append(t, Trigger{"context", v, float64(c.Guard.Context.Critical), LevelCritical,
+			t = append(t, Trigger{"context", obs(v), float64(c.Guard.Context.Critical), LevelCritical,
 				fmt.Sprintf("Context is %.0f%%", v), true})
 		case v >= float64(c.Guard.Context.Confirm):
-			t = append(t, Trigger{"context", v, float64(c.Guard.Context.Confirm), LevelConfirm,
+			t = append(t, Trigger{"context", obs(v), float64(c.Guard.Context.Confirm), LevelConfirm,
 				fmt.Sprintf("Context is %.0f%%", v), true})
 		case v >= float64(c.Guard.Context.Warn):
-			t = append(t, Trigger{"context", v, float64(c.Guard.Context.Warn), LevelWarn,
+			t = append(t, Trigger{"context", obs(v), float64(c.Guard.Context.Warn), LevelWarn,
 				fmt.Sprintf("Context is %.0f%%", v), true})
 		}
 	}
@@ -138,7 +179,7 @@ func EvaluateAt(g Guard, s state.Session, now time.Time) Result {
 		v := *s.FiveHourPct
 		if v >= float64(c.Guard.Limits.FiveHourWarn) {
 			crossed = true
-			t = append(t, Trigger{"fiveHour", v, float64(c.Guard.Limits.FiveHourWarn), LevelConfirm,
+			t = append(t, Trigger{"fiveHour", obs(v), float64(c.Guard.Limits.FiveHourWarn), LevelConfirm,
 				fmt.Sprintf("Five hour usage is %.0f%%", v), true})
 		}
 	}
@@ -147,7 +188,7 @@ func EvaluateAt(g Guard, s state.Session, now time.Time) Result {
 	// says nothing, and a moderate one burning faster than the clock does.
 	if !crossed && c.Guard.Limits.Projection == config.ProjectionOn {
 		if p, ok := Project(s, now); ok && p.Percent >= 100 {
-			t = append(t, Trigger{"projection", p.Percent, 100, LevelConfirm,
+			t = append(t, Trigger{"projection", obs(p.Percent), 100, LevelConfirm,
 				fmt.Sprintf("Five hour usage is %.0f%% and rising %.0f%% an hour, with %s left before it resets",
 					*s.FiveHourPct, p.RatePerHour, HumanMinutes(math.Round(p.HoursLeft*60))), true})
 		}
@@ -155,7 +196,7 @@ func EvaluateAt(g Guard, s state.Session, now time.Time) Result {
 	if s.SevenDayPct != nil {
 		v := *s.SevenDayPct
 		if v >= float64(c.Guard.Limits.SevenDayWarn) {
-			t = append(t, Trigger{"sevenDay", v, float64(c.Guard.Limits.SevenDayWarn), LevelConfirm,
+			t = append(t, Trigger{"sevenDay", obs(v), float64(c.Guard.Limits.SevenDayWarn), LevelConfirm,
 				fmt.Sprintf("Seven day usage is %.0f%%", v), true})
 		}
 	}
@@ -163,21 +204,21 @@ func EvaluateAt(g Guard, s state.Session, now time.Time) Result {
 	if s.DurationMS != nil {
 		mins := float64(*s.DurationMS) / 60000.0
 		if mins >= float64(c.Guard.Session.DurationWarnMinutes) {
-			t = append(t, Trigger{"duration", mins, float64(c.Guard.Session.DurationWarnMinutes), LevelConfirm,
+			t = append(t, Trigger{"duration", obs(mins), float64(c.Guard.Session.DurationWarnMinutes), LevelConfirm,
 				fmt.Sprintf("Session has run %s", HumanMinutes(mins)), true})
 		}
 	}
 
 	if s.ActiveSubagents >= c.Guard.Session.ActiveSubagentsWarn {
-		t = append(t, Trigger{"activeSubagents", float64(s.ActiveSubagents), float64(c.Guard.Session.ActiveSubagentsWarn),
+		t = append(t, Trigger{"activeSubagents", obs(float64(s.ActiveSubagents)), float64(c.Guard.Session.ActiveSubagentsWarn),
 			LevelConfirm, output.Counted(s.ActiveSubagents, "1 subagent is active", "%d subagents are active"), true})
 	}
 	if s.SubagentStarts >= c.Guard.Session.SubagentStartsWarn {
-		t = append(t, Trigger{"subagentStarts", float64(s.SubagentStarts), float64(c.Guard.Session.SubagentStartsWarn),
+		t = append(t, Trigger{"subagentStarts", obs(float64(s.SubagentStarts)), float64(c.Guard.Session.SubagentStartsWarn),
 			LevelConfirm, output.Counted(s.SubagentStarts, "1 subagent started this session", "%d subagents started this session"), true})
 	}
 	if s.BackgroundTasks > 0 {
-		t = append(t, Trigger{"backgroundTasks", float64(s.BackgroundTasks), 1, LevelWarn,
+		t = append(t, Trigger{"backgroundTasks", obs(float64(s.BackgroundTasks)), 1, LevelWarn,
 			output.Counted(s.BackgroundTasks, "1 background task is running", "%d background tasks are running"), true})
 	}
 
@@ -194,6 +235,13 @@ func EvaluateAt(g Guard, s state.Session, now time.Time) Result {
 	if t == nil {
 		r.Triggers = []Trigger{}
 	}
+	// Built from t alone, above and below, and attached here. The
+	// unmeasured entries take no part in the level, the decision, or the
+	// sentence the developer is shown: a threshold nobody measured was
+	// not crossed, and Reason reads the first two of whatever it is
+	// given, so an entry in that slice would put a reading nobody took
+	// into the prompt.
+	r.Unmeasured = unmeasuredTriggers(c, s)
 
 	switch c.Guard.Mode {
 	case config.ModeObserve:
@@ -314,14 +362,30 @@ var measurements = []struct {
 	// Field is the name on state.Session. A test compares this list with
 	// the nil checks in EvaluateAt, in both directions, so a measurement
 	// added to the gate cannot be left out of this answer.
-	Field   string
-	Label   string
+	Field string
+	Label string
+	// Trigger is the name this measurement's threshold is published
+	// under, so an unmeasured entry carries the same name a crossed one
+	// would have.
+	Trigger string
+	// Limit is the configured threshold. Context has three; the one that
+	// changes the decision is reported, because that is the one a reader
+	// is asking about.
+	Limit   func(config.Config) float64
 	Missing func(state.Session) bool
 }{
-	{"ContextPct", "context", func(s state.Session) bool { return s.ContextPct == nil }},
-	{"FiveHourPct", "the five hour usage window", func(s state.Session) bool { return s.FiveHourPct == nil }},
-	{"SevenDayPct", "the seven day usage window", func(s state.Session) bool { return s.SevenDayPct == nil }},
-	{"DurationMS", "session duration", func(s state.Session) bool { return s.DurationMS == nil }},
+	{"ContextPct", "context", "context",
+		func(c config.Config) float64 { return float64(c.Guard.Context.Confirm) },
+		func(s state.Session) bool { return s.ContextPct == nil }},
+	{"FiveHourPct", "the five hour usage window", "fiveHour",
+		func(c config.Config) float64 { return float64(c.Guard.Limits.FiveHourWarn) },
+		func(s state.Session) bool { return s.FiveHourPct == nil }},
+	{"SevenDayPct", "the seven day usage window", "sevenDay",
+		func(c config.Config) float64 { return float64(c.Guard.Limits.SevenDayWarn) },
+		func(s state.Session) bool { return s.SevenDayPct == nil }},
+	{"DurationMS", "session duration", "duration",
+		func(c config.Config) float64 { return float64(c.Guard.Session.DurationWarnMinutes) },
+		func(s state.Session) bool { return s.DurationMS == nil }},
 }
 
 // Unmeasured names the values the gate had no reading for, so a caller

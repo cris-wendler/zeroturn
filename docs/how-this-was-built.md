@@ -63,7 +63,7 @@ Two refusals shaped the code more than any feature:
 
 | Claim | Where it is checked |
 | --- | --- |
-| It behaves as documented | 483 tests across 74 files, run on Linux with both supported Go releases, on macOS, and on Windows |
+| It behaves as documented | 488 tests across 75 files, run on Linux with both supported Go releases, on macOS, and on Windows |
 | Output matches the published contract | `conformance/`, which runs the real executable against 10 schemas |
 | It is fast enough to sit in a hook | `scripts/bench`: status line 7.5 ms, gate 7.7 ms, over 50 runs on an Apple M4. Rerunning it on different hardware gives different numbers, which is why the machine is named |
 | A change the tests would not notice | `scripts/mutate` alters one operator at a time and runs that package's tests, over six packages in continuous integration. Every change that survives is recorded in `scripts/mutate/accepted` with the reason it alters nothing, and a line there that the tests later notice is reported as out of date |
@@ -180,4 +180,4 @@ Written in the README, not buried:
 
 ## How decisions are recorded
 
-56 entries in [decisions.md](decisions.md), each with the decision, the evidence, and the consequence. They include the ones that cut scope: `sync` dropped, Copilot deferred, goreleaser refused, and the license text left untouched. A decision that turns out to be wrong is meant to be replaced there, with its reason, rather than quietly reversed.
+57 entries in [decisions.md](decisions.md), each with the decision, the evidence, and the consequence. They include the ones that cut scope: `sync` dropped, Copilot deferred, goreleaser refused, and the license text left untouched. A decision that turns out to be wrong is meant to be replaced there, with its reason, rather than quietly reversed.

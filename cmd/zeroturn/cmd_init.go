@@ -363,17 +363,23 @@ func appendLang(current, add string) string {
 	return current + ", " + add
 }
 
+// Order is the answer when a project has more than one lockfile. This
+// was a map, and ranging over a map is randomised, so the same files
+// gave different answers on different runs.
+var lockfiles = []struct{ file, manager string }{
+	{"pnpm-lock.yaml", "pnpm"},
+	{"yarn.lock", "yarn"},
+	{"bun.lockb", "bun"},
+	{"package-lock.json", "npm"},
+}
+
 func nodePackageManager(root string) string {
-	for file, mgr := range map[string]string{
-		"pnpm-lock.yaml":    "pnpm",
-		"yarn.lock":         "yarn",
-		"package-lock.json": "npm",
-		"bun.lockb":         "bun",
-	} {
-		if _, err := os.Stat(filepath.Join(root, file)); err == nil {
-			if _, err := exec.LookPath(mgr); err == nil {
-				return mgr
-			}
+	for _, l := range lockfiles {
+		if _, err := os.Stat(filepath.Join(root, l.file)); err != nil {
+			continue
+		}
+		if _, err := exec.LookPath(l.manager); err == nil {
+			return l.manager
 		}
 	}
 	return "npm"

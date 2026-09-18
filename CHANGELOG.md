@@ -10,10 +10,12 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 **Fixed**
 
+- `zeroturn init` chose a package manager by ranging over a map, and ranging over a map is randomised in Go, so a repository holding more than one lockfile got a different proposal on different runs of the same command against the same files. The lockfiles are read in a fixed order now, most specific first.
 - `schemas/policy-tune.schema.json` advertised a trigger named `backgroundTasks`, which `policy tune` cannot produce: a threshold is only reported for a measurement the tuner can read, and that is not one of them. An adapter reading the published contract would have written handling for a value that can never arrive. No output changes, because the value was never emitted.
 
 **Internal**
 
+- The exit code table in the README is compared with the codes the program publishes, which are already compared with the constants themselves, so the three copies form a chain rather than three opinions.
 - The trigger names in `schemas/policy-tune.schema.json` are compared with the names the code can emit, read out of the switch that decides them, in both directions.
 - `.zeroturn.example.json` is compared with `config.Default()` rather than only checked for loading, so the file somebody reads to see what the defaults are cannot quietly stop showing them. The validation steps are excluded and held by their own check, because they illustrate a JavaScript project on purpose.
 

@@ -845,3 +845,27 @@ The finding that decides the original proposal is about direction. The Handoff T
 The conclusion is that the artifact is worth building and the destination in the proposal is not the one to build it for. A handoff record is a checkpoint for accountable human review, which is what the brief behind the pivot already said, and it is portable to a fresh session or another engine because it is a document and documents are portable. Handing it to a local model is then something a person may choose to do, not a feature, not a failover, and not a claim this project makes about quality.
 
 Two things are still unanswered and are recorded as unanswered. Whether a record built only from observable state and deliberate notes, which is thinner than a distilled transcript, keeps enough of the measured benefit to be worth the trouble. And whether anybody reaches for it twice.
+
+## 56. A plugin can carry the hooks and cannot carry the status line
+
+Date: 2026-09-17
+
+ZeroTurn installs itself by writing entries into a harness settings file, which `zeroturn integrate claude --apply` does after showing a plan. That is the only way in. Coding harnesses have since grown a packaging format of their own, and a published example was read to see whether ZeroTurn should ship as one: Spotify's Portal plugins, which put a software catalogue into Claude Code, Codex and Cursor.
+
+The relevant part is their second plugin rather than the headline one. It registers hooks that stop a large file being read and redirects the work elsewhere, which is the same mechanism as the credential guard here: a pre tool decision on the tool that reads a file. Its hook registration is the same shape ZeroTurn already writes, an event, an exact tool matcher, and a command, differing only in that the command is written relative to the plugin's own directory.
+
+So the packaging is mostly a rearrangement of something this repository already produces. Two questions decided whether it was worth doing, and the second one decided the design.
+
+A hook may name an executable that the plugin does not carry. The command is a string, and a bare name is resolved on the user's path like any other, so a plugin does not have to bundle a binary for five platforms. It has to say that the binary is installed separately, and a missing one is reported by the harness as not found on the path. The check added in entry 51 already answers that case from ZeroTurn's side.
+
+A plugin may not contribute a status line. The manifest has no field for it, and the settings a plugin is allowed to carry are restricted to a named few, which do not include it. A status line is user configuration.
+
+That second answer is the whole finding, because of what the status line carries here. Context, both usage windows and session duration reach ZeroTurn through the status line and through nothing else, which entry 31 established by reading the records. A plugin therefore installs a working credential guard, a working subagent gate on the counts ZeroTurn maintains itself, and no measurements at all. It is the same half-installed state as an editor extension, arrived at by a different route.
+
+Shipping that quietly would be the overstatement this project exists to avoid. It is shippable now only because of the change made the same day: `policy check` and `doctor` say when nothing was measured, name which values are absent, and say those thresholds cannot be crossed rather than reporting that none were. Before that, a plugin would have installed, looked healthy, and left two thirds of the gate unreachable with nothing to say so.
+
+The decision is to ship a plugin as a second install path rather than a replacement, and to describe both by what they can do. The plugin carries the hooks and the validation evidence, which needs neither hooks nor a status line because it is a command a person runs. `integrate` remains the way to get Session Guard's measurements, because it is the only way to get a status line.
+
+The manifest will be generated from the hook list in `internal/harness/claude` rather than written beside it. A hand maintained copy of that list is the pattern in entry 33, and it would be the seventh instance in this repository.
+
+Not decided, and recorded as not decided: whether the plugin is published to a marketplace at all, which is a distribution question and not this one. Nothing here authorises publishing.

@@ -65,8 +65,7 @@
             "sevenDay",
             "duration",
             "activeSubagents",
-            "subagentStarts",
-            "backgroundTasks"
+            "subagentStarts"
           ]
         },
         "setting": {

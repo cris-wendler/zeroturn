@@ -35,6 +35,7 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 - `scripts/mutate` covers six packages in continuous integration: `policy`, `session`, `security`, `tune`, `config`, `state`. Every change that survives is recorded in `scripts/mutate/accepted` with the reason it alters nothing.
 - A newer push on a branch cancels the older continuous integration run. The default branch is left to finish. The mutation job is skipped when only markdown changed, and the test matrix is not, because this project tests its documentation against its code.
+- The test for the `PATH` check judged every answer that was not ok as though it were a warning, so it demanded an action from a note, which exists for answers that have none. It failed only on a machine with ZeroTurn installed and on `PATH`, which no continuous integration runner is, so it passed everywhere it ran and failed for somebody running the suite on their own machine. Warnings and notes are held to their own rules now, and a second test applies both to every answer the check can give.
 
 ## 0.2.0, 2026-09-15
 

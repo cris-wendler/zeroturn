@@ -1,0 +1,15 @@
+{
+  "name": "zeroturn",
+  "displayName": "ZeroTurn",
+  "description": "Records what state your code was in when validation passed, and says when that answer no longer covers the code on disk.",
+  "homepage": "https://github.com/cris-wendler/zeroturn",
+  "repository": "https://github.com/cris-wendler/zeroturn",
+  "license": "GPL-3.0-only",
+  "keywords": [
+    "validation",
+    "git",
+    "guardrail",
+    "subagents"
+  ],
+  "hooks": "./hooks/hooks.json"
+}

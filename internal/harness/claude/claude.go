@@ -72,11 +72,54 @@ type StatusLine struct {
 // already escapes the backslashes in a Windows path. Quoting them a
 // second time stored every separator doubled.
 func Command(exe, event string) string {
-	quoted := `"` + exe + `"`
+	return `"` + exe + `"` + commandArgs(event)
+}
+
+func commandArgs(event string) string {
 	if event == "" {
-		return quoted + " status --stdin --harness claude"
+		return " status --stdin --harness claude"
 	}
-	return quoted + " event --harness claude --event " + event
+	return " event --harness claude --event " + event
+}
+
+// PluginExecutable is how a plugin names ZeroTurn. A plugin does not
+// carry the binary, so the name is resolved on PATH.
+const PluginExecutable = "zeroturn"
+
+// PluginCommand is Command without a path, and needs no quoting.
+func PluginCommand(event string) string {
+	return PluginExecutable + commandArgs(event)
+}
+
+// PluginHooks is the hooks.json a plugin ships, built from the same list
+// integrate writes. A plugin cannot carry a status line, so it installs
+// the hooks and nothing else.
+//
+// The prompt guard is absent deliberately: it is off by default, and a
+// plugin must not put ZeroTurn in the path of a person's messages
+// without them asking.
+// PluginHooksJSON is the file contents, so the generator and the test
+// compare the same bytes.
+func PluginHooksJSON() ([]byte, error) {
+	doc := struct {
+		Hooks map[string][]Entry `json:"hooks"`
+	}{PluginHooks()}
+	b, err := json.MarshalIndent(doc, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return append(b, '\n'), nil
+}
+
+func PluginHooks() map[string][]Entry {
+	out := map[string][]Entry{}
+	for _, h := range Hooks {
+		out[h.Event] = append(out[h.Event], Entry{
+			Matcher: h.Matcher,
+			Hooks:   []Inner{{Type: "command", Command: PluginCommand(h.Event), Timeout: 10}},
+		})
+	}
+	return out
 }
 
 // Owned reports whether a settings command was written by ZeroTurn. The

@@ -1,0 +1,14 @@
+{
+  "name": "zeroturn",
+  "owner": {
+    "name": "cris-wendler"
+  },
+  "plugins": [
+    {
+      "name": "zeroturn",
+      "description": "Records what state your code was in when validation passed, and says when that answer no longer covers the code on disk.",
+      "source": "./integrations/claude-plugin",
+      "category": "developer-tools"
+    }
+  ]
+}

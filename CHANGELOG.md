@@ -6,6 +6,7 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 **Added**
 
+- ZeroTurn installs as a Claude Code plugin: `/plugin marketplace add cris-wendler/zeroturn`. It carries the hooks and not the status line, because a plugin cannot contribute one, so it is a second install path rather than a replacement for `integrate`. The plugin does not bundle the executable either, and its hooks call `zeroturn` by name. `integrations/claude-plugin/hooks/hooks.json` is generated from the hook list and a test fails if the committed file is not what the generator produces.
 - `status --json` and `policy check --json` carry `unmeasured`, the thresholds the gate could not check because the harness sent no reading for them. `triggers` still means the thresholds that were crossed, so a reader counting it to ask whether anything fired gets the answer it has always got. Every entry in `triggers` has `available` true and every entry in `unmeasured` has it false, which is what that field was declared for and never carried: nothing ever set it false. The contract version is 2.2.0 and nothing was taken away.
 
 **Fixed**

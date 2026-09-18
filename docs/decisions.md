@@ -887,3 +887,21 @@ Three details are deliberate. The observation is absent rather than zero, becaus
 That last point is the whole risk of the change and it is held by a test rather than by care. Folding the entries into the list before the decision is computed makes the test fail, and the failure it prints is the reason why: the prompt a developer would have been shown becomes "New subagent requires approval. 3 subagents are active and no reading for the five hour usage window, so its threshold could not be checked."
 
 The entries are built from the same list the gate reads its measurements from, which a test compares against the nil checks in `EvaluateAt` in both directions, so a measurement added to the gate cannot be missing from this answer.
+
+## 58. ZeroTurn ships as a plugin, and the plugin is half an install
+
+Date: 2026-09-18
+
+Coding harnesses grew a packaging format, and a published example was read before anything was built: Spotify's Portal plugins. Their second plugin registers hooks that stop a large file being read, which is the same mechanism as the credential guard here, in the same shape `internal/harness/claude` already writes.
+
+Two things decided the design. A hook may name an executable the plugin does not carry, so there is no need to bundle a binary for five platforms. A plugin may not contribute a status line: there is no field for it, and the settings a plugin may carry are a named few that exclude it.
+
+The second answer is the whole finding. Context, both usage windows and session duration reach ZeroTurn through the status line and through nothing else, which entry 31 established. A plugin therefore installs a working credential guard, working subagent counts, and no measurements at all: the same half installed state as an editor extension, reached another way.
+
+Shipping that quietly would be the overstatement this project exists to avoid. It is shippable because `policy check` and `doctor` now say when nothing was measured and name which values are absent, and because both READMEs say what the plugin does not install.
+
+So the plugin is a second install path and not a replacement. `integrate` remains the only way to get a status line. The hooks file is generated from the hook list by `scripts/genplugin`, and a test fails when the committed file is not what the generator produces, because a hand written copy of that list would be the eleventh instance of entry 33 and the third copy of this particular list.
+
+The prompt guard is deliberately absent from the plugin. It is off by default and it reads what a person types, so installing a plugin must not switch it on.
+
+Nothing here publishes anything. The marketplace file lets somebody add this repository as a marketplace; submitting it to a public one is a separate decision that has not been made.

@@ -253,6 +253,17 @@ go build -o zeroturn ./cmd/zeroturn
 
 Release archives for macOS, Linux, and Windows are built by `scripts/build-release.sh` and attached to each release with their checksums. `scripts/homebrew-formula.sh` generates a Homebrew formula from a release, and no tap is published yet, so `brew install` is not an option today.
 
+### As a Claude Code plugin
+
+```
+/plugin marketplace add cris-wendler/zeroturn
+/plugin install zeroturn@zeroturn
+```
+
+That installs the hooks: the credential guard, the subagent gate, and the counts. It does not install the status line, because a plugin cannot contribute one, so context, the usage windows and session duration do not arrive and the thresholds built on them cannot be crossed. `zeroturn policy check` and `zeroturn doctor` both say so rather than reporting an all clear. The plugin does not carry the executable either, so `go install` it first and keep it on your `PATH`.
+
+For the measurements as well, use `integrate` below. [integrations/claude-plugin/](integrations/claude-plugin) has the detail.
+
 ### Setting it up
 
 From inside a Git repository:

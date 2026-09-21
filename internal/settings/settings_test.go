@@ -168,3 +168,103 @@ func TestBackupCopiesWhatIsOnDisk(t *testing.T) {
 		t.Fatalf("backup holds %q", b)
 	}
 }
+
+// Where a key lands is the whole promise of this package: a harness
+// settings file is read by a person as well as by a program, and a
+// rewrite that shuffled it would look like more than the change asked
+// for. A new key goes last and an existing one stays where it is.
+func TestANewKeyGoesLastAndAnExistingOneStaysWhereItIs(t *testing.T) {
+	f, err := Read(write(t, "{\n  \"model\": \"opus\",\n  \"hooks\": {}\n}\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Two new keys, in an order the sort would not produce, so a Set
+	// that stopped recording where a key goes would be visible here.
+	f.Set("statusLine", json.RawMessage(`"first"`))
+	f.Set("model", json.RawMessage(`"sonnet"`))
+	f.Set("env", json.RawMessage(`{}`))
+	if err := f.Write(); err != nil {
+		t.Fatal(err)
+	}
+	b, err := ioutil.ReadFile(f.Path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := order(t, string(b)); strings.Join(got, ",") != "model,hooks,statusLine,env" {
+		t.Errorf("the keys are in the order %v", got)
+	}
+}
+
+// Keys put into Top directly, rather than through Set, are written too,
+// and in a fixed order so that two runs produce the same file. The sort
+// is only reached by more than one such key, so one of them proves
+// nothing.
+func TestKeysAddedWithoutSetAreAllWrittenInOneOrder(t *testing.T) {
+	f, err := Read(write(t, "{\n  \"model\": \"opus\"\n}\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, k := range []string{"zeta", "alpha", "middle"} {
+		f.Top[k] = json.RawMessage(`1`)
+	}
+	if err := f.Write(); err != nil {
+		t.Fatal(err)
+	}
+	b, err := ioutil.ReadFile(f.Path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := order(t, string(b)); strings.Join(got, ",") != "model,alpha,middle,zeta" {
+		t.Errorf("the keys are in the order %v", got)
+	}
+}
+
+// A file that repeats a key is valid JSON and the last value wins, so a
+// rewrite has to answer with one entry rather than two.
+func TestARepeatedKeyIsWrittenOnce(t *testing.T) {
+	f, err := Read(write(t, "{\n  \"model\": \"opus\",\n  \"model\": \"sonnet\"\n}\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Write(); err != nil {
+		t.Fatal(err)
+	}
+	b, err := ioutil.ReadFile(f.Path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := order(t, string(b)); strings.Join(got, ",") != "model" {
+		t.Errorf("the keys are in the order %v", got)
+	}
+}
+
+// A document whose top level is not an object has no key order to
+// preserve, and reading one as though it had would write a file the
+// harness could not start from.
+func TestATopLevelThatIsNotAnObjectIsRefused(t *testing.T) {
+	if _, err := Read(write(t, "[1, 2]\n")); !errors.Is(err, ErrInvalidJSON) {
+		t.Fatalf("got %v, want ErrInvalidJSON", err)
+	}
+}
+
+// A document that is not an object has no key order to report. Read
+// refuses one before it gets here, so this is the only place the answer
+// can be seen.
+func TestOnlyAnObjectHasAKeyOrder(t *testing.T) {
+	for _, raw := range []string{`["a", "b"]`, `"a"`, `5`, ``} {
+		if got := topLevelOrder([]byte(raw)); len(got) != 0 {
+			t.Errorf("%s reported the keys %v", raw, got)
+		}
+	}
+}
+
+// order reads the keys out of written JSON in the order they appear,
+// which is what this package promises and json.Unmarshal discards.
+func order(t *testing.T, raw string) []string {
+	t.Helper()
+	keys := topLevelOrder([]byte(raw))
+	if len(keys) == 0 {
+		t.Fatalf("no key was written: %s", raw)
+	}
+	return keys
+}

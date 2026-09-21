@@ -104,7 +104,7 @@ func TestLogPreservedAndRedacted(t *testing.T) {
 	skipWithoutSh(t)
 	root := repo(t)
 	secret := "AKIA" + "QWERTYUIOPASDFGH"
-	res, _ := Run(context.Background(), steps(sh("leak", "echo line one; echo key "+secret+"; exit 1")),
+	res, _ := Run(context.Background(), steps(sh("leak", "echo line one; echo key "+secret+"; echo line three; exit 1")),
 		Options{RepoRoot: root})
 	s := res.Steps[0]
 	if !strings.HasPrefix(s.LogFile, LogDir(root)) {
@@ -114,7 +114,9 @@ func TestLogPreservedAndRedacted(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(b), "line one") {
+	// Every line, not only the first. A writer that stopped after one
+	// line kept the log looking right and lost the rest of the run.
+	if !strings.Contains(string(b), "line one") || !strings.Contains(string(b), "line three") {
 		t.Fatalf("log incomplete: %q", b)
 	}
 	if strings.Contains(string(b), secret) || strings.Contains(s.Excerpt, secret) {
@@ -175,6 +177,10 @@ func TestSafeName(t *testing.T) {
 		"vet":        "vet",
 		"unit tests": "unit-tests",
 		"../x y":     "---x-y",
+		// The ends of each allowed range. Narrowing one of them by a
+		// single character replaces it with a separator, which is
+		// invisible in a name that does not sit on the boundary.
+		"azAZ09-_": "azAZ09-_",
 	} {
 		if got := safeName(name); got != want {
 			t.Errorf("safeName(%q) is %q, want %q", name, got, want)

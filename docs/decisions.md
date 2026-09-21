@@ -906,7 +906,7 @@ The prompt guard is deliberately absent from the plugin. It is off by default an
 
 Nothing here publishes anything. The marketplace file lets somebody add this repository as a marketplace; submitting it to a public one is a separate decision that has not been made.
 
-## 59. The mutation guard reaches the runner and the settings writer
+## 59. The mutation guard reaches every package that holds behaviour
 
 Date: 2026-09-21
 
@@ -932,5 +932,9 @@ The rest of the packages followed in the same pass, and the guard now covers fif
 
 Two pieces of code went away rather than gaining tests. Two packages had written their own insertion sort, one of them in a file that already imported `sort`, and both are `sort.Strings` now.
 
-The run is three groups rather than one list, so its wall time is the slowest group rather than the sum of all of them. It was the longest job in the workflow before this change and it grew by six packages.
+The run is groups rather than one list, so its wall time is the slowest group rather than the sum of all of them. It was the longest job in the workflow before this change and it grew by six packages.
+
+Every package that holds behaviour is now in the guard, nineteen of them. The last four were `internal/output`, `internal/events`, `internal/uninstall` and `internal/capabilities`. What decides whether output is coloured had no test of its own, although the rule is ordered and every command asks it: the environment's refusal wins over everything, a harness rendering the output itself wins over the destination, and a destination that cannot show an escape sequence gets none. What a removal reports it is leaving behind had none either, so counting ZeroTurn's own status line as kept would have passed.
+
+Which packages are covered is no longer a judgement worth recording here, because the answer is all of them. What remains outside is `internal/testutil`, which is the test harness itself, and `cmd/zeroturn`, whose tests run the real executable and would multiply the run by their own cost.
 

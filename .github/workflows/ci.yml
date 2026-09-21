@@ -87,7 +87,7 @@ jobs:
           - name: gate
             packages: internal/policy,internal/session,internal/tune,internal/status,internal/evidence
           - name: storage
-            packages: internal/config,internal/security,internal/trust
+            packages: internal/config,internal/security,internal/trust,internal/output,internal/events,internal/capabilities,internal/uninstall
           - name: records
             packages: internal/state
           - name: tools

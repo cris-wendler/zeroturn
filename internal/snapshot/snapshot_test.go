@@ -433,3 +433,25 @@ func TestDescribeReadsAsASentence(t *testing.T) {
 		}
 	}
 }
+
+// The mode is part of the state, because a validation step runs a file
+// that is executable and does not run one that is not. Nothing about
+// the contents changes when the bit does.
+func TestMakingAFileExecutableChangesTheDigest(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the executable bit is not a file mode here")
+	}
+	repo, work := repoAt(t)
+	script := filepath.Join(work, "run.sh")
+	testutil.Write(t, work, "run.sh", "#!/bin/sh\necho hello\n")
+	testutil.Git(t, work, "add", "run.sh")
+	testutil.Git(t, work, "commit", "--quiet", "--message", "add a script")
+
+	before := take(t, repo)
+	if err := os.Chmod(script, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if after := take(t, repo); after.Digest == before.Digest {
+		t.Error("a file became executable and the digest did not move")
+	}
+}

@@ -186,31 +186,22 @@ func topLevelOrder(raw []byte) []string {
 		return nil
 	}
 	var keys []string
-	depth := 0
 	for {
 		t, err := dec.Token()
 		if err != nil {
 			return keys
 		}
-		if d, ok := t.(json.Delim); ok {
-			switch d {
-			case '{', '[':
-				depth++
-			case '}', ']':
-				if depth == 0 {
-					return keys
-				}
-				depth--
-			}
-			continue
+		// The value after each key is decoded below, so everything
+		// inside it is consumed there and the only delimiter that
+		// reaches here is the brace that closes the document.
+		if _, ok := t.(json.Delim); ok {
+			return keys
 		}
-		if depth == 0 {
-			if s, ok := t.(string); ok {
-				keys = append(keys, s)
-				var skip json.RawMessage
-				if dec.Decode(&skip) != nil {
-					return keys
-				}
+		if s, ok := t.(string); ok {
+			keys = append(keys, s)
+			var skip json.RawMessage
+			if dec.Decode(&skip) != nil {
+				return keys
 			}
 		}
 	}

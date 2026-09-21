@@ -178,8 +178,11 @@ func TestANewKeyGoesLastAndAnExistingOneStaysWhereItIs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Two new keys, in an order the sort would not produce, so a Set
+	// that stopped recording where a key goes would be visible here.
 	f.Set("statusLine", json.RawMessage(`"first"`))
 	f.Set("model", json.RawMessage(`"sonnet"`))
+	f.Set("env", json.RawMessage(`{}`))
 	if err := f.Write(); err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +190,7 @@ func TestANewKeyGoesLastAndAnExistingOneStaysWhereItIs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := order(t, string(b)); strings.Join(got, ",") != "model,hooks,statusLine" {
+	if got := order(t, string(b)); strings.Join(got, ",") != "model,hooks,statusLine,env" {
 		t.Errorf("the keys are in the order %v", got)
 	}
 }
@@ -241,6 +244,17 @@ func TestARepeatedKeyIsWrittenOnce(t *testing.T) {
 func TestATopLevelThatIsNotAnObjectIsRefused(t *testing.T) {
 	if _, err := Read(write(t, "[1, 2]\n")); !errors.Is(err, ErrInvalidJSON) {
 		t.Fatalf("got %v, want ErrInvalidJSON", err)
+	}
+}
+
+// A document that is not an object has no key order to report. Read
+// refuses one before it gets here, so this is the only place the answer
+// can be seen.
+func TestOnlyAnObjectHasAKeyOrder(t *testing.T) {
+	for _, raw := range []string{`["a", "b"]`, `"a"`, `5`, ``} {
+		if got := topLevelOrder([]byte(raw)); len(got) != 0 {
+			t.Errorf("%s reported the keys %v", raw, got)
+		}
 	}
 }
 

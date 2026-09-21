@@ -25,3 +25,4 @@ internal/state/state.go Lock > becomes >=  it differs only for a lock whose age 
 internal/state/state.go Lock == becomes !=  the continue after a successful clear skips one sleep; without it the next pass creates the lock anyway, one backoff later
 internal/verify/verify.go Write > becomes >=  the tail buffer trims at four times the kept line count, and String keeps the last twenty non blank lines out of whatever remains, so trimming one line earlier cannot change what it returns
 internal/verify/verify.go String > becomes >=  taking the last twenty of a list that is exactly twenty long is the whole list
+internal/settings/settings.go sortStrings < becomes <=  it decides whether two equal strings change places, and two equal strings are the same string, so the sorted list is identical

@@ -454,4 +454,24 @@ func TestMakingAFileExecutableChangesTheDigest(t *testing.T) {
 	if after := take(t, repo); after.Digest == before.Digest {
 		t.Error("a file became executable and the digest did not move")
 	}
+
+	// And in the direction that says which is which. The digest moving
+	// says only that something changed, not that the executable one is
+	// the one recorded as executable.
+	plain := filepath.Join(work, "plain.txt")
+	testutil.Write(t, work, "plain.txt", "#!/bin/sh\necho hello\n")
+	got, err := readPath(script)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.kind != kindExec {
+		t.Errorf("an executable file is recorded as %q", got.kind)
+	}
+	got, err = readPath(plain)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.kind != kindFile {
+		t.Errorf("a file that is not executable is recorded as %q", got.kind)
+	}
 }

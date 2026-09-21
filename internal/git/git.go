@@ -37,6 +37,16 @@ func run(ctx context.Context, dir string, args ...string) (string, string, error
 	return strings.TrimRight(out.String(), "\n"), strings.TrimSpace(errb.String()), err
 }
 
+// gitError reports a failed git call. Git's own message is used when it
+// printed one, because it is more specific than anything written here,
+// and the fallback covers a failure that printed nothing at all.
+func gitError(errText, fallback string) error {
+	if errText == "" {
+		return errors.New(fallback)
+	}
+	return errors.New(errText)
+}
+
 func (r Repo) git(ctx context.Context, args ...string) (string, string, error) {
 	return run(ctx, r.Root, args...)
 }
@@ -211,10 +221,7 @@ func (e IndexEntry) IsSubmodule() bool { return e.Mode == submoduleMode }
 func (r Repo) IndexEntries(ctx context.Context) ([]IndexEntry, error) {
 	out, errText, err := r.git(ctx, "ls-files", "--stage", "-z")
 	if err != nil {
-		if errText == "" {
-			errText = "git ls-files returned a failure"
-		}
-		return nil, errors.New(errText)
+		return nil, gitError(errText, "git ls-files returned a failure")
 	}
 	var entries []IndexEntry
 	for _, record := range strings.Split(out, "\x00") {
@@ -280,10 +287,7 @@ func (r Repo) HasStagedChanges(ctx context.Context) (bool, error) {
 func (r Repo) Fetch(ctx context.Context, remote string) error {
 	_, errText, err := r.git(ctx, "fetch", "--no-tags", remote)
 	if err != nil {
-		if errText == "" {
-			errText = "git fetch returned a failure"
-		}
-		return errors.New(errText)
+		return gitError(errText, "git fetch returned a failure")
 	}
 	return nil
 }
@@ -325,10 +329,7 @@ func (r Repo) Divergence(ctx context.Context) (Divergence, error) {
 func (r Repo) FastForward(ctx context.Context, upstream string) error {
 	_, errText, err := r.git(ctx, "merge", "--ff-only", upstream)
 	if err != nil {
-		if errText == "" {
-			errText = "the fast forward was refused"
-		}
-		return errors.New(errText)
+		return gitError(errText, "the fast forward was refused")
 	}
 	return nil
 }
@@ -347,10 +348,7 @@ func (r Repo) Add(ctx context.Context, paths []string) error {
 func (r Repo) Commit(ctx context.Context, message string) (string, error) {
 	_, errText, err := r.git(ctx, "commit", "--message", message)
 	if err != nil {
-		if errText == "" {
-			errText = "git commit returned a failure"
-		}
-		return "", errors.New(errText)
+		return "", gitError(errText, "git commit returned a failure")
 	}
 	sha, _, err := r.git(ctx, "rev-parse", "HEAD")
 	return sha, err
@@ -360,10 +358,7 @@ func (r Repo) Commit(ctx context.Context, message string) (string, error) {
 func (r Repo) Push(ctx context.Context, remote, branch string) (string, error) {
 	out, errText, err := r.git(ctx, "push", remote, branch)
 	if err != nil {
-		if errText == "" {
-			errText = "git push returned a failure"
-		}
-		return "", errors.New(errText)
+		return "", gitError(errText, "git push returned a failure")
 	}
 	if out == "" {
 		out = errText

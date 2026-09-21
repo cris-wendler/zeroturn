@@ -5,6 +5,9 @@ import (
 	"testing"
 
 	"github.com/cris-wendler/zeroturn/internal/config"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -316,5 +319,101 @@ func TestThePlanNamesAnInstalledHookByItsEventAndMatcher(t *testing.T) {
 	}
 	if !strings.Contains(named, without) {
 		t.Errorf("a hook with no matcher is not named at all: %v", p.AlreadyOwned)
+	}
+}
+
+// Remove takes out ZeroTurn's status line and leaves anybody else's,
+// which is the same rule the hooks follow and was only ever tested for
+// the hooks.
+func TestRemoveKeepsAStatusLineItDoesNotOwn(t *testing.T) {
+	const foreign = "my-prompt --fancy"
+	mine, _ := json.Marshal(StatusLine{Type: "command", Command: foreign})
+	top := map[string]json.RawMessage{"statusLine": json.RawMessage(mine)}
+
+	removed, removedStatus := Remove(top, map[string][]json.RawMessage{})
+	if removed != 0 || removedStatus {
+		t.Errorf("removed %d entries and reported the status line as %v", removed, removedStatus)
+	}
+	var sl StatusLine
+	if err := json.Unmarshal(top["statusLine"], &sl); err != nil {
+		t.Fatal(err)
+	}
+	if sl.Command != foreign {
+		t.Errorf("the status line became %q", sl.Command)
+	}
+}
+
+// Install repoints a ZeroTurn status line that names an executable that
+// is no longer there, and leaves one already naming this executable
+// exactly as it found it.
+func TestInstallRepointsOnlyAStaleStatusLine(t *testing.T) {
+	stale, _ := json.Marshal(StatusLine{Type: "command", Command: Command("/gone/zeroturn", "")})
+	top := map[string]json.RawMessage{"statusLine": json.RawMessage(stale)}
+	hooks := map[string][]json.RawMessage{}
+
+	p := Build(Input{Top: top, Hooks: hooks, Config: config.Default(), Exe: exe})
+	Install(top, hooks, p, exe, false)
+	var sl StatusLine
+	if err := json.Unmarshal(top["statusLine"], &sl); err != nil {
+		t.Fatal(err)
+	}
+	if got := InstalledPath(sl.Command); got != exe {
+		t.Errorf("a stale status line still names %q", got)
+	}
+
+	current := top["statusLine"]
+	p = Build(Input{Top: top, Hooks: hooks, Config: config.Default(), Exe: exe})
+	Install(top, hooks, p, exe, false)
+	if string(top["statusLine"]) != string(current) {
+		t.Errorf("a status line that was already right was rewritten to %s", top["statusLine"])
+	}
+}
+
+// Two paths that lead to the same file are the same installation, and
+// two that do not are not. A missing path is not the same as anything,
+// including another missing path.
+func TestSamePathFollowsLinksAndRefusesWhatIsNotThere(t *testing.T) {
+	dir := t.TempDir()
+	real := filepath.Join(dir, "zeroturn")
+	if err := ioutil.WriteFile(real, []byte("#!/bin/sh\n"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(dir, "link")
+	if err := os.Symlink(real, link); err != nil {
+		t.Skipf("symbolic links are not available here: %v", err)
+	}
+	other := filepath.Join(dir, "other")
+	if err := ioutil.WriteFile(other, []byte("#!/bin/sh\n"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	if !SamePath(real, link) {
+		t.Error("a link to the executable reads as a different installation")
+	}
+	if SamePath(real, other) {
+		t.Error("two different files read as one installation")
+	}
+	missing := filepath.Join(dir, "gone")
+	if SamePath(real, missing) || SamePath(missing, real) {
+		t.Error("a path that is not there matched one that is")
+	}
+	if SamePath(missing, filepath.Join(dir, "also-gone")) {
+		t.Error("two paths that are not there matched each other")
+	}
+}
+
+// The path is read out of a command a settings file holds, which may be
+// anything at all by the time somebody has edited it by hand.
+func TestInstalledPathOnCommandsNobodyMeantToWrite(t *testing.T) {
+	cases := map[string]string{
+		` zeroturn event`: " zeroturn event",
+		`""`:              "",
+		`" "`:             " ",
+		``:                "",
+	}
+	for command, want := range cases {
+		if got := InstalledPath(command); got != want {
+			t.Errorf("InstalledPath(%q) = %q, want %q", command, got, want)
+		}
 	}
 }

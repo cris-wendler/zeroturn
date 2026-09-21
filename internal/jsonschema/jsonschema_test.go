@@ -121,6 +121,14 @@ func TestOneOfRefusesAValueThatMatchesTwoAlternatives(t *testing.T) {
 	if !strings.Contains(p[0], "exactly one") {
 		t.Errorf("the problem does not say what the rule is: %v", p)
 	}
+
+	// Three alternatives, one of which matches. Two alternatives cannot
+	// tell counting the matches from counting the failures, because one
+	// of each is the same number.
+	three := parse(t, `{"oneOf":[{"type":"string"},{"type":"number"},{"type":"boolean"}]}`)
+	if p := three.Validate([]byte(`"a"`)); len(p) != 0 {
+		t.Errorf("a value matching one of three alternatives was refused: %v", p)
+	}
 }
 
 // anyOf means at least one, which is the rule oneOf is not.

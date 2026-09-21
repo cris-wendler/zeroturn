@@ -31,3 +31,4 @@ internal/git/git.go RemoteDisplay || becomes &&  same shape: git remote get-url 
 internal/git/git.go IndexEntries < becomes <=  the tab it looks for cannot be the first byte of a record, because the mode comes before it
 internal/git/git.go ShortSHA > becomes >=  a revision of exactly the fallback length is returned whole either way
 internal/git/git.go StripCredentials < becomes <=  one byte is either a slash or an at sign, so the two indexes are never equal
+internal/git/git.go Open == becomes !=  git resolves the working directory before it prints the top level, so the path is already resolved and resolving it again returns the same path

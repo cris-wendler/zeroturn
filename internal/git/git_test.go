@@ -393,6 +393,12 @@ func TestOpenResolvesSymbolicLinks(t *testing.T) {
 	if r := open(t, link); r.Root != work {
 		t.Errorf("root is %q, want %q", r.Root, work)
 	}
+	// FindRoot answers the same question without starting git, and the
+	// two answers are compared with each other elsewhere, so it has to
+	// resolve the link itself.
+	if got, ok := FindRoot(link); !ok || got != work {
+		t.Errorf("FindRoot through a link is %q %v, want %q", got, ok, work)
+	}
 }
 
 // A repository with no remote and one with no commit are both ordinary

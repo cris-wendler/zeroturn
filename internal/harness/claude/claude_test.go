@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cris-wendler/zeroturn/internal/config"
+	"strings"
 )
 
 const exe = "/usr/local/bin/zeroturn"
@@ -221,5 +222,99 @@ func TestRemoveOnAFileWithNoZeroTurnEntries(t *testing.T) {
 	}
 	if len(hooks["Stop"]) != 1 {
 		t.Error("a hook that is not ZeroTurn's was dropped")
+	}
+}
+
+// A repair rewrites ZeroTurn's own entries and nothing else. The test
+// above installs into a file that holds only ZeroTurn entries, so a
+// repair that rewrote every command it could read would pass it.
+func TestARepairLeavesSomebodyElsesCommandAlone(t *testing.T) {
+	const foreign = "other-tool --watch"
+	old := "/somewhere/else/zeroturn"
+	hooks := map[string][]json.RawMessage{}
+	for _, h := range Hooks {
+		hooks[h.Event] = append(hooks[h.Event], entry(h.Matcher, Command(old, h.Event)))
+	}
+	// One more entry on an event ZeroTurn also uses, belonging to
+	// somebody else, and a status line that is not ZeroTurn's either.
+	event := Hooks[0].Event
+	hooks[event] = append(hooks[event], entry("", foreign))
+	mine, _ := json.Marshal(StatusLine{Type: "command", Command: foreign})
+	top := map[string]json.RawMessage{"statusLine": json.RawMessage(mine)}
+
+	p := Build(Input{Top: top, Hooks: hooks, Config: config.Default(), Exe: exe})
+	Install(top, hooks, p, exe, false)
+
+	// EntryCommand answers only for entries ZeroTurn owns, so the
+	// foreign one is looked for in the raw JSON.
+	var found bool
+	for _, e := range hooks[event] {
+		if strings.Contains(string(e), foreign) {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("a command ZeroTurn does not own was rewritten: %s", hooks[event])
+	}
+	var sl StatusLine
+	if err := json.Unmarshal(top["statusLine"], &sl); err != nil {
+		t.Fatal(err)
+	}
+	if sl.Command != foreign {
+		t.Errorf("a status line ZeroTurn does not own became %q", sl.Command)
+	}
+}
+
+// ZeroTurn installs two hooks on PreToolUse, one per matcher, so the
+// entries on that event are examined twice. What the plan reports it
+// would leave behind is the number of entries, not the number of times
+// it looked at them.
+func TestAForeignEntryIsCountedOnceHoweverOftenItIsExamined(t *testing.T) {
+	var event string
+	seen := map[string]bool{}
+	for _, h := range Hooks {
+		if seen[h.Event] {
+			event = h.Event
+		}
+		seen[h.Event] = true
+	}
+	if event == "" {
+		t.Skip("no event carries two ZeroTurn hooks any more")
+	}
+	hooks := map[string][]json.RawMessage{event: {entry("", "one-tool")}}
+	p := Build(Input{Top: map[string]json.RawMessage{}, Hooks: hooks, Config: config.Default(), Exe: exe})
+	if p.KeepHooks != 1 {
+		t.Errorf("one entry on %s was counted as %d", event, p.KeepHooks)
+	}
+}
+
+// What the plan reports as already installed has to be what a person
+// would look for in the settings file, which for a hook with a matcher
+// is both words: one event can hold several entries.
+func TestThePlanNamesAnInstalledHookByItsEventAndMatcher(t *testing.T) {
+	hooks := map[string][]json.RawMessage{}
+	for _, h := range Hooks {
+		hooks[h.Event] = append(hooks[h.Event], entry(h.Matcher, Command(exe, h.Event)))
+	}
+	p := Build(Input{Top: map[string]json.RawMessage{}, Hooks: hooks, Config: config.Default(), Exe: exe})
+	named := strings.Join(p.AlreadyOwned, ",")
+
+	var withMatcher, without string
+	for _, h := range Hooks {
+		if h.Matcher != "" && withMatcher == "" {
+			withMatcher = h.Event + " " + h.Matcher
+		}
+		if h.Matcher == "" && without == "" {
+			without = h.Event
+		}
+	}
+	if withMatcher == "" || without == "" {
+		t.Fatal("the hook list no longer holds both shapes, so this test checks nothing")
+	}
+	if !strings.Contains(named, withMatcher) {
+		t.Errorf("a hook with a matcher is named without it: %v", p.AlreadyOwned)
+	}
+	if !strings.Contains(named, without) {
+		t.Errorf("a hook with no matcher is not named at all: %v", p.AlreadyOwned)
 	}
 }

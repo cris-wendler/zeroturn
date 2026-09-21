@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -67,5 +69,62 @@ func TestAWrappedErrorKeepsItsCode(t *testing.T) {
 	}
 	if ze.Code != ExitDeclined {
 		t.Fatalf("code %d, want %d", ze.Code, ExitDeclined)
+	}
+}
+
+// Colour is decided once, here, and every command asks this. The rules
+// are ordered: the environment's refusal wins over everything, a harness
+// that renders the output itself wins over the destination, and a
+// destination that cannot show an escape sequence gets none.
+func TestWhatDecidesColour(t *testing.T) {
+	plain, err := os.Create(filepath.Join(t.TempDir(), "out"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer plain.Close()
+	terminal, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer terminal.Close()
+
+	t.Setenv("NO_COLOR", "")
+	t.Setenv("TERM", "xterm")
+
+	// A destination that is not a character device gets none, and one
+	// that is gets colour.
+	if NewColor(plain, "").Escapes() {
+		t.Error("a redirected stream was given colour")
+	}
+	if !NewColor(terminal, "").Escapes() {
+		t.Error("a character device was not given colour")
+	}
+	// A harness renders the output itself, so colour is kept even
+	// though the destination is a pipe or a file.
+	if !NewColor(plain, "claude").Escapes() {
+		t.Error("a harness rendering the output was given no colour")
+	}
+
+	// Either refusal in the environment wins over both of those.
+	t.Setenv("NO_COLOR", "1")
+	if NewColor(terminal, "claude").Escapes() {
+		t.Error("NO_COLOR was set and colour was used anyway")
+	}
+	t.Setenv("NO_COLOR", "")
+	t.Setenv("TERM", "dumb")
+	if NewColor(terminal, "claude").Escapes() {
+		t.Error("TERM=dumb was set and colour was used anyway")
+	}
+
+	// A destination that cannot be asked about is treated as one that
+	// cannot show colour.
+	t.Setenv("TERM", "xterm")
+	closed, err := os.Create(filepath.Join(t.TempDir(), "closed"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	closed.Close()
+	if NewColor(closed, "").Escapes() {
+		t.Error("a destination that could not be read was given colour")
 	}
 }

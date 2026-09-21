@@ -171,3 +171,124 @@ func TestEntriesCountsWhatWouldStopZeroTurnRunning(t *testing.T) {
 		t.Fatalf("Entries() is %d, want 2", p.Entries())
 	}
 }
+
+// The validation logs live inside the repository rather than in the
+// state directory, which is how they were missed once already. The plan
+// counts the files so a person can see how much is about to go.
+func TestTheLogDirectoryIsCountedByWhatItHolds(t *testing.T) {
+	dir := t.TempDir()
+	logs := filepath.Join(dir, "logs")
+	write(t, filepath.Join(logs, "one.log"), "x")
+	write(t, filepath.Join(logs, "two.log"), "y")
+	// A directory inside it is not a log.
+	if err := os.MkdirAll(filepath.Join(logs, "old"), 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	p, err := Survey(Sources{LogDirs: []string{logs}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Items) != 1 {
+		t.Fatalf("items %+v", p.Items)
+	}
+	if got, want := p.Items[0].Detail, "2 logs"; got != want {
+		t.Errorf("detail %q, want %q", got, want)
+	}
+}
+
+// A state directory that is not there is nothing to remove, and saying
+// otherwise would ask a person to answer for a directory that does not
+// exist.
+func TestAStateDirectoryThatIsNotThereIsNotListed(t *testing.T) {
+	p, err := Survey(Sources{StateDir: filepath.Join(t.TempDir(), "never-created")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Items) != 0 {
+		t.Fatalf("a directory that is not there was listed: %+v", p.Items)
+	}
+}
+
+// What a person is told stays behind is what belongs to somebody else.
+// ZeroTurn's own status line is going, so counting it as kept would
+// report the removal as leaving more than it does.
+func TestWhatIsKeptIsWhatBelongsToSomebodyElse(t *testing.T) {
+	dir := t.TempDir()
+	mine := filepath.Join(dir, "mine.json")
+	write(t, mine, zeroTurnSettings)
+
+	p, err := Survey(Sources{SettingsFiles: []string{mine}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Items) != 1 {
+		t.Fatalf("items %+v", p.Items)
+	}
+	if p.Items[0].Kept != 0 {
+		t.Errorf("a file holding only ZeroTurn entries reports %d kept", p.Items[0].Kept)
+	}
+
+	shared := filepath.Join(dir, "shared.json")
+	write(t, shared, `{
+  "statusLine": {"type": "command", "command": "my-prompt --fancy"},
+  "hooks": {"PreToolUse": [
+    {"matcher": "Agent", "hooks": [{"type": "command", "command": "\"/usr/local/bin/zeroturn\" event --harness claude --event PreToolUse"}]},
+    {"matcher": "Bash", "hooks": [{"type": "command", "command": "audit"}]}
+  ]}
+}`)
+	p, err = Survey(Sources{SettingsFiles: []string{shared}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Items) != 1 {
+		t.Fatalf("items %+v", p.Items)
+	}
+	// The status line and the other tool's hook, and not ZeroTurn's own.
+	if got := p.Items[0].Kept; got != 2 {
+		t.Errorf("%d entries reported as kept, want the status line and the other hook", got)
+	}
+}
+
+// Removing ZeroTurn's entries from a file somebody else also writes to
+// leaves their entries where they were, and leaves no empty object
+// behind where ZeroTurn's used to be.
+func TestApplyLeavesTheOtherToolsHooksInPlace(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "settings.json")
+	write(t, path, `{
+  "model": "opus",
+  "hooks": {
+    "PreToolUse": [
+      {"matcher": "Agent", "hooks": [{"type": "command", "command": "\"/usr/local/bin/zeroturn\" event --harness claude --event PreToolUse"}]},
+      {"matcher": "Bash", "hooks": [{"type": "command", "command": "audit"}]}
+    ]
+  }
+}`)
+
+	p, err := Survey(Sources{SettingsFiles: []string{path}, StateDir: filepath.Join(dir, "state")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r := Apply(p, filepath.Join(dir, "backups")); len(r.Failed) != 0 {
+		t.Fatalf("failures %+v", r.Failed)
+	}
+
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(b)
+	if !strings.Contains(got, "audit") {
+		t.Errorf("the other tool's hook was removed: %s", got)
+	}
+	if !strings.Contains(got, `"hooks"`) {
+		t.Errorf("the hooks section was deleted although one entry remained: %s", got)
+	}
+	if strings.Contains(got, "zeroturn") {
+		t.Errorf("a ZeroTurn entry survived: %s", got)
+	}
+	if !strings.Contains(got, `"model"`) {
+		t.Errorf("a setting that has nothing to do with ZeroTurn was lost: %s", got)
+	}
+}

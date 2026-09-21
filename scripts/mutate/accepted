@@ -39,3 +39,4 @@ internal/snapshot/snapshot.go Short < becomes <=  a digest of exactly the shown 
 internal/evidence/evidence.go retry < becomes <=  it bounds the retry loop, so the difference is one more attempt over a window measured in microseconds
 internal/evidence/evidence.go retry || becomes &&  a successful call is repeated rather than returned at once, and the answer is the same because the operation is the same
 internal/evidence/evidence.go retry == becomes !=  it gives up on the first contended read instead of retrying, which a test could only observe by arranging a rename to land inside a window of microseconds
+internal/output/output.go Table > becomes >=  it keeps the widest label, and reassigning the same width when two labels are equally wide leaves the same number

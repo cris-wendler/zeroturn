@@ -905,3 +905,21 @@ So the plugin is a second install path and not a replacement. `integrate` remain
 The prompt guard is deliberately absent from the plugin. It is off by default and it reads what a person types, so installing a plugin must not switch it on.
 
 Nothing here publishes anything. The marketplace file lets somebody add this repository as a marketplace; submitting it to a public one is a separate decision that has not been made.
+
+## 59. The mutation guard reaches the runner and the settings writer
+
+Date: 2026-09-21
+
+Two more packages are held to the rule that a change the tests accept is behaviour nothing can fail for: `internal/verify`, which runs a project's own checks, and `internal/settings`, which rewrites a harness settings file in place.
+
+Three defects came out of it, and each is a test that was weaker than it read.
+
+The log writer could stop after the first line and every test still passed. The test that reads a preserved log asserted the first line was there and that a credential was not, so a writer that returned early on success kept both promises and lost the rest of the run.
+
+A step name is turned into a log file name by keeping letters, digits, and two punctuation marks. Narrowing any of those ranges by one character, so that `a`, `z`, `0` or `9` became a separator, was accepted by every test: the examples all sat comfortably inside the ranges.
+
+The settings writer had no test for where a key lands. Set records the position of a new key so that it is written at the end rather than sorted in among the rest, and a version that recorded nothing produced the same file for one new key. It takes two to tell them apart.
+
+The guard also had a fault of its own. Every change to `proc_windows.go` was reported as unnoticed, because that file is not compiled on the platform the guard runs on, so no test there could notice anything. It skips a file this platform does not build now.
+
+`topLevelOrder` lost the nesting it tracked. The value after each key is decoded whole, so the only delimiter that reaches the loop is the brace closing the document, and the two branches that counted depth could not run.

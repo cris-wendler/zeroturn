@@ -116,4 +116,4 @@ jobs:
       # are not here yet are recorded in docs/decisions.md.
       - name: go run ./scripts/mutate
         if: steps.sources.outputs.changed == 'true'
-        run: go run ./scripts/mutate -packages internal/policy,internal/session,internal/security,internal/tune,internal/config,internal/state -timeout 120s
+        run: go run ./scripts/mutate -packages internal/policy,internal/session,internal/security,internal/tune,internal/config,internal/state,internal/verify,internal/settings -timeout 120s

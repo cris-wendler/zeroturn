@@ -82,7 +82,7 @@ jobs:
           - name: gate
             packages: internal/policy,internal/session,internal/tune,internal/status
           - name: storage
-            packages: internal/config,internal/state,internal/security,internal/trust
+            packages: internal/config,internal/state,internal/security,internal/trust,internal/evidence,internal/snapshot
           - name: tools
             packages: internal/verify,internal/settings,internal/git,internal/jsonschema,internal/harness/claude
     steps:

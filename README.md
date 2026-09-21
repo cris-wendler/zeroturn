@@ -130,6 +130,19 @@ It says the checks passed for that code, on your machine, at that moment. It doe
 
 More in [docs/validation-evidence.md](docs/validation-evidence.md).
 
+### Why not just git
+
+Git tells you what changed. It does not record when your checks passed, so on its own it cannot say whether they covered the code in front of you.
+
+| What you might reach for | Why it does not answer |
+| --- | --- |
+| `git rev-parse HEAD` | Does not move when you edit a file, and the working tree is where an agent does its work |
+| `git status --porcelain` | Prints the same line for the first and the second edit of a file, so a digest built on it reports new code as the code that was tested |
+| `git stash create` | Comes closest, and does not see a new file at all |
+| `git blame` | Answers who last touched a line, which is a different question |
+
+Writing down the moment the checks passed is the part Git does not have, and it is most of what `zeroturn verify` does.
+
 ## Session Guard
 
 ```text

@@ -16,6 +16,7 @@ Notable changes, newest first. The project follows semantic versioning from the 
 - Cancelling `verify` or `ship` could wait for the whole step anyway. When the step's first process had already been reaped, the process group was not signalled, and what it had started kept the output pipe open until it finished by itself. The group is signalled by its id now, which does not depend on the first process still existing.
 
 **Internal**
+- The packages the mutation guard names in the workflow are compared with the packages that are there, so a group cannot name one that has been renamed or moved, and no package sits in two groups.
 - Two hand written insertion sorts are `sort.Strings`. One of them sat in a file that already imported `sort`.
 - `report purge --all` has a test that it removes evidence records and leaves everything else in the directory, and the installer has one that a repair rewrites ZeroTurn's command inside an entry it shares with somebody else's.
 - The five copies of "use git's message, or this one when git printed nothing" in `internal/git` are one function, which is tested directly rather than through five wrappers that cannot make git fail quietly.

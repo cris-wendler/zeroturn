@@ -417,3 +417,45 @@ func TestInstalledPathOnCommandsNobodyMeantToWrite(t *testing.T) {
 		}
 	}
 }
+
+// One entry can hold two commands, ZeroTurn's and somebody else's, and
+// a repair has to rewrite only the first. Separate entries prove less:
+// an entry ZeroTurn does not own is never opened at all.
+func TestARepairInsideASharedEntryTouchesOnlyItsOwnCommand(t *testing.T) {
+	const foreign = "my-own-hook --check"
+	shared, _ := json.Marshal(Entry{Matcher: "Agent", Hooks: []Inner{
+		{Type: "command", Command: Command("/gone/zeroturn", "PreToolUse")},
+		{Type: "command", Command: foreign},
+	}})
+	hooks := map[string][]json.RawMessage{"PreToolUse": {json.RawMessage(shared)}}
+	top := map[string]json.RawMessage{}
+
+	p := Build(Input{Top: top, Hooks: hooks, Config: config.Default(), Exe: exe})
+	if len(p.RepairHooks) == 0 {
+		t.Fatal("a stale command in a shared entry was not reported as needing repair")
+	}
+	Install(top, hooks, p, exe, false)
+
+	var e Entry
+	if err := json.Unmarshal(hooks["PreToolUse"][0], &e); err != nil {
+		t.Fatal(err)
+	}
+	if len(e.Hooks) != 2 {
+		t.Fatalf("the entry now holds %d commands: %+v", len(e.Hooks), e.Hooks)
+	}
+	var mine, theirs int
+	for _, h := range e.Hooks {
+		switch {
+		case h.Command == foreign:
+			theirs++
+		case InstalledPath(h.Command) == exe:
+			mine++
+		}
+	}
+	if theirs != 1 {
+		t.Errorf("the command ZeroTurn does not own was rewritten: %+v", e.Hooks)
+	}
+	if mine != 1 {
+		t.Errorf("the stale ZeroTurn command was not repointed: %+v", e.Hooks)
+	}
+}

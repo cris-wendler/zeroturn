@@ -31,3 +31,6 @@ internal/git/git.go IndexEntries < becomes <=  the tab it looks for cannot be th
 internal/git/git.go ShortSHA > becomes >=  a revision of exactly the fallback length is returned whole either way
 internal/git/git.go StripCredentials < becomes <=  one byte is either a slash or an at sign, so the two indexes are never equal
 internal/git/git.go Open == becomes !=  git resolves the working directory before it prints the top level, so the path is already resolved and resolving it again returns the same path
+internal/harness/claude/claude.go InstalledPath > becomes >=  a command whose quoted path is empty answers with an empty path either way, through the branch or past it
+internal/harness/claude/claude.go SamePath || becomes &&  os.SameFile answers false for a FileInfo that was never filled in, so a path that is not there gives the same answer with the check and without it
+internal/harness/claude/plan.go Install > becomes >=  it skips a loop that would change nothing, because every entry inside it is either not owned or not stale

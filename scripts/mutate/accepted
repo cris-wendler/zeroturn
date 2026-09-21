@@ -26,3 +26,8 @@ internal/state/state.go Lock == becomes !=  the continue after a successful clea
 internal/verify/verify.go Write > becomes >=  the tail buffer trims at four times the kept line count, and String keeps the last twenty non blank lines out of whatever remains, so trimming one line earlier cannot change what it returns
 internal/verify/verify.go String > becomes >=  taking the last twenty of a list that is exactly twenty long is the whole list
 internal/settings/settings.go sortStrings < becomes <=  it decides whether two equal strings change places, and two equal strings are the same string, so the sorted list is identical
+internal/git/git.go Open || becomes &&  git cannot print a top level path and fail, and it cannot succeed printing nothing, so the two conditions are answered by the same call
+internal/git/git.go RemoteDisplay || becomes &&  same shape: git remote get-url either prints a URL and succeeds or prints nothing and fails
+internal/git/git.go IndexEntries < becomes <=  the tab it looks for cannot be the first byte of a record, because the mode comes before it
+internal/git/git.go ShortSHA > becomes >=  a revision of exactly the fallback length is returned whole either way
+internal/git/git.go StripCredentials < becomes <=  one byte is either a slash or an at sign, so the two indexes are never equal

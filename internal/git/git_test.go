@@ -2,6 +2,8 @@ package git
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -63,6 +65,9 @@ func TestStatusClassifiesChanges(t *testing.T) {
 	if clean, _ := r.IsClean(ctx); !clean {
 		t.Fatal("fresh clone is not clean")
 	}
+	// A one character name makes the shortest entry the porcelain form
+	// can produce, which is exactly the length the reader bounds on.
+	testutil.Write(t, work, "a", "short name")
 	testutil.Write(t, work, "new.txt", "n")
 	testutil.Write(t, work, "staged.txt", "s")
 	testutil.Git(t, work, "add", "staged.txt")
@@ -78,6 +83,9 @@ func TestStatusClassifiesChanges(t *testing.T) {
 	}
 	if c := got["new.txt"]; c.Staged || c.Deleted {
 		t.Errorf("untracked: %+v", c)
+	}
+	if _, ok := got["a"]; !ok {
+		t.Errorf("the shortest entry was dropped: %v", got)
 	}
 	if c := got["staged.txt"]; !c.Staged {
 		t.Errorf("staged: %+v", c)
@@ -98,7 +106,7 @@ func TestDivergenceStates(t *testing.T) {
 	r := open(t, work)
 
 	d, _ := r.Divergence(ctx)
-	if !d.UpToDate || d.Diverged {
+	if !d.UpToDate || d.Diverged || d.OnlyAhead {
 		t.Fatalf("fresh clone: %+v", d)
 	}
 
@@ -193,8 +201,14 @@ func TestCommitAndPush(t *testing.T) {
 	if err != nil || len(sha) != 40 {
 		t.Fatalf("sha %q err %v", sha, err)
 	}
-	if _, err := r.Push(ctx, "origin", "main"); err != nil {
+	// What a push reports arrives on standard error, and ship prints it,
+	// so an empty summary would leave a person with no answer at all.
+	summary, err := r.Push(ctx, "origin", "main")
+	if err != nil {
 		t.Fatal(err)
+	}
+	if strings.TrimSpace(summary) == "" {
+		t.Error("the push reported nothing")
 	}
 	if testutil.Git(t, bare, "rev-parse", "main") != sha {
 		t.Fatal("remote did not receive the commit")
@@ -340,5 +354,129 @@ func TestShortSHAUsesGitsAbbreviation(t *testing.T) {
 	// And one no longer than the bound comes back whole.
 	if got := r.ShortSHA(ctx, "0123456"); got != "0123456" {
 		t.Errorf("a short unresolvable revision gave %q", got)
+	}
+}
+
+// FindRoot is the status line's answer, taken without starting a git
+// process, so it has to agree with Open and to stop rather than walk to
+// the top of the disk when there is no repository at all.
+func TestFindRoot(t *testing.T) {
+	testutil.Isolate(t)
+	work, _ := testutil.Remote(t)
+	testutil.Write(t, work, "a/b/c.txt", "x")
+
+	if got, ok := FindRoot(filepath.Join(work, "a", "b")); !ok || got != work {
+		t.Errorf("FindRoot from a subdirectory is %q %v, want %q", got, ok, work)
+	}
+	if got, ok := FindRoot(work); !ok || got != work {
+		t.Errorf("FindRoot at the root is %q %v", got, ok)
+	}
+	if _, ok := FindRoot(""); ok {
+		t.Error("an empty path reported a repository")
+	}
+	outside := testutil.Canonical(t, t.TempDir())
+	if got, ok := FindRoot(outside); ok {
+		t.Errorf("a directory outside any repository reported %q", got)
+	}
+}
+
+// A repository opened through a symbolic link has to answer with the
+// path the rest of the program will see, because the root is compared
+// with paths that have already been resolved.
+func TestOpenResolvesSymbolicLinks(t *testing.T) {
+	testutil.Isolate(t)
+	work, _ := testutil.Remote(t)
+	link := filepath.Join(testutil.Canonical(t, t.TempDir()), "link")
+	if err := os.Symlink(work, link); err != nil {
+		t.Skipf("symbolic links are not available here: %v", err)
+	}
+	if r := open(t, link); r.Root != work {
+		t.Errorf("root is %q, want %q", r.Root, work)
+	}
+}
+
+// A repository with no remote and one with no commit are both ordinary
+// states, and each takes a branch that the usual fixtures never reach.
+func TestAnEmptyRepositoryAnswersWithoutFailing(t *testing.T) {
+	testutil.Isolate(t)
+	dir := testutil.Canonical(t, t.TempDir())
+	testutil.Git(t, dir, "init", "--quiet", ".")
+	r := open(t, dir)
+
+	if remotes := r.Remotes(ctx); len(remotes) != 0 {
+		t.Errorf("a repository with no remote reported %v", remotes)
+	}
+	sha, branch := r.Head(ctx)
+	if sha != "" {
+		t.Errorf("a repository with no commit reported the commit %q", sha)
+	}
+	if branch == "" {
+		t.Error("a repository with no commit reported no branch either")
+	}
+}
+
+// Head answers two questions in one git call, because the status line
+// pays for every process it starts.
+func TestHeadReportsBothTheCommitAndTheBranch(t *testing.T) {
+	testutil.Isolate(t)
+	work, _ := testutil.Remote(t)
+	r := open(t, work)
+	sha, branch := r.Head(ctx)
+	if len(sha) != 40 {
+		t.Errorf("commit is %q, want a full object name", sha)
+	}
+	if branch == "" || branch == sha {
+		t.Errorf("branch is %q", branch)
+	}
+}
+
+// The index is where the evidence digest reads what Git holds for each
+// staged path, so an entry that is dropped or misread is a digest over
+// less than it claims.
+func TestIndexEntriesReadsEveryStagedPath(t *testing.T) {
+	testutil.Isolate(t)
+	work, _ := testutil.Remote(t)
+	testutil.Write(t, work, "a.txt", "one")
+	// A name with a space in it: the fields before the tab are the ones
+	// that are split, and the path is whatever follows.
+	testutil.Write(t, work, "two words.txt", "two")
+	testutil.Git(t, work, "add", "a.txt", "two words.txt")
+	r := open(t, work)
+
+	entries, err := r.IndexEntries(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]IndexEntry{}
+	for _, e := range entries {
+		got[e.Path] = e
+	}
+	for _, name := range []string{"a.txt", "two words.txt"} {
+		e, ok := got[name]
+		if !ok {
+			t.Fatalf("%q is staged and the index does not name it: %v", name, got)
+		}
+		if e.Mode == "" || e.Blob == "" || e.Stage != "0" {
+			t.Errorf("%q reads as %+v", name, e)
+		}
+	}
+
+	// Outside a repository the command fails, and a failure is reported
+	// rather than answered with an empty index, which would read as a
+	// repository with nothing staged.
+	outside := Repo{Root: testutil.Canonical(t, t.TempDir())}
+	if _, err := outside.IndexEntries(ctx); err == nil {
+		t.Error("a directory that is not a repository reported an index")
+	}
+}
+
+// A submodule is recorded as a commit, not as content, and the digest
+// says so rather than hashing files it never read.
+func TestASubmoduleEntryIsNotAFile(t *testing.T) {
+	if !(IndexEntry{Mode: submoduleMode}).IsSubmodule() {
+		t.Error("a gitlink entry does not report as a submodule")
+	}
+	if (IndexEntry{Mode: "100644"}).IsSubmodule() {
+		t.Error("an ordinary file reports as a submodule")
 	}
 }

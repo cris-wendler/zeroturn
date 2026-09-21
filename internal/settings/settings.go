@@ -12,7 +12,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -190,7 +189,7 @@ func topLevelOrder(raw []byte) []string {
 	depth := 0
 	for {
 		t, err := dec.Token()
-		if err == io.EOF || err != nil {
+		if err != nil {
 			return keys
 		}
 		if d, ok := t.(json.Delim); ok {

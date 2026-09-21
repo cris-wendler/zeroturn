@@ -18,10 +18,7 @@ func killGroup(cmd *exec.Cmd) {
 	if cmd.Process == nil {
 		return
 	}
-	pgid, err := syscall.Getpgid(cmd.Process.Pid)
-	if err == nil && pgid > 0 {
-		syscall.Kill(-pgid, syscall.SIGKILL)
-		return
-	}
-	cmd.Process.Kill()
+	// Setpgid makes the group id the pid. Asking the kernel for it fails
+	// once the leader has been reaped, while the group is still running.
+	syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 }

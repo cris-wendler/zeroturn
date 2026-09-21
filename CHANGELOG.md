@@ -13,6 +13,7 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 - `zeroturn init` chose a package manager by ranging over a map, and ranging over a map is randomised in Go, so a repository holding more than one lockfile got a different proposal on different runs of the same command against the same files. The lockfiles are read in a fixed order now, most specific first.
 - `schemas/policy-tune.schema.json` advertised a trigger named `backgroundTasks`, which `policy tune` cannot produce: a threshold is only reported for a measurement the tuner can read, and that is not one of them. An adapter reading the published contract would have written handling for a value that can never arrive. No output changes, because the value was never emitted.
+- Cancelling `verify` or `ship` could wait for the whole step anyway. When the step's first process had already been reaped, the process group was not signalled, and what it had started kept the output pipe open until it finished by itself. The group is signalled by its id now, which does not depend on the first process still existing.
 
 **Internal**
 

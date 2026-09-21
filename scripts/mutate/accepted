@@ -23,3 +23,5 @@ internal/state/state.go Lock < becomes <=  the backoff cap changes how long a re
 internal/state/state.go Lock > becomes >=  it gives up after one fewer consecutive missing reading; both bound the loop and neither spins, so the difference is one retry
 internal/state/state.go Lock > becomes >=  it differs only for a lock whose age is exactly the stale limit to the nanosecond, which no run can arrange
 internal/state/state.go Lock == becomes !=  the continue after a successful clear skips one sleep; without it the next pass creates the lock anyway, one backoff later
+internal/verify/verify.go Write > becomes >=  the tail buffer trims at four times the kept line count, and String keeps the last twenty non blank lines out of whatever remains, so trimming one line earlier cannot change what it returns
+internal/verify/verify.go String > becomes >=  taking the last twenty of a list that is exactly twenty long is the whole list

@@ -302,3 +302,47 @@ func TestAnEventMustNameItsSession(t *testing.T) {
 		t.Error("the normalized parser accepted an event with no session")
 	}
 }
+
+// The harness sends the working directory in two places, and they are
+// not the same thing: cwd is where the command ran, and the workspace
+// says where the session was opened. The first is the answer when it is
+// there, because a session can move between directories.
+func TestTheWorkspaceFillsInAWorkingDirectoryOnlyWhenOneIsMissing(t *testing.T) {
+	both := `{"hook_event_name":"SessionEnd","session_id":"s1",` +
+		`"cwd":"/where/the/command/ran","workspace":{"current_dir":"/where/the/session/opened"}}`
+	e, err := ParseClaude(strings.NewReader(both), "SessionEnd")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e.CWD != "/where/the/command/ran" {
+		t.Errorf("the working directory is %q, want the one the payload names directly", e.CWD)
+	}
+
+	only := `{"hook_event_name":"SessionEnd","session_id":"s1",` +
+		`"workspace":{"current_dir":"/where/the/session/opened"}}`
+	e, err = ParseClaude(strings.NewReader(only), "SessionEnd")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e.CWD != "/where/the/session/opened" {
+		t.Errorf("with no cwd the working directory is %q", e.CWD)
+	}
+}
+
+// The message names the contract an adapter sent, because the adapter
+// author reading it needs to know which one their build speaks. A
+// payload naming none of them says so rather than reading as an empty
+// name in the middle of a sentence.
+func TestTheContractErrorNamesWhatArrived(t *testing.T) {
+	got := ContractError{Got: "zeroturn.event/9", Want: Contract}.Error()
+	if !strings.Contains(got, "zeroturn.event/9") || !strings.Contains(got, Contract) {
+		t.Errorf("the message names neither side: %q", got)
+	}
+	unnamed := ContractError{Want: Contract}.Error()
+	if !strings.Contains(unnamed, "unnamed") {
+		t.Errorf("a payload naming no contract reads as %q", unnamed)
+	}
+	if strings.Contains(unnamed, "sent , ") {
+		t.Errorf("an empty name was put in the sentence: %q", unnamed)
+	}
+}

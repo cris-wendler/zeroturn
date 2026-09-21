@@ -923,3 +923,7 @@ The settings writer had no test for where a key lands. Set records the position 
 The guard also had a fault of its own. Every change to `proc_windows.go` was reported as unnoticed, because that file is not compiled on the platform the guard runs on, so no test there could notice anything. It skips a file this platform does not build now.
 
 `topLevelOrder` lost the nesting it tracked. The value after each key is decoded whole, so the only delimiter that reaches the loop is the brace closing the document, and the two branches that counted depth could not run.
+
+`internal/git` joined them in the same pass, and it was the widest gap: half of every change made there was accepted by the tests. Most of it was one shape, an answer that was only ever asserted in one of its two states. Whether a path is ignored, whether it is tracked, whether anything is staged, whether a branch is only ahead or also behind, what an empty repository reports, and what the index holds for a path with a space in its name were all read in one direction only.
+
+Five copies of the same four lines, choosing between git's own message and a fallback, became one function with a test of its own. None of the five wrappers could make git fail while printing nothing, so through them the fallback was unreachable, and directly it is two lines of test.

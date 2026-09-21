@@ -76,15 +76,17 @@ jobs:
       fail-fast: false
       # The packages are split so that the job's wall time is the slowest
       # group rather than the sum of all of them. The groups are balanced
-      # by how long they took, not by how many packages they hold.
+      # by how long they took, not by how many packages they hold: a
+      # package whose tests start git processes costs many times one
+      # whose tests are arithmetic. Measured 2026-09-21.
       matrix:
         include:
           - name: gate
-            packages: internal/policy,internal/session,internal/tune,internal/status
+            packages: internal/policy,internal/session,internal/tune,internal/status,internal/evidence
           - name: storage
-            packages: internal/config,internal/state,internal/security,internal/trust,internal/evidence,internal/snapshot
+            packages: internal/config,internal/state,internal/security,internal/trust
           - name: tools
-            packages: internal/verify,internal/settings,internal/git,internal/jsonschema,internal/harness/claude
+            packages: internal/verify,internal/settings,internal/git,internal/jsonschema,internal/harness/claude,internal/snapshot
     steps:
       - uses: actions/checkout@v7
         with:

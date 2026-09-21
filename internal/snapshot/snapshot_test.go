@@ -475,3 +475,45 @@ func TestMakingAFileExecutableChangesTheDigest(t *testing.T) {
 		t.Errorf("a file that is not executable is recorded as %q", got.kind)
 	}
 }
+
+// The README tells a reader why Git alone does not answer this, and
+// names the three commands somebody would reach for first. Those are
+// claims about another program's behaviour, so they are run here rather
+// than asserted in prose: if Git ever answers differently, this fails
+// and the README is wrong rather than quietly out of date.
+//
+// The porcelain claim is proved by the test above, which requires the
+// output to be identical across an edit that moves the digest.
+func TestTheReadmeIsRightAboutWhatGitAloneAnswers(t *testing.T) {
+	repo, work := repoAt(t)
+	testutil.Write(t, work, "a.txt", "one\n")
+	testutil.Git(t, work, "add", "a.txt")
+	testutil.Git(t, work, "commit", "--quiet", "--message", "add a")
+
+	head := testutil.Git(t, work, "rev-parse", "HEAD")
+	stash := testutil.Git(t, work, "stash", "create")
+
+	testutil.Write(t, work, "a.txt", "two\n")
+	if now := testutil.Git(t, work, "rev-parse", "HEAD"); now != head {
+		t.Errorf("the commit moved when a file was edited: %q then %q", head, now)
+	}
+	// Editing a tracked file does move it, which is why the README says
+	// this one comes closest rather than dismissing it.
+	edited := testutil.Git(t, work, "stash", "create")
+	if edited == stash {
+		t.Fatalf("stash create no longer moves for an edit, so the README overstates it: %q", edited)
+	}
+
+	testutil.Write(t, work, "new.txt", "a file nobody has added\n")
+	if after := testutil.Git(t, work, "stash", "create"); after != edited {
+		t.Errorf("stash create saw an untracked file, so the README is wrong about it: %q then %q",
+			edited, after)
+	}
+	// And the digest does see it, which is the difference the section
+	// exists to explain.
+	before := take(t, repo)
+	testutil.Write(t, work, "second.txt", "another one\n")
+	if take(t, repo).Digest == before.Digest {
+		t.Error("a new file did not move the digest")
+	}
+}

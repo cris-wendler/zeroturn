@@ -1,6 +1,7 @@
 package trust
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -108,5 +109,45 @@ func TestRecordStoresNoPath(t *testing.T) {
 	// It has to hold the thing it is for, or it is not a record.
 	if !strings.Contains(string(b), state.RepoHash(root)) {
 		t.Fatalf("the trust record does not name the repository it is for: %s", b)
+	}
+}
+
+// A record this build cannot read is refused, and so is one that reads
+// as JSON but was written by a build that recorded something else. The
+// two are told apart so the second does not read as corruption.
+func TestARecordFromAnotherBuildIsUntrusted(t *testing.T) {
+	st, root, c := setup(t)
+	raw, err := json.Marshal(Record{SchemaVersion: SchemaVersion + 1, RepoHash: state.RepoHash(root)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := ioutil.WriteFile(filepath.Join(st.TrustDir(), state.RepoHash(root)+".json"), raw, 0600); err != nil {
+		t.Fatal(err)
+	}
+	s := Check(st, root, c)
+	if s.Trusted {
+		t.Fatal("a record from a later schema version was trusted")
+	}
+	if !strings.Contains(s.Reason, "not readable by this build") {
+		t.Errorf("the reason is %q", s.Reason)
+	}
+}
+
+// Strict is approved per repository and per machine, and nothing else
+// grants it. Both answers are asserted, because a function that always
+// said yes would pass a test that only ever approved first.
+func TestStrictIsApprovedOnlyWhereItWasApproved(t *testing.T) {
+	st, root, _ := setup(t)
+	if StrictApproved(st, root) {
+		t.Fatal("strict was approved before anybody approved it")
+	}
+	if err := ApproveStrict(st, root); err != nil {
+		t.Fatal(err)
+	}
+	if !StrictApproved(st, root) {
+		t.Fatal("strict was approved and does not read as approved")
+	}
+	if StrictApproved(st, filepath.Join(root, "elsewhere")) {
+		t.Fatal("approving one repository approved another")
 	}
 }

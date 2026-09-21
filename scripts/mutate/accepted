@@ -25,10 +25,17 @@ internal/state/state.go Lock > becomes >=  it differs only for a lock whose age 
 internal/state/state.go Lock == becomes !=  the continue after a successful clear skips one sleep; without it the next pass creates the lock anyway, one backoff later
 internal/verify/verify.go Write > becomes >=  the tail buffer trims at four times the kept line count, and String keeps the last twenty non blank lines out of whatever remains, so trimming one line earlier cannot change what it returns
 internal/verify/verify.go String > becomes >=  taking the last twenty of a list that is exactly twenty long is the whole list
-internal/settings/settings.go sortStrings < becomes <=  it decides whether two equal strings change places, and two equal strings are the same string, so the sorted list is identical
 internal/git/git.go Open || becomes &&  git cannot print a top level path and fail, and it cannot succeed printing nothing, so the two conditions are answered by the same call
 internal/git/git.go RemoteDisplay || becomes &&  same shape: git remote get-url either prints a URL and succeeds or prints nothing and fails
 internal/git/git.go IndexEntries < becomes <=  the tab it looks for cannot be the first byte of a record, because the mode comes before it
 internal/git/git.go ShortSHA > becomes >=  a revision of exactly the fallback length is returned whole either way
 internal/git/git.go StripCredentials < becomes <=  one byte is either a slash or an at sign, so the two indexes are never equal
 internal/git/git.go Open == becomes !=  git resolves the working directory before it prints the top level, so the path is already resolved and resolving it again returns the same path
+internal/harness/claude/claude.go InstalledPath > becomes >=  a command whose quoted path is empty answers with an empty path either way, through the branch or past it
+internal/harness/claude/claude.go SamePath || becomes &&  os.SameFile answers false for a FileInfo that was never filled in, so a path that is not there gives the same answer with the check and without it
+internal/harness/claude/plan.go Install > becomes >=  it skips a loop that would change nothing, because every entry inside it is either not owned or not stale
+internal/snapshot/snapshot.go worktreeStates < becomes <=  it orders two paths, and Git lists a path once, so no two entries are ever equal
+internal/snapshot/snapshot.go Short < becomes <=  a digest of exactly the shown length is returned whole either way
+internal/evidence/evidence.go retry < becomes <=  it bounds the retry loop, so the difference is one more attempt over a window measured in microseconds
+internal/evidence/evidence.go retry || becomes &&  a successful call is repeated rather than returned at once, and the answer is the same because the operation is the same
+internal/evidence/evidence.go retry == becomes !=  it gives up on the first contended read instead of retrying, which a test could only observe by arranging a rename to land inside a window of microseconds

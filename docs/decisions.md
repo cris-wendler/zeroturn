@@ -927,3 +927,10 @@ The guard also had a fault of its own. Every change to `proc_windows.go` was rep
 `internal/git` joined them in the same pass, and it was the widest gap: half of every change made there was accepted by the tests. Most of it was one shape, an answer that was only ever asserted in one of its two states. Whether a path is ignored, whether it is tracked, whether anything is staged, whether a branch is only ahead or also behind, what an empty repository reports, and what the index holds for a path with a space in its name were all read in one direction only.
 
 Five copies of the same four lines, choosing between git's own message and a fallback, became one function with a test of its own. None of the five wrappers could make git fail while printing nothing, so through them the fallback was unreachable, and directly it is two lines of test.
+
+The rest of the packages followed in the same pass, and the guard now covers fifteen. What it found beyond the three above was one shape repeated: an answer asserted in one direction only. A digest that moves when a file becomes executable, without anything saying which of the two states is the executable one. A status line coloured from the level of whichever threshold was crossed first rather than each value's own. An installer that leaves somebody else's hook alone when it sits in its own entry, with nothing asking what happens when it shares an entry with ZeroTurn's. A purge that removes every record, with nothing asking what it does to a file that is not one.
+
+Two pieces of code went away rather than gaining tests. Two packages had written their own insertion sort, one of them in a file that already imported `sort`, and both are `sort.Strings` now.
+
+The run is three groups rather than one list, so its wall time is the slowest group rather than the sum of all of them. It was the longest job in the workflow before this change and it grew by six packages.
+

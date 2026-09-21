@@ -2,6 +2,8 @@ package status
 
 import (
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -128,5 +130,54 @@ func TestAMeasurementTheHarnessDidNotSendIsNotShownAsZero(t *testing.T) {
 		if !strings.Contains(measured, want) {
 			t.Errorf("a measured zero is not shown as %q: %s", want, measured)
 		}
+	}
+}
+
+// Each measurement is coloured by its own threshold. Reading the level
+// of whichever threshold happened to be crossed first would paint a
+// value that is fine in the colour of one that is not.
+func TestEachValueIsColouredByItsOwnThreshold(t *testing.T) {
+	sink, err := os.Create(filepath.Join(t.TempDir(), "out"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer sink.Close()
+
+	c := config.Default()
+	// Context past critical, the five hour window past its warning, and
+	// nothing else measured.
+	sess := state.Session{ContextPct: f(95), FiveHourPct: f(80)}
+	got := Render(Line{
+		Session: sess,
+		Result:  policy.Evaluate(policy.NewGuard(c, true), sess),
+		Color:   output.NewColor(sink, "claude"),
+	})
+	const red, yellow = "\x1b[31m", "\x1b[33m"
+	if !strings.Contains(got, red+"95%") {
+		t.Errorf("context is past critical and is not red: %q", got)
+	}
+	if !strings.Contains(got, yellow+"80%") {
+		t.Errorf("the five hour window crossed its warning and is not yellow: %q", got)
+	}
+}
+
+// The branch is shown where a repository is being reported and there is
+// a branch to name, and in no other case.
+func TestTheBranchIsShownOnlyWhenThereIsOneToShow(t *testing.T) {
+	sess := state.Session{ContextPct: f(10)}
+	result := policy.Evaluate(policy.NewGuard(config.Default(), true), sess)
+	line := Line{Session: sess, Result: result, Color: output.Color{}}
+
+	line.ShowRepo, line.Branch = true, "main"
+	if got := Render(line); !strings.Contains(got, "branch main") {
+		t.Errorf("the branch was asked for and not shown: %q", got)
+	}
+	line.ShowRepo, line.Branch = false, "main"
+	if got := Render(line); strings.Contains(got, "branch") {
+		t.Errorf("the branch was shown where it was not asked for: %q", got)
+	}
+	line.ShowRepo, line.Branch = true, ""
+	if got := Render(line); strings.Contains(got, "branch") {
+		t.Errorf("a branch with no name was shown: %q", got)
 	}
 }

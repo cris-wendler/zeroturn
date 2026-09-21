@@ -574,6 +574,59 @@ func TestPurgeAllRemovesEveryEvidenceRecord(t *testing.T) {
 	}
 }
 
+// The purge removes evidence records and nothing else. It runs over a
+// directory on somebody's machine, and the README promises it removes
+// ZeroTurn's records and nothing besides.
+func TestPurgeAllLeavesWhatIsNotAnEvidenceRecord(t *testing.T) {
+	st, repo, _ := fixture(t)
+	record(t, st, repo, "plan", passing())
+
+	stray := filepath.Join(Dir(st), "notes.txt")
+	if err := ioutil.WriteFile(stray, []byte("somebody put this here\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	dir := filepath.Join(Dir(st), "adirectory.json")
+	if err := os.Mkdir(dir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	n, err := PurgeAll(st)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 1 {
+		t.Errorf("purged %d records, want the one that is a record", n)
+	}
+	if _, err := os.Stat(stray); err != nil {
+		t.Errorf("a file that is not a record was removed: %v", err)
+	}
+	if _, err := os.Stat(dir); err != nil {
+		t.Errorf("a directory was removed: %v", err)
+	}
+}
+
+// A run that was cancelled and a run that failed are different answers,
+// and the sentence a person reads has to say which one happened.
+func TestAStaleCancelledRunSaysItWasCancelled(t *testing.T) {
+	st, repo, work := fixture(t)
+	r := passing()
+	r.Cancelled = true
+	r.Steps[0].Status = verify.StatusCancelled
+	record(t, st, repo, "plan", r)
+	testutil.Write(t, work, "after.txt", "the code moved\n")
+
+	a := assess(t, st, repo, "plan")
+	if a.Result != ResultCancelled {
+		t.Fatalf("the result is %q", a.Result)
+	}
+	if !strings.Contains(a.Reason, "cancelled") {
+		t.Errorf("the reason does not say it was cancelled: %q", a.Reason)
+	}
+	if strings.Contains(a.Reason, "failed") {
+		t.Errorf("a cancelled run is reported as a failure: %q", a.Reason)
+	}
+}
+
 // The identifier is derived, so writing the same run twice cannot produce
 // two names for it, and two different runs cannot share one.
 func TestTheEvidenceIdentifierIsDerivedFromTheRun(t *testing.T) {

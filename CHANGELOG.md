@@ -16,6 +16,7 @@ Notable changes, newest first. The project follows semantic versioning from the 
 - Cancelling `verify` or `ship` could wait for the whole step anyway. When the step's first process had already been reaped, the process group was not signalled, and what it had started kept the output pipe open until it finished by itself. The group is signalled by its id now, which does not depend on the first process still existing.
 
 **Internal**
+- The trigger names in `schemas/status.schema.json` and `schemas/policy-check.schema.json` are compared with the names the gate can emit, read out of the source, in both directions. They were the last two copies of that list kept by hand, and the same list in `schemas/policy-tune.schema.json` had already drifted.
 
 - The exit code table in the README is compared with the codes the program publishes, which are already compared with the constants themselves, so the three copies form a chain rather than three opinions.
 - The trigger names in `schemas/policy-tune.schema.json` are compared with the names the code can emit, read out of the switch that decides them, in both directions.

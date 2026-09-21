@@ -70,8 +70,21 @@ jobs:
         run: go test ${{ matrix.extra }} ./...
 
   mutate:
-    name: changes the tests should notice
+    name: changes the tests should notice (${{ matrix.name }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      # The packages are split so that the job's wall time is the slowest
+      # group rather than the sum of all of them. The groups are balanced
+      # by how long they took, not by how many packages they hold.
+      matrix:
+        include:
+          - name: gate
+            packages: internal/policy,internal/session,internal/tune,internal/status
+          - name: storage
+            packages: internal/config,internal/state,internal/security,internal/trust
+          - name: tools
+            packages: internal/verify,internal/settings,internal/git,internal/jsonschema,internal/harness/claude
     steps:
       - uses: actions/checkout@v7
         with:
@@ -116,4 +129,4 @@ jobs:
       # are not here yet are recorded in docs/decisions.md.
       - name: go run ./scripts/mutate
         if: steps.sources.outputs.changed == 'true'
-        run: go run ./scripts/mutate -packages internal/policy,internal/session,internal/security,internal/tune,internal/config,internal/state,internal/verify,internal/settings,internal/git -timeout 120s
+        run: go run ./scripts/mutate -packages ${{ matrix.packages }} -timeout 120s

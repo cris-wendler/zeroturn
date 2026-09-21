@@ -16,6 +16,7 @@ import (
 	"flag"
 	"fmt"
 	"go/ast"
+	"go/build"
 	"go/parser"
 	"go/printer"
 	"go/token"
@@ -219,6 +220,14 @@ func plan(pkg string) ([]mutant, error) {
 	var out []mutant
 	for _, name := range names {
 		if strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+		// A file this platform does not build cannot be noticed by any
+		// test run here, so every change to it would be reported as a
+		// survivor. proc_windows.go was reported that way.
+		if built, err := build.Default.MatchFile(filepath.Dir(name), filepath.Base(name)); err != nil {
+			return nil, err
+		} else if !built {
 			continue
 		}
 		fset := token.NewFileSet()

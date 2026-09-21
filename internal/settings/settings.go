@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/cris-wendler/zeroturn/internal/state"
 )
@@ -164,7 +165,7 @@ func (f *File) Write() error {
 			rest = append(rest, k)
 		}
 	}
-	sortStrings(rest)
+	sort.Strings(rest)
 	for _, k := range rest {
 		if err := emit(k); err != nil {
 			return err
@@ -203,14 +204,6 @@ func topLevelOrder(raw []byte) []string {
 			if dec.Decode(&skip) != nil {
 				return keys
 			}
-		}
-	}
-}
-
-func sortStrings(s []string) {
-	for i := 1; i < len(s); i++ {
-		for j := i; j > 0 && s[j] < s[j-1]; j-- {
-			s[j], s[j-1] = s[j-1], s[j]
 		}
 	}
 }

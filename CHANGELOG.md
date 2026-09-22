@@ -4,7 +4,9 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
-Nothing yet.
+**Fixed**
+
+- `doctor --compat --live` reported that the harness had ignored a denial when no denial had been put to it. The check asked for one thing and reported another: a session that never tried to start a subagent produces no denials and no subagents, which is the same pair of zeroes as a session where nothing was asked, and it was read as a failure. There are three answers now, and the one where nothing was asked says so. Observed on Claude Code 2.1.277.
 
 ## 0.4.0, 2026-09-21
 

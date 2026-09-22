@@ -96,8 +96,12 @@ func TestTheLiveTestSaysWhenNothingWasPutToTheHarness(t *testing.T) {
 		says            string
 	}{
 		{"a denial was honoured", 1, 0, checkOK, "honoured"},
-		{"a denial was ignored", 1, 1, checkFail, "did not honour"},
-		{"a subagent started with no denial recorded", 0, 1, checkFail, "did not honour"},
+		// The two failures are both failures and they are not the same
+		// reading. One says the harness was given a denial and went
+		// ahead; the other says a subagent started with no denial in the
+		// record at all, which is a different thing to look into.
+		{"a denial was ignored", 1, 1, checkFail, "given a denial"},
+		{"a subagent started with no denial recorded", 0, 1, checkFail, "no denial was recorded"},
 		{"nothing was asked for", 0, 0, checkWarn, "never asked"},
 	} {
 		got := judgeLive(c.denials, c.spawns)

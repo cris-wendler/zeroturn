@@ -6,6 +6,9 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 **Internal**
 
+- The live session is isolated from MCP servers as well as settings. `--restricted` leaves them alone, so `--strict-mcp-config` goes with it, and a session meant to inherit nothing now inherits nothing. Both flags are in 2.1.257, older than any release published as tested.
+- A live test that fails because a subagent started says which of the two readings it found: the harness was given a denial and went ahead, or a subagent started with no denial in the record at all. It said the first for both.
+
 - `doctor --compat --live` counted every permission denial the session recorded, including ones the harness refused of its own accord, and read any of them as the gate being honoured. It counts only denials of the subagent tool now. That tool has two names, `Agent` in a hook payload and `Task` in the session result, and both are counted.
 - A live session that could not start said so and nothing else, whatever the cause. It now carries the harness's own first line, which is where "this release has no such flag" or "not logged in" is written, and names the command that runs the checks needing no session.
 - The mutation guard carried on without its sandbox when the sandbox could not be created, which is the harm the sandbox exists to prevent, and silently. It stops instead.

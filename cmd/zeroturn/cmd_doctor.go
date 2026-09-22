@@ -599,10 +599,15 @@ func compatLive(ctx context.Context) []check {
 	// configured, and a hook of theirs answered the prompt instead: the
 	// model never reached the Agent tool, so nothing was put to the gate
 	// and the test reported a denial that had been ignored.
+	//
+	// --restricted leaves MCP servers alone, so --strict-mcp-config goes
+	// with it: a server of theirs is theirs, and this session is meant to
+	// inherit nothing. Both flags are in 2.1.257, which is older than any
+	// release this build publishes as tested.
 	cmd := exec.CommandContext(ctx, bin, "-p",
 		"Use the Agent tool to launch the Explore subagent to list files here.",
 		"--model", "haiku", "--settings", sp, "--session-id", sessionID,
-		"--restricted", "--output-format", "json", "--max-turns", "3")
+		"--restricted", "--strict-mcp-config", "--output-format", "json", "--max-turns", "3")
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), "ZEROTURN_STATE_DIR="+stateDir)
 	out, runErr := cmd.Output()
@@ -670,8 +675,17 @@ func subagentDenials(toolNames []string) int {
 // a failure is a reading nobody took presented as a reading that failed.
 func judgeLive(denials, spawned int) check {
 	if spawned > 0 {
-		return check{"live harness test", checkFail,
-			"the harness did not honour the denial and a subagent started, keep guard.mode on observe"}
+		// A subagent started under Strict, which is the failure however
+		// it happened. What the record says about a denial is reported
+		// rather than assumed: when none was recorded, saying the
+		// harness ignored one states something nobody read.
+		said := "a subagent started under strict mode"
+		if denials > 0 {
+			said = "the harness was given a denial and a subagent started anyway"
+		} else {
+			said += " and no denial was recorded"
+		}
+		return check{"live harness test", checkFail, said + ", keep guard.mode on observe"}
 	}
 	if denials == 0 {
 		return check{"live harness test", checkWarn,

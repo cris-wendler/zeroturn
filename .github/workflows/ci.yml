@@ -80,8 +80,12 @@ jobs:
       # package costs its mutant count times how long its tests take, so
       # internal/state, which has the most changes to make and the
       # slowest suite of the four it used to sit with, is a group of its
-      # own. Measured 2026-09-21: that group of four took 666 seconds
-      # while the other two took 83 and 244.
+      # own. Measured on the runner 2026-09-22, after the guard stopped
+      # rebuilding from cold: records 659s, tools 247s, gate 81s,
+      # storage 61s. internal/state is most of the wall time and cannot
+      # be split further, being one package. What would shorten it is
+      # running mutants in parallel, which needs a copy of the tree per
+      # mutant because this tool edits files in place.
       matrix:
         include:
           - name: gate

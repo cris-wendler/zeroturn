@@ -13,22 +13,6 @@ It is for developers working with a coding agent, where files keep moving betwee
 
 One executable. No dependencies, no network, no model calls. It never reads your prompts, your messages, or your code.
 
-## Quick start
-
-```sh
-go install github.com/cris-wendler/zeroturn/cmd/zeroturn@latest
-```
-
-Then, inside a Git repository:
-
-```sh
-zeroturn init            # detect the project and propose .zeroturn.json
-zeroturn verify          # run the checks, and record what state they ran against
-zeroturn report current  # say whether that answer still covers the code
-```
-
-If `zeroturn` is not found, your Go bin directory is not on your `PATH`. Add `export PATH="$(go env GOPATH)/bin:$PATH"` to your shell profile. `zeroturn doctor` checks this and everything else about the installation.
-
 ## What it does
 
 ![Diagram in two lanes. Session Guard: the coding harness sends events from its status line and hooks to ZeroTurn, which checks your thresholds, counts subagents, and keeps local records, then returns a decision for the next subagent: allow, ask you, or deny. The harness applies it before the subagent starts. Direct Lane: you run zeroturn verify or zeroturn ship, ZeroTurn runs only approved commands with a credential scan and safe Git rules, and acts on your project's tests, lint, build, commit, and push, on your machine without a model turn.](docs/img/how-it-works.svg)
@@ -40,7 +24,84 @@ If `zeroturn` is not found, your Go bin directory is not on your `PATH`. Add `ex
 | **Credential guard** | Before the model reads a file that holds a key, the harness asks you first | [docs/credential-guard.md](docs/credential-guard.md) |
 | **Ship** | `ship` stages only the files you name, scans them, runs the checks, and pushes without force. `--dry-run` changes nothing | `zeroturn ship --help` |
 
-### See it run
+## Install
+
+Needs Go 1.17 or newer.
+
+```sh
+go install github.com/cris-wendler/zeroturn/cmd/zeroturn@latest
+```
+
+If `zeroturn` is not found afterwards, your Go bin directory is not on your `PATH`. Add `export PATH="$(go env GOPATH)/bin:$PATH"` to your shell profile.
+
+Release archives for macOS, Linux, and Windows are attached to each [release](https://github.com/cris-wendler/zeroturn/releases) with checksums. There is no Homebrew tap yet.
+
+## Set it up
+
+From inside a Git repository:
+
+```sh
+zeroturn init                      # detect the project and propose .zeroturn.json
+zeroturn integrate claude --plan   # show what would change, change nothing
+zeroturn integrate claude --apply  # write it after you confirm
+zeroturn doctor                    # check the installation
+```
+
+`doctor` is the command to run whenever something looks wrong. It checks the install, the `PATH`, the harness entries, and whether the guard is receiving measurements.
+
+Start a new coding session after `--apply`. This writes to `.claude/settings.local.json` in the repository. `--user` writes to your user settings, and `--remove` deletes ZeroTurn's own entries and leaves everything else alone. The full guide is [docs/integrations/claude-code.md](docs/integrations/claude-code.md).
+
+### Or as a Claude Code plugin
+
+```
+/plugin marketplace add cris-wendler/zeroturn
+/plugin install zeroturn@zeroturn
+```
+
+The plugin installs the hooks only. It carries no status line and no executable, so `go install` first, and use `integrate` if you want the measurements. See [integrations/claude-plugin/](integrations/claude-plugin).
+
+### The configuration file
+
+`init` proposes validation steps only for commands the project declares, and only when the executable is installed. It recognises Go, JavaScript and TypeScript, Python, Rust, Maven and Gradle, .NET, Ruby, and `Makefile` targets.
+
+<details>
+<summary>What .zeroturn.json looks like</summary>
+
+The file it writes looks like this:
+
+```json
+{
+  "version": 1,
+  "guard": {
+    "mode": "observe",
+    "context": { "warn": 70, "confirm": 80, "critical": 90 },
+    "limits": { "fiveHourWarn": 75, "sevenDayWarn": 75, "projection": "on" },
+    "session": { "durationWarnMinutes": 240, "activeSubagentsWarn": 2, "subagentStartsWarn": 4 },
+    "credentials": { "mode": "ask", "prompts": "off" }
+  },
+  "report": { "retentionDays": 7 },
+  "verify": {
+    "steps": [
+      { "name": "vet", "command": ["go", "vet", "./..."] },
+      { "name": "test", "command": ["go", "test", "./..."] }
+    ]
+  },
+  "git": { "remote": "origin", "protectedBranches": ["main", "master"] }
+}
+```
+
+The thresholds are starting points, not measurements. Adjust them to how you work.
+
+</details>
+
+## Use it
+
+```sh
+zeroturn verify          # run the checks, and record what state they ran against
+zeroturn report current  # say whether that answer still covers the code
+```
+
+`verify` prints one line per step and ends with the state the run answered for. `report current` compares that state with the code on disk and says `STALE` when they differ.
 
 ![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask because context, five hour usage, and active subagents are past their thresholds. The credential guard then stops a file that holds an aws access key id from being read, and, with the prompt guard switched on, stops a message carrying the same key from being sent. zeroturn verify passes two checks and records evidence for the repository state it ran against, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
 
@@ -104,6 +165,19 @@ Dry run finished. Nothing was staged, committed, or pushed.
 
 </details>
 
+## Where each part works
+
+Session Guard's measurements arrive through the harness status line and through nothing else. An editor extension draws no status line, and a plugin cannot install one.
+
+| | Terminal, with `integrate` | Editor extension | Plugin only |
+| --- | --- | --- | --- |
+| Validation evidence, `verify`, `ship` | yes | yes | yes |
+| Credential guard | yes | yes | yes |
+| Subagent counts and the gate on them | yes | yes | yes |
+| Context, usage windows, session time | yes | no | no |
+
+`zeroturn doctor` and `zeroturn policy check` both say which case you are in, and name the values that were not measured. They do not print an all clear for a threshold nothing could check.
+
 ## Validation evidence
 
 ```text
@@ -165,81 +239,6 @@ The gate also looks at how fast the five hour window is being used, and `zerotur
 ![Two guards. Files the model reads, on by default: before a file is opened ZeroTurn scans it and the harness asks you, with modes ask, deny, and off. Messages you send, off by default: switch it on and a message holding a key is stopped before it is sent, which means ZeroTurn reads your messages in that repository in memory, and a stopped message is erased. Both checks run on your machine, nothing is stored, and the explanation names the file, the line, and the kind, never the value.](docs/img/credential-guard.svg)
 
 On by default for files, in `ask` mode. Off by default for messages you send, because switching it on means ZeroTurn reads them. It is a guard, not a guarantee: it looks for high confidence patterns and skips files over 1 MB. Details in [docs/credential-guard.md](docs/credential-guard.md).
-
-## Where each part works
-
-Session Guard's measurements arrive through the harness status line and through nothing else. An editor extension draws no status line, and a plugin cannot install one.
-
-| | Terminal, with `integrate` | Editor extension | Plugin only |
-| --- | --- | --- | --- |
-| Validation evidence, `verify`, `ship` | yes | yes | yes |
-| Credential guard | yes | yes | yes |
-| Subagent counts and the gate on them | yes | yes | yes |
-| Context, usage windows, session time | yes | no | no |
-
-`zeroturn doctor` and `zeroturn policy check` both say which case you are in, and name the values that were not measured. They do not print an all clear for a threshold nothing could check.
-
-## Installation
-
-Needs Go 1.17 or newer. Release archives for macOS, Linux, and Windows are attached to each [release](https://github.com/cris-wendler/zeroturn/releases) with checksums. There is no Homebrew tap yet.
-
-```sh
-go install github.com/cris-wendler/zeroturn/cmd/zeroturn@latest
-```
-
-### Connect it to Claude Code
-
-```sh
-zeroturn init                      # detect the project and propose .zeroturn.json
-zeroturn integrate claude --plan   # show what would change, change nothing
-zeroturn integrate claude --apply  # write it after you confirm
-zeroturn doctor                    # check the installation
-```
-
-Start a new coding session after `--apply`. This writes to `.claude/settings.local.json` in the repository. `--user` writes to your user settings, and `--remove` deletes ZeroTurn's own entries and leaves everything else alone. The full guide is [docs/integrations/claude-code.md](docs/integrations/claude-code.md).
-
-### Or as a Claude Code plugin
-
-```
-/plugin marketplace add cris-wendler/zeroturn
-/plugin install zeroturn@zeroturn
-```
-
-The plugin installs the hooks only. It carries no status line and no executable, so `go install` first, and use `integrate` if you want the measurements. See [integrations/claude-plugin/](integrations/claude-plugin).
-
-### The configuration file
-
-`init` proposes validation steps only for commands the project declares, and only when the executable is installed. It recognises Go, JavaScript and TypeScript, Python, Rust, Maven and Gradle, .NET, Ruby, and `Makefile` targets.
-
-<details>
-<summary>What .zeroturn.json looks like</summary>
-
-The file it writes looks like this:
-
-```json
-{
-  "version": 1,
-  "guard": {
-    "mode": "observe",
-    "context": { "warn": 70, "confirm": 80, "critical": 90 },
-    "limits": { "fiveHourWarn": 75, "sevenDayWarn": 75, "projection": "on" },
-    "session": { "durationWarnMinutes": 240, "activeSubagentsWarn": 2, "subagentStartsWarn": 4 },
-    "credentials": { "mode": "ask", "prompts": "off" }
-  },
-  "report": { "retentionDays": 7 },
-  "verify": {
-    "steps": [
-      { "name": "vet", "command": ["go", "vet", "./..."] },
-      { "name": "test", "command": ["go", "test", "./..."] }
-    ]
-  },
-  "git": { "remote": "origin", "protectedBranches": ["main", "master"] }
-}
-```
-
-The thresholds are starting points, not measurements. Adjust them to how you work.
-
-</details>
 
 ## Commands
 
@@ -340,3 +339,4 @@ The finding that outlived its feature: six defects here had the same shape, a de
 ## License
 
 `GPL-3.0-only`. The full text is in [LICENSE](LICENSE), and [COPYING](COPYING) is the traditional GNU name for the same file. Contributions are accepted under the same license, with no contributor license agreement.
+

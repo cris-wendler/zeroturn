@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 300" width="820" height="300" role="img" aria-labelledby="title desc">
+<title id="title">What ZeroTurn costs, measured</title>
+<desc id="desc">Horizontal bars of the time each ZeroTurn command takes, including process start, measured over 50 runs on an Apple M4: the status line 7.5 milliseconds, the subagent gate 7.7 milliseconds, and bare startup 6.3 milliseconds. A note records that the executable is 2.5 megabytes and makes no network request.</desc>
+<style>
+.bg{fill:#0d1117;stroke:#30363d}
+.h{font:600 13px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em;fill:#c9d1d9}
+.t{font:14px ui-monospace,SFMono-Regular,Menlo,monospace;fill:#c9d1d9}
+.s{font:12.5px -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;fill:#9da7b3}
+.v{font:600 13px ui-monospace,SFMono-Regular,Menlo,monospace;fill:#c9d1d9}
+.grid{stroke:#21262d;stroke-width:1}
+.bar{fill:#4690e0}
+.base{fill:#3d4650}
+</style>
+<rect class="bg" x="1" y="1" width="818" height="298" rx="10"/>
+<text class="h" x="36" y="40">WHAT IT COSTS, INCLUDING PROCESS START</text>
+
+<line class="grid" x1="300" y1="60" x2="300" y2="228"/>
+<line class="grid" x1="500" y1="60" x2="500" y2="228"/>
+<line class="grid" x1="700" y1="60" x2="700" y2="228"/>
+<text class="s" x="300" y="248" text-anchor="middle">0</text>
+<text class="s" x="500" y="248" text-anchor="middle">5</text>
+<text class="s" x="700" y="248" text-anchor="middle">10 ms</text>
+
+<text class="t" x="36" y="92">status line</text>
+<path class="bar" d="M300 78 h296 a4 4 0 0 1 4 4 v8 a4 4 0 0 1 -4 4 h-296 z"/>
+<text class="v" x="612" y="91">7.5</text>
+
+<text class="t" x="36" y="140">subagent gate</text>
+<path class="bar" d="M300 126 h304 a4 4 0 0 1 4 4 v8 a4 4 0 0 1 -4 4 h-304 z"/>
+<text class="v" x="620" y="139">7.7</text>
+
+<text class="t" x="36" y="188">bare startup</text>
+<path class="base" d="M300 174 h248 a4 4 0 0 1 4 4 v8 a4 4 0 0 1 -4 4 h-248 z"/>
+<text class="v" x="564" y="187">6.3</text>
+
+<text class="s" x="36" y="276">Median of 50 runs on an Apple M4. Most of each figure is starting a process, which is the grey bar.</text>
+</svg>

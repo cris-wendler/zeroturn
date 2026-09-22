@@ -1,5 +1,7 @@
 # ZeroTurn
 
+![ZeroTurn. Your tests passed, then the code changed. Three panels: a validation run passes and records the repository state, the code moves underneath it, and ZeroTurn answers that the code it was validated against is gone.](docs/img/banner.svg)
+
 [![Tests on Linux, macOS, and Windows](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml/badge.svg)](https://github.com/cris-wendler/zeroturn/actions/workflows/ci.yml)
 [![Go 1.17+](https://img.shields.io/badge/go-1.17%2B-00ADD8?logo=go&logoColor=white)](go.mod)
 ![No dependencies](https://img.shields.io/badge/dependencies-none-success)
@@ -166,6 +168,12 @@ The gate also looks at how fast the five hour window is being used, and `zerotur
 
 On by default for files, in `ask` mode. Off by default for messages you send, because switching it on means ZeroTurn reads them. It is a guard, not a guarantee: it looks for high confidence patterns and skips files over 1 MB. Details in [docs/credential-guard.md](docs/credential-guard.md).
 
+### What it costs
+
+![Horizontal bars of the time each command takes including process start, measured over 50 runs on an Apple M4: the status line 7.5 milliseconds, the subagent gate 7.7 milliseconds, and bare startup 6.3 milliseconds.](docs/img/measured.svg)
+
+Most of each figure is starting a process. Neither the status line nor the gate makes a network request or starts anything in the background, and the executable is 2.5 MB.
+
 ## Where each part works
 
 Session Guard's measurements arrive through the harness status line and through nothing else. An editor extension draws no status line, and a plugin cannot install one.
@@ -324,6 +332,22 @@ Any other harness can send events as normalized JSON with `zeroturn event --harn
 - Being explored, and not built: a repository handoff record that an engineer can review after an agent has worked, holding the repository state, what was done, the validation evidence, and what still needs a person. This is a file you ask for and read. It is not an automatic session handoff.
 
 Not planned: `zeroturn sync`. The reasoning is in [docs/decisions.md](docs/decisions.md).
+
+## Questions
+
+**Why not just Git?** Git tells you what changed. It does not record when your checks passed. The commands people reach for first, and what each one misses, are in [Why not just git](#why-not-just-git) above.
+
+**Does `verify` watch me?** No. It runs the commands listed in your own `.zeroturn.json`, prints one line per step, and writes one record saying which state of the repository they passed against. There is no background process and nothing is sent anywhere.
+
+**`doctor` says session data is a warning. What do I fix?** Nothing, if you work in an editor extension. Context and the usage windows reach ZeroTurn through the harness status line, and an extension draws none, so the guard has no measurements there. Validation evidence and the credential guard are unaffected. Run Claude Code in a terminal if you want the measurements.
+
+**Which terminal?** Any, including the one inside your editor. What matters is the command line interface rather than the editor extension, not which terminal window it runs in.
+
+**Does it work without Claude Code?** The validation half does, anywhere. `verify`, `ship` and `report` need only Git. Session Guard needs a harness that draws a status line.
+
+**Does it send anything anywhere?** No network requests, no model calls, no telemetry. `ship` contacts your Git remote because pushing requires it, and that is all.
+
+**What if I want it gone?** `zeroturn uninstall` lists everything it put on the machine and removes it with `--apply`. It edits settings files rather than deleting them, and backs up each one first.
 
 ## Contributing
 

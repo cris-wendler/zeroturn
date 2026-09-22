@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400" role="img" aria-labelledby="title desc">
+<title id="title">ZeroTurn</title>
+<desc id="desc">ZeroTurn. Your tests passed, then the code changed. Three panels show a validation run passing and recording the repository state, the code moving underneath it, and the answer that the recorded validation no longer covers the code on disk. Below: one executable, no dependencies, no network.</desc>
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#11161d"/>
+<stop offset="1" stop-color="#0d1117"/>
+</linearGradient>
+</defs>
+<rect width="1280" height="400" fill="url(#sky)"/>
+<rect x="0" y="0" width="1280" height="3" fill="#4690e0"/>
+
+<text x="80" y="104" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="52" font-weight="700" fill="#e6edf3" letter-spacing="-0.5">zeroturn</text>
+<text x="80" y="150" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="23" fill="#9da7b3">Your tests passed. Then the code changed.</text>
+
+<g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">
+<rect x="80" y="196" width="340" height="104" rx="10" fill="#161b22" stroke="#2ea043" stroke-width="2"/>
+<text x="104" y="230" font-size="13" fill="#7d8590" letter-spacing="1.2">VALIDATED</text>
+<text x="104" y="264" font-size="20" font-weight="700" fill="#3fb950">PASS</text>
+<text x="104" y="288" font-size="13" fill="#7d8590">state cab46d1b8898</text>
+
+<path d="M436 248 h34" stroke="#484f58" stroke-width="2" fill="none"/>
+<path d="M464 242 l10 6 -10 6 z" fill="#484f58"/>
+
+<rect x="486" y="196" width="308" height="104" rx="10" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+<text x="510" y="230" font-size="13" fill="#7d8590" letter-spacing="1.2">THE CODE MOVED</text>
+<text x="510" y="264" font-size="20" font-weight="700" fill="#c9d1d9">CHANGED</text>
+<text x="510" y="288" font-size="13" fill="#7d8590">state 7e02b91f4a3d</text>
+
+<path d="M810 248 h34" stroke="#484f58" stroke-width="2" fill="none"/>
+<path d="M838 242 l10 6 -10 6 z" fill="#484f58"/>
+
+<rect x="860" y="196" width="340" height="104" rx="10" fill="#161b22" stroke="#d29922" stroke-width="2"/>
+<text x="884" y="230" font-size="13" fill="#7d8590" letter-spacing="1.2">ZEROTURN SAYS</text>
+<text x="884" y="264" font-size="20" font-weight="700" fill="#d29922">STALE</text>
+<text x="884" y="288" font-size="13" fill="#7d8590">the code it answered for is gone</text>
+</g>
+
+<text x="80" y="356" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="16" fill="#7d8590">One executable   ·   no dependencies   ·   no network   ·   never reads your prompts or your code</text>
+</svg>

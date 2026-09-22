@@ -4,7 +4,11 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
-Nothing yet.
+**Internal**
+
+- The README opens with a banner, and the timings it states are also drawn as a chart. Both are SVG in the same style as the other diagrams here, so they render in light and dark and carry a text description.
+- A Questions section answers what people actually asked when reading this: why Git alone does not answer it, whether `verify` watches anybody, what the session data warning means for somebody working in an editor, and how to remove it all.
+- `docs/img/social-preview.png` is the image GitHub shows when the repository is linked. It has to be uploaded in the repository settings; nothing in the repository applies it.
 
 ## 0.4.1, 2026-09-22
 

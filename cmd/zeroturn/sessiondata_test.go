@@ -28,6 +28,13 @@ func doctorCheck(t *testing.T, work, name string) check {
 // never invokes the command, and the guard then runs with no
 // measurements while still looking installed. Doctor has to say so,
 // because nothing else will.
+//
+// It says it as a warning. This was a failure, and a failure is a claim
+// that something is broken: working in an editor extension is a
+// supported way to use the validation half, and there the check could
+// never be green while doctor closed by telling a person to fix what
+// they had not broken. What is asserted here is that the fact is
+// reported and what to do is named, not the colour it is reported in.
 func TestDoctorReportsASessionThatCarriedNoMeasurements(t *testing.T) {
 	work, _ := repoWithConfig(t, nil)
 
@@ -36,13 +43,31 @@ func TestDoctorReportsASessionThatCarriedNoMeasurements(t *testing.T) {
 	gate(t, work, "extension-session")
 
 	c := doctorCheck(t, work, "session data")
-	if c.Status != checkFail {
-		t.Fatalf("status %q, want fail: %s", c.Status, c.Detail)
+	if c.Status == checkOK {
+		t.Fatalf("a session with no measurements reads as ok: %s", c.Detail)
 	}
 	for _, want := range []string{"no context or usage values", "terminal"} {
 		if !strings.Contains(c.Detail, want) {
 			t.Errorf("the explanation does not mention %q: %s", want, c.Detail)
 		}
+	}
+}
+
+// A person whose work is in an editor extension has nothing to fix, so
+// doctor has to be able to come back green for them. While this was a
+// failure it never could, and a check that is permanently red in a
+// supported arrangement is one people learn to ignore.
+func TestDoctorCanBeGreenInAnEditorExtension(t *testing.T) {
+	work, _ := repoWithConfig(t, nil)
+	gate(t, work, "extension-session")
+
+	r := run(t, work, "", "doctor")
+	if r.code != 0 {
+		t.Errorf("doctor exits %d where the only complaint is that no status line was drawn:\n%s",
+			r.code, r.stdout)
+	}
+	if strings.Contains(r.stdout, "FAIL") {
+		t.Errorf("doctor reports a failure with nothing broken:\n%s", r.stdout)
 	}
 }
 

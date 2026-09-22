@@ -436,12 +436,19 @@ func checkSessionData(repoRoot string) check {
 		if seen == 1 {
 			subject = "the one session recorded for this repository"
 		}
-		return check{"session data", checkFail,
+		// A warning rather than a failure. Entry 31 made this a failure
+		// to surface a finding nobody had noticed, and it is the right
+		// level for nothing: working in an editor extension is a
+		// supported way to use the validation half, and there doctor
+		// could never be green and closed by telling a person to fix
+		// what they had not broken. A check that is permanently red in a
+		// supported arrangement teaches people to ignore the check.
+		return check{"session data", checkWarn,
 			fmt.Sprintf("%s carried no context or usage values. "+
 				"The status line is not being invoked, which is what happens in an editor extension, where there is no status line to draw. "+
 				"Subagents are still counted and the credential guard still works, but the guard has no measurements, "+
 				"so thresholds on context, the usage windows, and session duration can never be crossed. "+
-				"Run Claude Code in a terminal for the guard to have anything to read", subject)}
+				"Run Claude Code in a terminal, then zeroturn doctor again, for the guard to have anything to read", subject)}
 	case withUsage < seen:
 		// Some sessions carried measurements and some did not, which is
 		// what a person working in both a terminal and an editor sees.

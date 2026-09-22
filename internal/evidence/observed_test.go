@@ -239,3 +239,99 @@ func TestAPartialRecordReadsAsNeitherPassNorFailure(t *testing.T) {
 		t.Errorf("a stale partial reads as a finished run: %s", a.Reason)
 	}
 }
+
+// sameProgram decides what counts as a near miss, and a near miss is the
+// only thing a developer sees when their commands are close to the plan
+// and never match it. Each shape it compares is exercised here: a
+// one word command, a mismatched program, and a command whose second
+// word differs, which is the case that separates go vet from go test.
+func TestWhatCountsAsANearMiss(t *testing.T) {
+	oneWord := []config.Step{{Name: "build", Command: []string{"make"}}}
+	twoWords := []config.Step{{Name: "test", Command: []string{"go", "test", "./..."}}}
+
+	for _, c := range []struct {
+		name    string
+		command string
+		steps   []config.Step
+		want    MatchKind
+	}{
+		{"a one word step run as itself", "make", oneWord, Exact},
+		{"a one word step with an argument", "make release", oneWord, NoMatch},
+		{"a longer command where the step is one word", "make -j4 release", oneWord, NoMatch},
+		{"the step's program with another subcommand", "go build ./...", twoWords, NoMatch},
+		{"the step's program and subcommand, narrower", "go test ./pkg", twoWords, Near},
+		{"a different program entirely", "cargo test ./...", twoWords, NoMatch},
+		{"the program alone", "go", twoWords, NoMatch},
+	} {
+		if got, _ := Match(c.command, c.steps); got != c.want {
+			t.Errorf("%s: %q gave %v, want %v", c.name, c.command, got, c.want)
+		}
+	}
+}
+
+// A step the plan does not hold is not a step that passed. The plan is
+// what a record is measured against, so a name that is not in it can
+// never complete one.
+func TestAStepOutsideThePlanNeverCompletesIt(t *testing.T) {
+	st, repo, _ := fixture(t)
+	snap := snapshotOf(t, repo)
+	stray := config.Step{Name: "lint", Command: []string{"golangci-lint", "run"}}
+
+	r, err := Observe(st, state.RepoHash(repo.Root), "test", snap, stray, plan(), 1, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Result != ResultPartial {
+		t.Errorf("a step outside the plan gave %q", r.Result)
+	}
+	if got := Missing(r, plan()); len(got) != 2 {
+		t.Errorf("both configured steps should still be outstanding, got %v", got)
+	}
+
+	// And a plan with nothing in it is never complete, because there is
+	// no plan to have passed.
+	r, err = Observe(st, state.RepoHash(repo.Root), "test", snap, plan()[0], nil, 1, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Result == ResultPassed {
+		t.Error("an empty plan was reported as passed")
+	}
+}
+
+// An observation adds to a record it started and never to one verify
+// wrote. Both halves of that test are needed: a partial is added to, and
+// a record carrying an observed identifier is added to as well, which is
+// what happens once a plan has completed and a step runs again.
+func TestAnObservationAddsToItsOwnRecordOnly(t *testing.T) {
+	st, repo, _ := fixture(t)
+	snap := snapshotOf(t, repo)
+
+	// Complete the plan, so the record reads passed and is no longer
+	// partial, while still being one observations own.
+	for _, s := range plan() {
+		if _, err := Observe(st, state.RepoHash(repo.Root), "test", snap, s, plan(), 1, time.Now()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	first, _, err := Load(st, state.RepoHash(repo.Root))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first.Result != ResultPassed || len(first.Steps) != 2 {
+		t.Fatalf("the completed record is %q with %d steps", first.Result, len(first.Steps))
+	}
+
+	// Running a step again keeps the same record rather than starting a
+	// new one that holds only that step.
+	if _, err := Observe(st, state.RepoHash(repo.Root), "test", snap, plan()[0], plan(), 2, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	again, _, err := Load(st, state.RepoHash(repo.Root))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(again.Steps) != 2 || again.Result != ResultPassed {
+		t.Errorf("re-running one step left %d steps and result %q", len(again.Steps), again.Result)
+	}
+}

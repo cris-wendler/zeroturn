@@ -938,3 +938,17 @@ Every package that holds behaviour is now in the guard, nineteen of them. The la
 
 Which packages are covered is no longer a judgement worth recording here, because the answer is all of them. What remains outside is `internal/testutil`, which is the test harness itself, and `cmd/zeroturn`, whose tests run the real executable and would multiply the run by their own cost.
 
+
+## 60. A supported arrangement must be able to pass its own check
+
+Date: 2026-09-21
+
+Entry 31 found that Session Guard has no measurements outside a terminal, and made `doctor` report a session that carried none as a failure. That was the right level for finding it and the wrong one for living with it.
+
+Working in an editor extension is a supported way to use ZeroTurn. Validation evidence, `verify`, `ship` and the credential guard all work there; only the measurements the status line carries do not. A person working that way ran `doctor`, saw `FAIL`, and read `fix the failures listed above` about something they had not broken and could not fix without changing which interface they work in. The check could never come back green for them.
+
+A check that is permanently red in a supported arrangement is one people learn to ignore, and then it is worth nothing when something is really wrong. So the case where no session carried a measurement is a warning now. The explanation is unchanged and still says what is absent, why, and what it costs; it names running Claude Code in a terminal and then `doctor` again, because every warning here has to name something to do.
+
+Two tests hold it. One requires the fact to be reported and what to do to be named, without asserting the level, because the level is not the point. The other requires `doctor` to exit zero in an extension, which is the thing that was impossible before, and it fails if the level goes back.
+
+Nothing about the guard changed. It has the same measurements it had, and `policy check` and `status` say the same as they did.

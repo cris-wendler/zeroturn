@@ -348,8 +348,27 @@ func rewrite(src []byte, m mutant) ([]byte, error) {
 
 // test reports whether the package's tests pass. A build failure counts
 // as noticed: a change that does not compile is not one that slipped by.
+//
+// The run is pointed at a throwaway home and state directory. The tests
+// isolate themselves, but they do it by setting ZEROTURN_STATE_DIR and
+// reading it back through the code being changed here, and one of the
+// changes made here is to stop that variable being read. When that
+// happens every test in the package writes into the real state
+// directory of whoever is running the guard, which is how a developer's
+// own records came to be sitting beside files named borrowed.txt and
+// adir.json. Isolation cannot be left to the code under test.
 func test(pkg, timeout string) (bool, string) {
 	cmd := exec.Command("go", "test", "-count=1", "-timeout", timeout, "./"+pkg+"/")
+	if sandbox, err := ioutil.TempDir("", "mutate-"); err == nil {
+		defer os.RemoveAll(sandbox)
+		cmd.Env = append(os.Environ(),
+			"ZEROTURN_STATE_DIR="+filepath.Join(sandbox, "state"),
+			// os.UserHomeDir reads USERPROFILE on Windows and HOME
+			// elsewhere, which is entry 40 in the decisions: setting one
+			// of them isolated nothing on the other platform.
+			"HOME="+sandbox,
+			"USERPROFILE="+sandbox)
+	}
 	out, err := cmd.CombinedOutput()
 	return err == nil, string(out)
 }

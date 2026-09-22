@@ -4,6 +4,10 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
+Nothing yet.
+
+## 0.4.2, 2026-09-22
+
 **Internal**
 
 - The live session is isolated from MCP servers as well as settings. `--restricted` leaves them alone, so `--strict-mcp-config` goes with it, and a session meant to inherit nothing now inherits nothing. Both flags are in 2.1.257, older than any release published as tested.

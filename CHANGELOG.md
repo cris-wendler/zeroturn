@@ -4,6 +4,10 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
+**Internal**
+
+- The README is in reading order: what it is, install, set it up, use it, then the detail. The install command appeared twice, a hundred and seventy lines apart, and the command that connects it to a harness sat fifty lines after the feature that needs it. Nothing was added and nothing was cut; the sections moved.
+
 Nothing yet.
 
 ## 0.4.1, 2026-09-22

@@ -37,7 +37,14 @@ import (
 // This is what the `available` field was declared for. Nothing ever set
 // it false, so it could only ever say one thing; every entry in
 // `triggers` has it true and every entry in `unmeasured` has it false.
-const ContractVersion = "2.2.0"
+//
+// 2.3.0 adds the `command.ran` event and takes nothing away. An adapter
+// may report a command that ran and succeeded, and a record is written
+// when that command was one of the repository's validation steps. Two
+// counts join the session document, `observedSteps` and
+// `nearValidationRuns`, and a record may now say `partial`: some step of
+// the plan passed at this state and some has not been seen to.
+const ContractVersion = "2.3.0"
 
 // ClaudeTestedVersions are the harness releases on which a decision was
 // observed end to end: allow and deny on the first, and the interactive

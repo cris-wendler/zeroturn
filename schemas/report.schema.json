@@ -106,7 +106,8 @@
             "passed",
             "failed",
             "cancelled",
-            "stale"
+            "stale",
+            "partial"
           ],
           "description": "The single word for a person. A reader deciding what to do should use result and current instead, which never lose the original outcome."
         },
@@ -116,7 +117,8 @@
             "running",
             "passed",
             "failed",
-            "cancelled"
+            "cancelled",
+            "partial"
           ],
           "description": "What the recorded run concluded. A failed run that has since gone stale still reports failed here."
         },

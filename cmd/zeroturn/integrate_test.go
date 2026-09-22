@@ -112,6 +112,7 @@ func TestIntegrateInstallReinstallRemove(t *testing.T) {
 	// here, so ZeroTurn could have stopped installing one in silence.
 	want := map[string]int{
 		"PreToolUse":    2, // the subagent gate and the credential guard
+		"PostToolUse":   1,
 		"SubagentStart": 1,
 		"SubagentStop":  1,
 		"Stop":          1,

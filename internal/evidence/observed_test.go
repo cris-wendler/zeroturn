@@ -2,6 +2,7 @@ package evidence
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -202,4 +203,39 @@ func snapshotOf(t *testing.T, repo git.Repo) snapshot.Snapshot {
 		t.Fatal(err)
 	}
 	return s
+}
+
+// A partial record is neither a pass nor a failure, and the sentence a
+// person reads has to say which of the three it is. Reading it as passed
+// would claim steps nobody saw run.
+func TestAPartialRecordReadsAsNeitherPassNorFailure(t *testing.T) {
+	st, repo, work := fixture(t)
+	snap := snapshotOf(t, repo)
+	if _, err := Observe(st, state.RepoHash(repo.Root), "test", snap, plan()[1], plan(), 1.5, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+
+	a := assess(t, st, repo, "plan")
+	if a.State != StatePartial {
+		t.Fatalf("the state is %q, want %q", a.State, StatePartial)
+	}
+	for _, wrong := range []string{"Validation passed", "Validation failed"} {
+		if strings.Contains(a.Reason, wrong) {
+			t.Errorf("a partial record reads as %q: %s", wrong, a.Reason)
+		}
+	}
+	if !strings.Contains(a.Reason, "not been seen to run") {
+		t.Errorf("the reason does not say what is outstanding: %s", a.Reason)
+	}
+
+	// And when the code moves under it, it says that without pretending
+	// the plan had finished.
+	testutil.Write(t, work, "after.txt", "moved\n")
+	a = assess(t, st, repo, "plan")
+	if a.State != StateStale {
+		t.Fatalf("after a change the state is %q", a.State)
+	}
+	if !strings.Contains(a.Reason, "Part of the plan") {
+		t.Errorf("a stale partial reads as a finished run: %s", a.Reason)
+	}
 }

@@ -65,6 +65,18 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/usr/local/bin/zeroturn\" event --harness claude --event PostToolUse",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "statusLine": {

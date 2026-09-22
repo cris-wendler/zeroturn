@@ -103,17 +103,6 @@ func sameProgram(a, b []string) bool {
 	return len(a) == 1 && len(b) == 1
 }
 
-// ResultPartial is a record assembled from observed steps where some
-// step of the plan has not been seen at this state. It is stored, and it
-// is deliberately not ResultPassed: the steps that were seen passed, and
-// the ones that were not were not run as far as anybody here knows.
-const ResultPartial = "partial"
-
-// StatePartial is the word for a person. A partial record is not a
-// failure and not a pass, and calling it either would be a claim nobody
-// made.
-const StatePartial = "partial"
-
 // Observe records that one step of the plan passed at a repository
 // state, and returns the record as it now stands.
 //

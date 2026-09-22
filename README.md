@@ -202,6 +202,12 @@ It says the checks passed for that code, on your machine, at that moment. It doe
 - Anything outside the repository: installed dependencies, environment variables, toolchain versions, services the tests reach.
 - A change that was made and then undone. The digest returns to its earlier value, because the code did too.
 
+### Recorded without being asked
+
+`verify` records evidence because it ran the steps itself. Steps are also recorded when a coding session happens to run them: ZeroTurn compares each command against the plan, and a step that passes is written down.
+
+A record says `passed` only when every configured step has passed against the same state of the code. Until then it says `partial` and names what is outstanding. A narrower run, `go test ./internal/policy` where the step is `go test ./...`, records nothing, because it did less work than the step claims.
+
 More in [docs/validation-evidence.md](docs/validation-evidence.md).
 
 ### Why not just git
@@ -292,6 +298,7 @@ Every command has `--help`. `status`, `policy show`, `policy check`, `report`, `
 
 - Nothing leaves your machine. No network requests, no model calls, no background process. `zeroturn ship` contacts your Git remote because pushing requires it.
 - The harness sends a transcript path with most events. ZeroTurn discards it and never opens the file, and a test checks that no prompt, response, or path reaches its records.
+- Commands a session runs are read, and not kept. Each one is compared with the validation steps in `.zeroturn.json` so that a step passing can be recorded without anybody remembering to run `verify`. What reaches a record is the name of the step it matched, or nothing. The command itself is never stored, logged, or sent.
 - The credential guard scans in memory and stores nothing from what it scans.
 - Validation evidence stores digests, step names and results. It stores no file contents, no file paths and no step output.
 - Validation commands are argument arrays, never shell strings. They do not run until you approve them on your machine, and changing a command withdraws the approval.

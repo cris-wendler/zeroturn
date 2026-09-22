@@ -47,7 +47,7 @@ const ContractVersion = "2.2.0"
 // This was one release for as long as only one had been used, and it
 // stayed that way after a second was, so the published contract named an
 // older release than the README did.
-var ClaudeTestedVersions = []string{"2.1.265", "2.1.270"}
+var ClaudeTestedVersions = []string{"2.1.265", "2.1.270", "2.1.277"}
 
 type Harness struct {
 	Name            string   `json:"name"`

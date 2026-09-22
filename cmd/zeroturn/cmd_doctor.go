@@ -586,10 +586,16 @@ func compatLive(ctx context.Context) []check {
 		return []check{{"live harness test", checkFail, "the temporary configuration could not be written"}}
 	}
 
+	// --restricted makes the harness ignore the user, project and local
+	// settings files while still applying the one named here. Without it
+	// the session inherits whatever the person running the test has
+	// configured, and a hook of theirs answered the prompt instead: the
+	// model never reached the Agent tool, so nothing was put to the gate
+	// and the test reported a denial that had been ignored.
 	cmd := exec.CommandContext(ctx, bin, "-p",
 		"Use the Agent tool to launch the Explore subagent to list files here.",
 		"--model", "haiku", "--settings", sp, "--session-id", sessionID,
-		"--output-format", "json", "--max-turns", "3")
+		"--restricted", "--output-format", "json", "--max-turns", "3")
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), "ZEROTURN_STATE_DIR="+stateDir)
 	out, runErr := cmd.Output()
@@ -608,12 +614,29 @@ func compatLive(ctx context.Context) []check {
 	if json.Unmarshal(out, &result) != nil {
 		return []check{{"live harness test", checkWarn, "the session result could not be read"}}
 	}
-	if len(result.PermissionDenials) > 0 && result.SubagentStats.Spawned == 0 {
-		return []check{{"live harness test", checkOK,
-			"the harness honoured a denial and no subagent started"}}
+	return []check{judgeLive(len(result.PermissionDenials), result.SubagentStats.Spawned)}
+}
+
+// judgeLive reads the session's own counts. It is separate from the
+// session that produces them so that the rule can be tested without
+// starting a coding session, which is what let it say for months that a
+// denial had been ignored when none had been put.
+//
+// Three outcomes, not two. A denial that was ignored and a denial that
+// was never asked for are different answers, and calling the second one
+// a failure is a reading nobody took presented as a reading that failed.
+func judgeLive(denials, spawned int) check {
+	if spawned > 0 {
+		return check{"live harness test", checkFail,
+			"the harness did not honour the denial and a subagent started, keep guard.mode on observe"}
 	}
-	return []check{{"live harness test", checkFail,
-		"the harness did not honour the denial, keep guard.mode on observe"}}
+	if denials == 0 {
+		return check{"live harness test", checkWarn,
+			"the session never asked to start a subagent, so no denial was put to the harness and " +
+				"nothing was confirmed either way. Run zeroturn doctor --compat --live again"}
+	}
+	return check{"live harness test", checkOK,
+		"the harness honoured a denial and no subagent started"}
 }
 
 // seedCompatState prepares the temporary state for compatLive: Strict is

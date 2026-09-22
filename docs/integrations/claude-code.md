@@ -1,6 +1,6 @@
 # Claude Code integration
 
-Status: supported. Tested on Claude Code 2.1.265 on macOS.
+Status: supported. Tested on Claude Code 2.1.265, 2.1.270 and 2.1.277 on macOS.
 
 ZeroTurn connects to Claude Code through its documented status line and hook interfaces. It reads the JSON the harness sends on standard input and, for the subagent gate, answers with the harness's own permission decision. It does not scrape the interface, read transcripts, or add text to the model's context.
 

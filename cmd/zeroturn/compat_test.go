@@ -82,3 +82,36 @@ func TestCompatAddsChecksToTheOrdinaryRun(t *testing.T) {
 		}
 	}
 }
+
+// The live test reads two counts from the session it started, and there
+// are three answers in them. Running it against Claude Code 2.1.277
+// produced no denials and no subagents, because the session never tried
+// to start one, and the check reported that the harness had ignored a
+// denial. Nothing had been put to the harness to ignore.
+func TestTheLiveTestSaysWhenNothingWasPutToTheHarness(t *testing.T) {
+	for _, c := range []struct {
+		name            string
+		denials, spawns int
+		want            string
+		says            string
+	}{
+		{"a denial was honoured", 1, 0, checkOK, "honoured"},
+		{"a denial was ignored", 1, 1, checkFail, "did not honour"},
+		{"a subagent started with no denial recorded", 0, 1, checkFail, "did not honour"},
+		{"nothing was asked for", 0, 0, checkWarn, "never asked"},
+	} {
+		got := judgeLive(c.denials, c.spawns)
+		if got.Status != c.want {
+			t.Errorf("%s: %s, want %s (%s)", c.name, got.Status, c.want, got.Detail)
+		}
+		if !strings.Contains(got.Detail, c.says) {
+			t.Errorf("%s: detail does not say %q: %s", c.name, c.says, got.Detail)
+		}
+	}
+
+	// The one that is not a failure must still name what to do, which is
+	// the rule every warning in doctor follows.
+	if d := judgeLive(0, 0).Detail; !strings.Contains(d, "zeroturn doctor") {
+		t.Errorf("the warning names no command: %s", d)
+	}
+}

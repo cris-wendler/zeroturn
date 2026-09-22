@@ -4,13 +4,15 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
+Nothing yet.
+
+## 0.4.1, 2026-09-22
+
 **Fixed**
 
 - The test that holds the README's claims about Git compared the commit `git stash create` prints. A commit carries the time it was written, so two calls over identical content differ whenever they fall either side of a second: it passed here and failed on a slower runner. It compares the tree now, which is content and nothing else. The claim itself was right.
-
 - `doctor` reported a session that carried no context or usage values as a failure, so it could never come back green for somebody working in an editor extension, where the status line is never drawn. It closed by telling them to fix what they had not broken. It is a warning now, with the same explanation, and `doctor` exits zero when that is the only complaint. Entry 31 chose the level to surface the finding; entry 60 records why living with it needs a different one.
 - The mutation guard runs the tests with a throwaway home and state directory. It changes the code that decides where records are kept, so isolation cannot be left to the code it is changing.
-
 - `doctor --compat --live` ran a session that inherited the settings of whoever ran it. A hook of theirs answered the prompt, the model never reached the Agent tool, and nothing was put to the gate. The session is isolated from user, project and local settings now, and asks the harness for a subagent as it was meant to.
 - `doctor --compat --live` reported that the harness had ignored a denial when no denial had been put to it. The check asked for one thing and reported another: a session that never tried to start a subagent produces no denials and no subagents, which is the same pair of zeroes as a session where nothing was asked, and it was read as a failure. There are three answers now, and the one where nothing was asked says so. Observed on Claude Code 2.1.277.
 

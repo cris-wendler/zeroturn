@@ -6,6 +6,8 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 **Fixed**
 
+- The test that holds the README's claims about Git compared the commit `git stash create` prints. A commit carries the time it was written, so two calls over identical content differ whenever they fall either side of a second: it passed here and failed on a slower runner. It compares the tree now, which is content and nothing else. The claim itself was right.
+
 - `doctor` reported a session that carried no context or usage values as a failure, so it could never come back green for somebody working in an editor extension, where the status line is never drawn. It closed by telling them to fix what they had not broken. It is a warning now, with the same explanation, and `doctor` exits zero when that is the only complaint. Entry 31 chose the level to surface the finding; entry 60 records why living with it needs a different one.
 - The mutation guard runs the tests with a throwaway home and state directory. It changes the code that decides where records are kept, so isolation cannot be left to the code it is changing.
 

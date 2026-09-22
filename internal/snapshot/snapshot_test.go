@@ -491,23 +491,28 @@ func TestTheReadmeIsRightAboutWhatGitAloneAnswers(t *testing.T) {
 	testutil.Git(t, work, "commit", "--quiet", "--message", "add a")
 
 	head := testutil.Git(t, work, "rev-parse", "HEAD")
-	stash := testutil.Git(t, work, "stash", "create")
 
 	testutil.Write(t, work, "a.txt", "two\n")
 	if now := testutil.Git(t, work, "rev-parse", "HEAD"); now != head {
 		t.Errorf("the commit moved when a file was edited: %q then %q", head, now)
 	}
-	// Editing a tracked file does move it, which is why the README says
-	// this one comes closest rather than dismissing it.
-	edited := testutil.Git(t, work, "stash", "create")
-	if edited == stash {
-		t.Fatalf("stash create no longer moves for an edit, so the README overstates it: %q", edited)
-	}
+	// What stash create records is compared, not what it is called. It
+	// writes a commit object, and a commit carries the time it was
+	// written, so two calls over identical content differ whenever they
+	// fall either side of a second. This test passed locally and failed
+	// on a slower runner for exactly that reason.
+	edited := stashTree(t, work)
 
 	testutil.Write(t, work, "new.txt", "a file nobody has added\n")
-	if after := testutil.Git(t, work, "stash", "create"); after != edited {
+	if after := stashTree(t, work); after != edited {
 		t.Errorf("stash create saw an untracked file, so the README is wrong about it: %q then %q",
 			edited, after)
+	}
+	// And it does record an edit to a tracked file, which is why the
+	// README says this one comes closest rather than dismissing it.
+	testutil.Write(t, work, "a.txt", "three\n")
+	if after := stashTree(t, work); after == edited {
+		t.Errorf("stash create no longer records an edit, so the README overstates it: %q", after)
 	}
 	// And the digest does see it, which is the difference the section
 	// exists to explain.
@@ -516,4 +521,11 @@ func TestTheReadmeIsRightAboutWhatGitAloneAnswers(t *testing.T) {
 	if take(t, repo).Digest == before.Digest {
 		t.Error("a new file did not move the digest")
 	}
+}
+
+// stashTree is the tree git stash create would keep, which is content
+// and nothing else. The commit it prints carries a timestamp as well.
+func stashTree(t *testing.T, work string) string {
+	t.Helper()
+	return testutil.Git(t, work, "rev-parse", testutil.Git(t, work, "stash", "create")+"^{tree}")
 }

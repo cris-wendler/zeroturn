@@ -115,3 +115,30 @@ func TestTheLiveTestSaysWhenNothingWasPutToTheHarness(t *testing.T) {
 		t.Errorf("the warning names no command: %s", d)
 	}
 }
+
+// Only a denial of the subagent tool says anything about this gate. The
+// live session runs with --restricted, which refuses tools of its own
+// accord, and counting one of those as proof the gate was honoured is
+// the same defect as the one judgeLive exists to avoid, one layer up.
+//
+// The two names are not interchangeable in practice: the hook payload
+// this repository sends says Agent, and the session result observed on
+// Claude Code 2.1.277 said Task. Counting only the first would have made
+// every real run report that nothing was asked.
+func TestOnlyADenialOfTheSubagentToolCounts(t *testing.T) {
+	for _, c := range []struct {
+		name  string
+		given []string
+		want  int
+	}{
+		{"what a real session reported", []string{"Task"}, 1},
+		{"what a hook payload calls it", []string{"Agent"}, 1},
+		{"a tool restricted mode refused", []string{"Bash"}, 0},
+		{"the gate's denial among others", []string{"Bash", "Task", "WebFetch"}, 1},
+		{"nothing denied", nil, 0},
+	} {
+		if got := subagentDenials(c.given); got != c.want {
+			t.Errorf("%s: %v counted as %d, want %d", c.name, c.given, got, c.want)
+		}
+	}
+}

@@ -358,17 +358,52 @@ func rewrite(src []byte, m mutant) ([]byte, error) {
 // own records came to be sitting beside files named borrowed.txt and
 // adir.json. Isolation cannot be left to the code under test.
 func test(pkg, timeout string) (bool, string) {
-	cmd := exec.Command("go", "test", "-count=1", "-timeout", timeout, "./"+pkg+"/")
-	if sandbox, err := ioutil.TempDir("", "mutate-"); err == nil {
-		defer os.RemoveAll(sandbox)
-		cmd.Env = append(os.Environ(),
-			"ZEROTURN_STATE_DIR="+filepath.Join(sandbox, "state"),
-			// os.UserHomeDir reads USERPROFILE on Windows and HOME
-			// elsewhere, which is entry 40 in the decisions: setting one
-			// of them isolated nothing on the other platform.
-			"HOME="+sandbox,
-			"USERPROFILE="+sandbox)
+	sandbox, err := ioutil.TempDir("", "mutate-")
+	if err != nil {
+		// Running without the sandbox is the harm described above, so it
+		// stops rather than carries on unprotected.
+		fmt.Fprintf(os.Stderr, "mutate: the sandbox for the test run could not be created: %v\n", err)
+		os.Exit(2)
 	}
-	out, err := cmd.CombinedOutput()
-	return err == nil, string(out)
+	defer os.RemoveAll(sandbox)
+
+	cmd := exec.Command("go", "test", "-count=1", "-timeout", timeout, "./"+pkg+"/")
+	cmd.Env = sandboxEnv(sandbox)
+
+	out, rerr := cmd.CombinedOutput()
+	return rerr == nil, string(out)
+}
+
+// sandboxEnv is the environment a mutant's tests run in. Two things have
+// to be true at once and they pull against each other, which is why this
+// is its own function with a test rather than a literal inside the call.
+//
+// The home directory and the state directory are redirected, because the
+// guard changes the code that decides where records are kept and cannot
+// leave isolation to the code it is changing. Go's caches are not, even
+// though Go works them out from the home directory: following it moved
+// them into a directory deleted after every mutant, and every one then
+// rebuilt from cold, measured at 296 ms against 1998 ms for one package.
+func sandboxEnv(sandbox string) []string {
+	return append(os.Environ(),
+		"ZEROTURN_STATE_DIR="+filepath.Join(sandbox, "state"),
+		// os.UserHomeDir reads USERPROFILE on Windows and HOME
+		// elsewhere, which is entry 40 in the decisions: setting one of
+		// them isolated nothing on the other platform.
+		"HOME="+sandbox,
+		"USERPROFILE="+sandbox,
+		"GOCACHE="+goCache,
+		"GOMODCACHE="+goModCache)
+}
+
+// goCache and goModCache are read once, before anything redirects the
+// home directory they are worked out from.
+var goCache, goModCache = goEnv("GOCACHE"), goEnv("GOMODCACHE")
+
+func goEnv(name string) string {
+	out, err := exec.Command("go", "env", name).Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
 }

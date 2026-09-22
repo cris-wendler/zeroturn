@@ -6,8 +6,13 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 **Internal**
 
+- `doctor --compat --live` counted every permission denial the session recorded, including ones the harness refused of its own accord, and read any of them as the gate being honoured. It counts only denials of the subagent tool now. That tool has two names, `Agent` in a hook payload and `Task` in the session result, and both are counted.
+- A live session that could not start said so and nothing else, whatever the cause. It now carries the harness's own first line, which is where "this release has no such flag" or "not logged in" is written, and names the command that runs the checks needing no session.
+- The mutation guard carried on without its sandbox when the sandbox could not be created, which is the harm the sandbox exists to prevent, and silently. It stops instead.
+- The mutation guard rebuilt every package from cold for every mutant. Redirecting the home directory moved Go's caches with it, into a directory deleted after each run: 296 ms became 1998 ms for one package. The caches stay where they are, and a test holds both halves of the rule.
+
 - The Install section told everybody they need Go 1.17 or newer. That is true of `go install` and of nothing else: somebody taking a release archive needs no Go at all. It now names the two ways separately.
-- The README is in reading order: what it is, install, set it up, use it, then the detail. The install command appeared twice, a hundred and seventy lines apart, and the command that connects it to a harness sat fifty lines after the feature that needs it. Nothing was added and nothing was cut; the sections moved.
+- The README is in reading order: what it is, install, set it up, use it, then the detail. The install command appeared twice, a hundred and seventy lines apart, and the command that connects it to a harness sat fifty lines after the feature that needs it. The sections moved, the duplicated install block went, and two sentences were added saying what `verify` prints and when to reach for `doctor`.
 
 Nothing yet.
 

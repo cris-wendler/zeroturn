@@ -607,8 +607,17 @@ func compatLive(ctx context.Context) []check {
 	cmd.Env = append(os.Environ(), "ZEROTURN_STATE_DIR="+stateDir)
 	out, runErr := cmd.Output()
 	if runErr != nil && len(out) == 0 {
+		// The harness said why and it is the only actionable fact here:
+		// a flag this release does not have, no credentials, no network.
+		// Discarding it left one sentence for every one of those.
+		detail := "the session could not be started"
+		if ee, ok := runErr.(*exec.ExitError); ok {
+			if said := firstLine(string(ee.Stderr)); said != "" {
+				detail += ", and the harness said: " + said
+			}
+		}
 		return []check{{"live harness test", checkWarn,
-			"the session could not be started, so denial could not be confirmed"}}
+			detail + ". Nothing was confirmed against a real harness. Run zeroturn doctor --compat for the checks that need no session"}}
 	}
 	var result struct {
 		PermissionDenials []struct {
@@ -621,7 +630,34 @@ func compatLive(ctx context.Context) []check {
 	if json.Unmarshal(out, &result) != nil {
 		return []check{{"live harness test", checkWarn, "the session result could not be read"}}
 	}
-	return []check{judgeLive(len(result.PermissionDenials), result.SubagentStats.Spawned)}
+	// Only a denial of the subagent tool says anything about this gate.
+	// --restricted can refuse other tools of its own accord, and counting
+	// those would report a denial ZeroTurn was never asked about.
+	//
+	// The tool has two names. A hook payload calls it Agent, which is
+	// what the matcher and internal/events use; the session result calls
+	// it Task. Both are accepted so that this does not turn silent if a
+	// harness release reports the other one.
+	return []check{judgeLive(subagentDenials(names(result.PermissionDenials)), result.SubagentStats.Spawned)}
+}
+
+// subagentDenials counts only the denials of the tool this gate guards.
+// A session refuses other tools for reasons of its own, and --restricted
+// refuses several, so counting every denial would report one ZeroTurn
+// was never asked about as proof that the gate was honoured.
+//
+// The tool has two names. A hook payload calls it Agent, which is what
+// the matcher and internal/events use; the session result calls it Task.
+// Both are counted, so this does not go silent if a release reports the
+// other one.
+func subagentDenials(toolNames []string) int {
+	n := 0
+	for _, name := range toolNames {
+		if name == "Task" || name == "Agent" {
+			n++
+		}
+	}
+	return n
 }
 
 // judgeLive reads the session's own counts. It is separate from the
@@ -683,3 +719,24 @@ func newUUID() (string, error) {
 }
 
 func f64(v float64) *float64 { return &v }
+
+// firstLine is the harness's own message without the rest of its output,
+// which can run to a usage block.
+func firstLine(s string) string {
+	s = strings.TrimSpace(s)
+	if i := strings.IndexByte(s, '\n'); i >= 0 {
+		s = s[:i]
+	}
+	return strings.TrimSpace(s)
+}
+
+// names lifts the tool names out of the session's denial records.
+func names(denials []struct {
+	ToolName string `json:"tool_name"`
+}) []string {
+	out := make([]string, 0, len(denials))
+	for _, d := range denials {
+		out = append(out, d.ToolName)
+	}
+	return out
+}

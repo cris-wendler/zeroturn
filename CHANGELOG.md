@@ -6,6 +6,7 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 **Internal**
 
+- The Install section told everybody they need Go 1.17 or newer. That is true of `go install` and of nothing else: somebody taking a release archive needs no Go at all. It now names the two ways separately.
 - The README is in reading order: what it is, install, set it up, use it, then the detail. The install command appeared twice, a hundred and seventy lines apart, and the command that connects it to a harness sat fifty lines after the feature that needs it. Nothing was added and nothing was cut; the sections moved.
 
 Nothing yet.

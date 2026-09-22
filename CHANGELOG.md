@@ -4,6 +4,10 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
+Nothing yet.
+
+## 0.4.0, 2026-09-21
+
 **Added**
 
 - ZeroTurn installs as a Claude Code plugin: `/plugin marketplace add cris-wendler/zeroturn`. It carries the hooks and not the status line, because a plugin cannot contribute one, so it is a second install path rather than a replacement for `integrate`. The plugin does not bundle the executable either, and its hooks call `zeroturn` by name. `integrations/claude-plugin/hooks/hooks.json` is generated from the hook list and a test fails if the committed file is not what the generator produces.

@@ -16,13 +16,15 @@ import (
 
 // Version is set at build time by the release script. A build made with
 // go install carries no such value, so the module version recorded in
-// the executable is used instead, and a developer building from a
-// checkout keeps the default.
+// the executable is used instead. A checkout keeps the default only on
+// Go 1.17, which is the floor this project supports; from Go 1.18 a
+// build inside a repository is stamped with a pseudo version naming the
+// last tag and the commit, and that is what such a build reports.
 // defaultVersion is what a build from a checkout reports. It was written
 // out twice, as the value and as the thing the value is compared with, so
 // bumping it in one place and not the other would have made every build
 // claim to be a release.
-const defaultVersion = "0.3.0-dev"
+const defaultVersion = "0.4.0-dev"
 
 var Version = defaultVersion
 

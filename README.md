@@ -26,7 +26,7 @@ One executable. No dependencies, no network, no model calls. It never reads your
 
 ## Install
 
-Needs Go 1.17 or newer.
+**With Go 1.17 or newer:**
 
 ```sh
 go install github.com/cris-wendler/zeroturn/cmd/zeroturn@latest
@@ -34,7 +34,7 @@ go install github.com/cris-wendler/zeroturn/cmd/zeroturn@latest
 
 If `zeroturn` is not found afterwards, your Go bin directory is not on your `PATH`. Add `export PATH="$(go env GOPATH)/bin:$PATH"` to your shell profile.
 
-Release archives for macOS, Linux, and Windows are attached to each [release](https://github.com/cris-wendler/zeroturn/releases) with checksums. There is no Homebrew tap yet.
+**Without Go:** take an archive for macOS, Linux, or Windows from the [latest release](https://github.com/cris-wendler/zeroturn/releases/latest), check it against the `SHA256SUMS` beside it, and put the executable on your `PATH`. There is no Homebrew tap yet.
 
 ## Set it up
 

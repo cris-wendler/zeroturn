@@ -6,7 +6,12 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 **Fixed**
 
+- `doctor --compat --live` ran a session that inherited the settings of whoever ran it. A hook of theirs answered the prompt, the model never reached the Agent tool, and nothing was put to the gate. The session is isolated from user, project and local settings now, and asks the harness for a subagent as it was meant to.
 - `doctor --compat --live` reported that the harness had ignored a denial when no denial had been put to it. The check asked for one thing and reported another: a session that never tried to start a subagent produces no denials and no subagents, which is the same pair of zeroes as a session where nothing was asked, and it was read as a failure. There are three answers now, and the one where nothing was asked says so. Observed on Claude Code 2.1.277.
+
+**Added**
+
+- Claude Code 2.1.277 is published as tested. A denial was put to it and honoured, with no subagent started, in an isolated session. The releases `capabilities` publishes are now compared with the two documents that name them, which had already drifted: the integration document said one release when the list held two.
 
 ## 0.4.0, 2026-09-21
 

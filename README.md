@@ -303,7 +303,7 @@ Records live in `~/Library/Application Support/zeroturn` on macOS, `$XDG_DATA_HO
 
 ## Harnesses
 
-Claude Code is supported, tested on 2.1.265 and 2.1.270. Allow, ask and deny were each observed in a real session. Run `zeroturn doctor --compat --live` to repeat the denial test on your machine. It starts one short session and spends a small amount of usage.
+Claude Code is supported, tested on 2.1.265, 2.1.270 and 2.1.277. Allow, ask and deny were each observed in a real session. Run `zeroturn doctor --compat --live` to repeat the denial test on your machine. It starts one short session and spends a small amount of usage.
 
 GitHub Copilot CLI is not supported yet. No adapter ships, and one will be called supported only after it has run against a real session. The notes are in [docs/decisions.md](docs/decisions.md).
 

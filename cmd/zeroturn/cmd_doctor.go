@@ -586,10 +586,16 @@ func compatLive(ctx context.Context) []check {
 		return []check{{"live harness test", checkFail, "the temporary configuration could not be written"}}
 	}
 
+	// --restricted makes the harness ignore the user, project and local
+	// settings files while still applying the one named here. Without it
+	// the session inherits whatever the person running the test has
+	// configured, and a hook of theirs answered the prompt instead: the
+	// model never reached the Agent tool, so nothing was put to the gate
+	// and the test reported a denial that had been ignored.
 	cmd := exec.CommandContext(ctx, bin, "-p",
 		"Use the Agent tool to launch the Explore subagent to list files here.",
 		"--model", "haiku", "--settings", sp, "--session-id", sessionID,
-		"--output-format", "json", "--max-turns", "3")
+		"--restricted", "--output-format", "json", "--max-turns", "3")
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), "ZEROTURN_STATE_DIR="+stateDir)
 	out, runErr := cmd.Output()

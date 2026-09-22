@@ -323,3 +323,52 @@ func helpTextIn(t *testing.T, body string) string {
 	}
 	return b.String()
 }
+
+// The harness releases a decision was observed on are published by
+// capabilities and stated in two documents, and nothing compared the
+// three. They had already drifted: the integration document named one
+// release when the list held two.
+//
+// Each document carries one sentence saying what was tested. This reads
+// that sentence rather than the whole file, because both documents name
+// releases elsewhere for other reasons, and a check that scanned every
+// line would fail on a sentence about something else.
+func TestBothDocumentsNameEveryTestedHarnessRelease(t *testing.T) {
+	sentences := map[string]*regexp.Regexp{
+		"README.md":                        regexp.MustCompile(`Claude Code is supported, tested on (.*?)\. `),
+		"docs/integrations/claude-code.md": regexp.MustCompile(`Tested on Claude Code ([^\n]*?) on macOS`),
+	}
+	version := regexp.MustCompile(`\d+\.\d+\.\d+`)
+
+	for name, sentence := range sentences {
+		b, err := ioutil.ReadFile(filepath.Join("..", "..", filepath.FromSlash(name)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		m := sentence.FindStringSubmatch(string(b))
+		if m == nil {
+			t.Errorf("%s no longer says which releases were tested, so this test checks nothing", name)
+			continue
+		}
+		named := map[string]bool{}
+		for _, v := range version.FindAllString(m[1], -1) {
+			named[v] = true
+		}
+		for _, v := range capabilities.ClaudeTestedVersions {
+			if !named[v] {
+				t.Errorf("%s does not say %s was tested, and capabilities publishes it: %q", name, v, m[1])
+			}
+		}
+		for v := range named {
+			found := false
+			for _, published := range capabilities.ClaudeTestedVersions {
+				if v == published {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("%s says %s was tested, and capabilities does not publish it", name, v)
+			}
+		}
+	}
+}

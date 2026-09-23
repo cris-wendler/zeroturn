@@ -4,7 +4,9 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
-Nothing yet.
+**Internal**
+
+- `go test ./...` printed `Do the thing? [y/N]:` three times. The tests for the real confirmation run it against `/dev/null` and a pipe, and it prints its prompt to standard output, so a suite that was answering itself looked exactly like one waiting to be answered. In a package whose tests take over a minute, somebody interrupted a run over it. The prompt goes somewhere quiet now.
 
 ## 0.5.0, 2026-09-23
 

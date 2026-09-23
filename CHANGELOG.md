@@ -4,10 +4,7 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
-**Internal**
-
-- The README told a first time reader to run `zeroturn verify`, which on a fresh machine runs nothing: a repository's commands have to be approved once before they execute. A cold start from a clean home and an empty GOPATH walked into it. The first command shown is `zeroturn verify --approve` now, with a sentence saying why it asks.
-- `go test ./...` printed `Do the thing? [y/N]:` three times. The tests for the real confirmation run it against `/dev/null` and a pipe, and it prints its prompt to standard output, so a suite that was answering itself looked exactly like one waiting to be answered. In a package whose tests take over a minute, somebody interrupted a run over it. The prompt goes somewhere quiet now.
+Nothing yet.
 
 ## 0.5.0, 2026-09-23
 
@@ -19,6 +16,11 @@ Notable changes, newest first. The project follows semantic versioning from the 
 **Changed**
 
 - ZeroTurn reads the commands a session runs, which it did not before. Each is compared with the configured steps in memory and discarded; what reaches a record is the name of the step it matched, or nothing. The privacy section says so.
+
+**Internal**
+
+- The README told a first time reader to run `zeroturn verify`, which on a fresh machine runs nothing: a repository's commands have to be approved once before they execute. A cold start from a clean home and an empty GOPATH walked into it. The first command shown is `zeroturn verify --approve` now, with a sentence saying why it asks.
+- `go test ./...` printed `Do the thing? [y/N]:` three times. The tests for the real confirmation run it against `/dev/null` and a pipe, and it prints its prompt to standard output, so a suite that was answering itself looked exactly like one waiting to be answered. In a package whose tests take over a minute, somebody interrupted a run over it. The prompt goes somewhere quiet now.
 
 ## 0.4.2, 2026-09-22
 

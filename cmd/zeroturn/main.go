@@ -24,7 +24,7 @@ import (
 // out twice, as the value and as the thing the value is compared with, so
 // bumping it in one place and not the other would have made every build
 // claim to be a release.
-const defaultVersion = "0.4.2-dev"
+const defaultVersion = "0.5.0-dev"
 
 var Version = defaultVersion
 

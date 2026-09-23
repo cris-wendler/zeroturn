@@ -4,6 +4,10 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
+Nothing yet.
+
+## 0.5.0, 2026-09-23
+
 **Added**
 
 - A validation step is recorded when a coding session runs it, so evidence is a by-product of the work rather than a command to remember. ZeroTurn compares each command the harness reports against the steps in `.zeroturn.json`. Only the step run argument for argument counts; a narrower run, or one a shell would read differently, records nothing and is reported as a near miss so that a plan nothing matches can be told from the feature doing nothing. A record says `passed` only when every step has passed against the same repository state, and `partial` until then, naming what is outstanding.

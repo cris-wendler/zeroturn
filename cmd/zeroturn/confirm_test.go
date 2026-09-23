@@ -8,21 +8,33 @@ import (
 	"github.com/cris-wendler/zeroturn/internal/output"
 )
 
-// withStdin points os.Stdin at the named file for one test. The real
-// confirm reads os.Stdin directly, and every other test in this package
-// replaces the confirm variable instead, so nothing here had ever run
-// the function itself against a real file.
+// withStdin points os.Stdin at the named file for one test, and sends
+// what confirm prints somewhere nobody is looking. The real confirm
+// reads os.Stdin directly, and every other test in this package replaces
+// the confirm variable instead, so nothing here had ever run the
+// function itself against a real file.
+//
+// The prompt is swallowed because it went to the terminal running the
+// tests. go test ./... printed "Do the thing? [y/N]:" three times and
+// looked exactly like a suite waiting to be answered, in a package whose
+// tests take over a minute. It was not waiting for anything. Somebody
+// interrupted a run over it.
 func withStdin(t *testing.T, name string) {
 	t.Helper()
 	f, err := os.Open(name)
 	if err != nil {
 		t.Skipf("%s cannot be opened on this machine: %v", name, err)
 	}
-	orig := os.Stdin
-	os.Stdin = f
+	quiet, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
+	if err != nil {
+		t.Fatalf("the prompt could not be sent anywhere quiet: %v", err)
+	}
+	origIn, origOut := os.Stdin, os.Stdout
+	os.Stdin, os.Stdout = f, quiet
 	t.Cleanup(func() {
-		os.Stdin = orig
+		os.Stdin, os.Stdout = origIn, origOut
 		f.Close()
+		quiet.Close()
 	})
 }
 

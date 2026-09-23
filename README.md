@@ -97,11 +97,14 @@ The thresholds are starting points, not measurements. Adjust them to how you wor
 ## Use it
 
 ```sh
-zeroturn verify          # run the checks, and record what state they ran against
-zeroturn report current  # say whether that answer still covers the code
+zeroturn verify --approve   # the first time: review the commands, then run them
+zeroturn verify             # every time after that
+zeroturn report current     # say whether that answer still covers the code
 ```
 
-`verify` prints one line per step and ends with the state the run answered for. `report current` compares that state with the code on disk and says `STALE` when they differ.
+The first run asks. A repository's validation commands are whatever that repository put in `.zeroturn.json`, and they run directly on your machine, so `verify` prints them and waits for you to agree once. Changing any of them asks again. Without that approval `verify` runs nothing and says so.
+
+`verify` then prints one line per step and ends with the state the run answered for. `report current` compares that state with the code on disk and says `STALE` when they differ.
 
 ![Terminal recording. The ZeroTurn status line shows context at 82 percent, five hour usage at 81 percent, seven day usage at 47 percent, a session of 3 hours 12 minutes, 2 active subagents, and the word ask. zeroturn policy check shows the decision ask because context, five hour usage, and active subagents are past their thresholds. The credential guard then stops a file that holds an aws access key id from being read, and, with the prompt guard switched on, stops a message carrying the same key from being sent. zeroturn verify passes two checks and records evidence for the repository state it ran against, and zeroturn ship with dry run prints READY TO SHIP. The values are sample data.](docs/demo/zeroturn.svg)
 

@@ -53,3 +53,19 @@ Step names, step statuses, exit codes, counts, times, the log file names, and th
 Not stored: step output, because output carries whatever the tool printed. File contents, because the digest stands in for them. The paths of your changed files.
 
 Evidence is not aged out with session records. There is one record per repository and the next run replaces it, because deleting it would report a repository as never validated when it had been. `zeroturn uninstall` removes it with everything else, and so does `zeroturn report purge --all`.
+
+## Recorded without being asked
+
+Evidence written by `verify` is the strongest statement, because `verify` ran every step and watched each one finish.
+
+A step is also recorded when a coding session runs it. The harness reports each command that succeeded, ZeroTurn compares it with the steps in `.zeroturn.json`, and a match is written down. This exists because the command nobody remembers to run records nothing: in this repository, fifteen changes were merged over five days while the only evidence sat stale, because `verify` wraps commands a developer runs anyway and asks them to run a second one.
+
+Three rules keep such a record honest.
+
+**Only the step, argument for argument.** `go test ./...` is the step. `go test ./internal/policy` is not, and neither is `go test -run TestX ./...`: both did less work than the step describes. They are counted as near misses and recorded nowhere, so that a plan nothing matches can be told from the feature doing nothing.
+
+**A command a shell would read differently is never matched.** `go test ./... && echo done` is not the step, because what ran is not knowable from the string.
+
+**Steps must meet at one state.** A plan reads `passed` only when every step has passed against the same repository state. One step of two is `partial`, and says which are outstanding. A step seen before the code changed is dropped rather than counted towards the state that is here now.
+
+The command is read for that comparison and discarded. What reaches the record is the name of the step it matched.

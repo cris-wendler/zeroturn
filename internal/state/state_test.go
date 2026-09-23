@@ -243,6 +243,10 @@ var permittedFields = map[string]bool{
 	"credentialWarnings":   true,
 	"deniedSubagentStarts": true, "allowedSubagentStarts": true, "directValidations": true,
 	"directGitOperations": true, "lastDecision": true, "activeAgentIds": true,
+	// Counts of validation steps seen in commands a session ran, and of
+	// commands that were nearly one. Neither holds the command itself:
+	// it is compared with the configured steps in memory and discarded.
+	"observedSteps": true, "nearValidationRuns": true,
 	"gateOutcomes": true, "pendingAsk": true,
 	// Inside a gate outcome.
 	"gateOutcomes.decision": true, "gateOutcomes.at": true, "gateOutcomes.approved": true,

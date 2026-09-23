@@ -23,6 +23,10 @@ const (
 	TypeStatus      = "status"
 	TypeSubagentPre = "subagent.pre"
 	TypeFileRead    = "file.read"
+	// TypeCommandRan is a command a session ran and that succeeded. It
+	// carries the command so that it can be compared with the validation
+	// steps this repository configures, and for nothing else.
+	TypeCommandRan = "command.ran"
 	// TypePromptSubmit carries the message a developer is about to send.
 	// It exists only on the Claude path and only when the prompt guard is
 	// switched on. It is never part of the normalized contract, so an
@@ -60,6 +64,12 @@ type Event struct {
 	// prompt.submit. It is scanned in memory and never stored, never
 	// logged, and never written to a record.
 	Prompt string
+
+	// Command is the command a session ran, present only on
+	// command.ran. It is compared with the configured validation steps
+	// in memory and never stored, in the same way Prompt is scanned and
+	// discarded.
+	Command string
 
 	// FilePath is the file a read tool is about to open. It is the one
 	// tool argument ZeroTurn binds, so that a credential can be found
@@ -111,11 +121,19 @@ type claudePayload struct {
 		TotalDurationMS *int64 `json:"total_duration_ms"`
 	} `json:"cost"`
 
-	// ToolInput is declared with one field. The subagent prompt, the
-	// command, the replacement text, and everything else a tool carries
-	// have no field here and are therefore never bound to a variable.
+	// ToolInput is declared with two fields. The subagent prompt, the
+	// replacement text, and everything else a tool carries have no field
+	// here and are therefore never bound to a variable.
+	//
+	// Command is bound so that a command a session ran can be compared
+	// with the validation steps this repository configures. It is held
+	// in memory for that comparison and never stored: what reaches a
+	// record is the name of the step it matched, or nothing. A command
+	// can carry a secret in an argument, which is why it is read for one
+	// question and discarded rather than kept.
 	ToolInput *struct {
 		FilePath string `json:"file_path"`
+		Command  string `json:"command"`
 	} `json:"tool_input"`
 
 	// BackgroundTasks is counted, never inspected. Entries carry a
@@ -207,6 +225,18 @@ func ParseClaude(r io.Reader, eventName string) (Event, error) {
 		default:
 			return Event{}, errUnsupportedTool{p.ToolName}
 		}
+	case "PostToolUse":
+		if p.ToolName != "Bash" {
+			return Event{}, errUnsupportedTool{p.ToolName}
+		}
+		// PostToolUse fires only where a tool call succeeded; a failure
+		// raises PostToolUseFailure instead. So arriving here is itself
+		// the report that the command exited zero, and no exit code is
+		// carried or needed. Observed on Claude Code 2.1.277.
+		e.Type = TypeCommandRan
+		if p.ToolInput != nil {
+			e.Command = p.ToolInput.Command
+		}
 	case "UserPromptSubmit":
 		e.Type = TypePromptSubmit
 		e.Prompt = p.Prompt
@@ -258,6 +288,7 @@ type Normalized struct {
 	DurationMS       *int64   `json:"durationMs,omitempty"`
 	AgentID          string   `json:"agentId,omitempty"`
 	FilePath         string   `json:"filePath,omitempty"`
+	Command          string   `json:"command,omitempty"`
 	AgentType        string   `json:"agentType,omitempty"`
 	BackgroundTasks  *int     `json:"backgroundTasks,omitempty"`
 	EndReason        string   `json:"endReason,omitempty"`
@@ -300,7 +331,7 @@ func ParseNormalized(r io.Reader) (Event, error) {
 		ContextPct: n.ContextPct, ContextSize: n.ContextSize,
 		FiveHourPct: n.FiveHourPct, FiveHourResetsAt: n.FiveHourResetsAt,
 		SevenDayPct: n.SevenDayPct, SevenDayResetsAt: n.SevenDayResetsAt,
-		DurationMS: n.DurationMS, AgentID: n.AgentID, AgentType: n.AgentType, FilePath: n.FilePath,
+		DurationMS: n.DurationMS, AgentID: n.AgentID, AgentType: n.AgentType, FilePath: n.FilePath, Command: n.Command,
 		BackgroundTasks: n.BackgroundTasks, EndReason: n.EndReason,
 	}, nil
 }

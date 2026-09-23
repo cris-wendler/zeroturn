@@ -126,6 +126,14 @@
         "directGitOperations": {
           "type": "integer"
         },
+        "observedSteps": {
+          "type": "integer",
+          "description": "Validation steps seen to pass in a command the session ran. The command is compared with the configured steps in memory and is not stored."
+        },
+        "nearValidationRuns": {
+          "type": "integer",
+          "description": "Commands that were nearly a configured step and were not recorded, such as one package rather than every package. Reported so that a plan nothing matches can be told apart from the feature doing nothing."
+        },
         "lastDecision": {
           "enum": [
             "allow",

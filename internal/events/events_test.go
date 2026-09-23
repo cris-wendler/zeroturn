@@ -346,3 +346,40 @@ func TestTheContractErrorNamesWhatArrived(t *testing.T) {
 		t.Errorf("an empty name was put in the sentence: %q", unnamed)
 	}
 }
+
+// PostToolUse is accepted for Bash and refused for every other tool, and
+// the command is bound so that it can be compared with the configured
+// validation steps. A payload with no tool input at all is an ordinary
+// shape, not a crash: the event still arrives, carrying no command, and
+// nothing is recorded from it.
+func TestPostToolUseCarriesTheCommandForBashOnly(t *testing.T) {
+	const withCommand = `{"hook_event_name":"PostToolUse","session_id":"s1","tool_name":"Bash",` +
+		`"tool_input":{"command":"go test ./..."}}`
+	e, err := ParseClaude(strings.NewReader(withCommand), "PostToolUse")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e.Type != TypeCommandRan {
+		t.Errorf("type is %q, want %q", e.Type, TypeCommandRan)
+	}
+	if e.Command != "go test ./..." {
+		t.Errorf("the command is %q", e.Command)
+	}
+
+	const noInput = `{"hook_event_name":"PostToolUse","session_id":"s1","tool_name":"Bash"}`
+	e, err = ParseClaude(strings.NewReader(noInput), "PostToolUse")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e.Type != TypeCommandRan || e.Command != "" {
+		t.Errorf("a payload with no tool input gave type %q command %q", e.Type, e.Command)
+	}
+
+	// Every other tool is refused, so ZeroTurn never reads the arguments
+	// of a tool it has no question about.
+	const otherTool = `{"hook_event_name":"PostToolUse","session_id":"s1","tool_name":"Edit",` +
+		`"tool_input":{"command":"not mine"}}`
+	if _, err := ParseClaude(strings.NewReader(otherTool), "PostToolUse"); err == nil {
+		t.Error("PostToolUse was accepted for a tool other than Bash")
+	}
+}

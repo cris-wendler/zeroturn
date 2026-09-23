@@ -4,7 +4,14 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
-Nothing yet.
+**Added**
+
+- A validation step is recorded when a coding session runs it, so evidence is a by-product of the work rather than a command to remember. ZeroTurn compares each command the harness reports against the steps in `.zeroturn.json`. Only the step run argument for argument counts; a narrower run, or one a shell would read differently, records nothing and is reported as a near miss so that a plan nothing matches can be told from the feature doing nothing. A record says `passed` only when every step has passed against the same repository state, and `partial` until then, naming what is outstanding.
+- The contract is 2.3.0 and takes nothing away. It adds the `command.ran` event, the `observedSteps` and `nearValidationRuns` counts on the session document, and `partial` to the states a record and an assessment can hold.
+
+**Changed**
+
+- ZeroTurn reads the commands a session runs, which it did not before. Each is compared with the configured steps in memory and discarded; what reaches a record is the name of the step it matched, or nothing. The privacy section says so.
 
 ## 0.4.2, 2026-09-22
 

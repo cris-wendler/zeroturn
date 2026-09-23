@@ -73,6 +73,15 @@ type Session struct {
 	DirectValidations int `json:"directValidations"`
 	DirectGitOps      int `json:"directGitOperations"`
 
+	// ObservedSteps counts validation steps seen to pass in a command the
+	// session ran, and NearValidationRuns counts commands that were
+	// nearly a step and were not recorded. The second exists so that a
+	// developer whose commands never quite match the plan can be told
+	// that, rather than seeing nothing and concluding the feature is off.
+	// Neither holds the command: a count is not a record of what ran.
+	ObservedSteps      int `json:"observedSteps"`
+	NearValidationRuns int `json:"nearValidationRuns"`
+
 	// LastDecision records only the decision word, never the reason text
 	// and never anything from the subagent prompt.
 	LastDecision string `json:"lastDecision,omitempty"`

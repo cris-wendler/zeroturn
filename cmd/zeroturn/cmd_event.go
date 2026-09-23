@@ -217,6 +217,10 @@ func cmdEvent(ctx context.Context, args []string) error {
 	if e.Type == events.TypePromptSubmit {
 		return promptGate(st, guard.Config(), e)
 	}
+	if e.Type == events.TypeCommandRan {
+		recordObservedStep(st, guard.Config(), e)
+		return nil
+	}
 
 	if e.Type != events.TypeSubagentPre {
 		if _, uerr := session.Record(st, e); uerr != nil {

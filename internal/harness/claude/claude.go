@@ -28,6 +28,7 @@ type Hook struct {
 var Hooks = []Hook{
 	{"PreToolUse", "Agent", "the subagent gate"},
 	{"PreToolUse", "Read", "the credential guard, before a file is read"},
+	{"PostToolUse", "Bash", "records a validation step that passed, when a command was one"},
 	{"SubagentStart", "", "counts a subagent as started"},
 	{"SubagentStop", "", "counts it as stopped"},
 	{"Stop", "", "reads how many background tasks are running"},

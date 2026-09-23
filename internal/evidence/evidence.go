@@ -47,8 +47,13 @@ const (
 	// ResultRunning is stored before the steps start and replaced when
 	// they finish. A record still holding it describes a run that never
 	// reported back.
-	ResultRunning   = "running"
-	ResultPassed    = "passed"
+	ResultRunning = "running"
+	ResultPassed  = "passed"
+	// ResultPartial is a record assembled from steps observed in commands
+	// a session ran, where some step of the plan has not been seen at
+	// this state. It is deliberately not ResultPassed: the steps seen
+	// passed, and the rest were not run as far as anything here knows.
+	ResultPartial   = "partial"
 	ResultFailed    = "failed"
 	ResultCancelled = "cancelled"
 )
@@ -58,9 +63,13 @@ const (
 // record on purpose: a failure that has gone stale is still a failure,
 // and a state word that only said "stale" would hide it.
 const (
-	StateNeverRun  = "never-run"
-	StateRunning   = "running"
-	StatePassed    = "passed"
+	StateNeverRun = "never-run"
+	StateRunning  = "running"
+	StatePassed   = "passed"
+	// StatePartial is the word for a person when a record was assembled
+	// from observations and the plan is not complete at this state.
+	// Calling it passed or failed would be a claim nobody made.
+	StatePartial   = "partial"
 	StateFailed    = "failed"
 	StateCancelled = "cancelled"
 	StateStale     = "stale"
@@ -326,6 +335,13 @@ func Assess(r Record, found bool, now snapshot.Snapshot) Assessment {
 		case ResultPassed:
 			a.State = StatePassed
 			a.Reason = "Validation passed for the code that is here now."
+		case ResultPartial:
+			// Assembled from commands a session ran. The steps seen
+			// passed; the rest were not run as far as anything here
+			// knows, and calling that a pass would claim what nobody saw.
+			a.State = StatePartial
+			a.Reason = "Some of the validation steps have passed for the code that is here now, " +
+				"and the rest have not been seen to run. Run zeroturn verify for the whole plan."
 		case ResultFailed:
 			a.State = StateFailed
 			a.Reason = "Validation failed for the code that is here now. " +
@@ -351,6 +367,11 @@ func Assess(r Record, found bool, now snapshot.Snapshot) Assessment {
 	if r.Result == ResultCancelled {
 		a.Reason = "The last validation run was cancelled, and " + why + " since. " +
 			"Run zeroturn verify again for the current code."
+		return a
+	}
+	if r.Result == ResultPartial {
+		a.Reason = "Part of the plan had passed, and " + why + " since. " +
+			"Run zeroturn verify for the current code."
 		return a
 	}
 	a.Reason = "Validation is stale because " + why + " after the last successful run. " +

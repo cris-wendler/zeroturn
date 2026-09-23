@@ -29,6 +29,7 @@
         "status",
         "subagent.pre",
         "file.read",
+        "command.ran",
         "subagent.start",
         "subagent.stop",
         "session.stop",
@@ -119,7 +120,11 @@
     },
     "filePath": {
       "type": "string",
-      "description": "On file.read, the file a read tool is about to open. The only tool argument ZeroTurn reads."
+      "description": "On file.read, the file a read tool is about to open."
+    },
+    "command": {
+      "type": "string",
+      "description": "On command.ran, the command that ran and succeeded. It is compared with the validation steps the repository configures and is not stored: what reaches a record is the name of the step it matched, or nothing."
     }
   }
 }

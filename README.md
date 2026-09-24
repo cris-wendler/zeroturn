@@ -207,7 +207,11 @@ It says the checks passed for that code, on your machine, at that moment. It doe
 
 ### Recorded without being asked
 
-`verify` records evidence because it ran the steps itself. Steps are also recorded when a coding session happens to run them: ZeroTurn compares each command against the plan, and a step that passes is written down.
+`verify` records evidence because it ran the steps itself. Steps are also recorded when a coding agent happens to run them: ZeroTurn compares each command against the plan, and a step that passes is written down.
+
+This watches what the agent runs, and only that. It is a harness hook, so it sees the commands a coding session makes through its own tools. A command you type in your terminal never reaches it, because the harness was not involved. That is the case it is for: the evidence here went stale across fifteen merged changes because an agent ran the tests directly and nobody ran `verify` afterwards.
+
+Installing it needs a new coding session. Settings are read when a session starts, so `integrate` says so and a session already open does not pick it up.
 
 A record says `passed` only when every configured step has passed against the same state of the code. Until then it says `partial` and names what is outstanding. A narrower run, `go test ./internal/policy` where the step is `go test ./...`, records nothing, because it did less work than the step claims.
 

@@ -4,7 +4,9 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
-Nothing yet.
+**Internal**
+
+- The README said steps are recorded when a coding session runs them, without saying whose commands those are. It is a harness hook: it watches what an agent runs through its own tools, and a command typed in a terminal never reaches it. Somebody read it the other way and tried to make it record by hand.
 
 ## 0.5.0, 2026-09-23
 

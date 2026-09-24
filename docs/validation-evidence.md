@@ -58,7 +58,7 @@ Evidence is not aged out with session records. There is one record per repositor
 
 Evidence written by `verify` is the strongest statement, because `verify` ran every step and watched each one finish.
 
-A step is also recorded when a coding session runs it. The harness reports each command that succeeded, ZeroTurn compares it with the steps in `.zeroturn.json`, and a match is written down. This exists because the command nobody remembers to run records nothing: in this repository, fifteen changes were merged over five days while the only evidence sat stale, because `verify` wraps commands a developer runs anyway and asks them to run a second one.
+A step is also recorded when a coding agent runs it, and only then. This is a harness hook: it sees the commands a session makes through its own tools, and a command typed in a terminal never reaches it. A new session is needed after installing it, because settings are read when a session starts. The harness reports each command that succeeded, ZeroTurn compares it with the steps in `.zeroturn.json`, and a match is written down. This exists because the command nobody remembers to run records nothing: in this repository, fifteen changes were merged over five days while the only evidence sat stale, because `verify` wraps commands a developer runs anyway and asks them to run a second one.
 
 Three rules keep such a record honest.
 

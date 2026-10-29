@@ -122,6 +122,10 @@
       "type": "string",
       "description": "On file.read, the file a read tool is about to open."
     },
+    "ranged": {
+      "type": "boolean",
+      "description": "On file.read, true when the read names a starting line or a line count rather than the whole file."
+    },
     "command": {
       "type": "string",
       "description": "On command.ran, the command that ran and succeeded. It is compared with the validation steps the repository configures and is not stored: what reaches a record is the name of the step it matched, or nothing."

@@ -240,7 +240,9 @@ var permittedFields = map[string]bool{
 	"fiveHourBasePercent": true, "fiveHourBaseAt": true, "fiveHourBaseReset": true,
 	"sevenDayPercent": true, "sevenDayResetsAt": true, "subagentStarts": true, "subagentStops": true,
 	"activeSubagents": true, "peakActiveSubagents": true, "backgroundTasks": true, "confirmRequests": true,
-	"credentialWarnings":   true,
+	"credentialWarnings": true,
+	// A count of long reads turned back. It holds no path.
+	"steeredReads":         true,
 	"deniedSubagentStarts": true, "allowedSubagentStarts": true, "directValidations": true,
 	"directGitOperations": true, "lastDecision": true, "activeAgentIds": true,
 	// Counts of validation steps seen in commands a session ran, and of

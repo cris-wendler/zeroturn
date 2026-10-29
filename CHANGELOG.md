@@ -4,7 +4,10 @@ Notable changes, newest first. The project follows semantic versioning from the 
 
 ## Unreleased
 
-Nothing yet.
+**Added**
+
+- A whole read of a long text file is turned back, with a reason telling the model to search it with Grep or read the lines it needs with offset and limit. The limit is `guard.reads.maxLines`, 1000 lines by default and 0 to switch it off. A read that already names a range is never turned back, and a credential in the file is still reported first. Each read turned back is counted in the session record as `steeredReads`.
+- The contract is 2.4.0 and takes nothing away. It adds `ranged` to the file.read event and `steeredReads` to the session document.
 
 ## 0.5.0, 2026-09-23
 

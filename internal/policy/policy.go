@@ -291,6 +291,18 @@ func CredentialDecision(mode, file string, line int, categories []string) (decis
 		head, file, line, what)
 }
 
+// LargeReadDecision reports whether a whole file read should be turned
+// back. The reason is shown to the model, so it names what to do instead
+// rather than only what was refused. A read that names a range is the
+// model's own choice and is never turned back.
+func LargeReadDecision(maxLines int, file string, lines int, ranged bool) (decision, reason string) {
+	if maxLines < 1 || ranged || lines <= maxLines {
+		return DecisionAllow, ""
+	}
+	return DecisionDeny, fmt.Sprintf("%s has %s, more than the %s this repository reads whole. Search it with Grep first, or read the part you need with offset and limit.",
+		file, output.Counted(lines, "1 line", "%d lines"), output.Counted(maxLines, "1 line", "%d lines"))
+}
+
 // PromptCredentialDecision reports whether a message about to be sent
 // should be stopped. The harness has no way to ask about a message, so
 // the answer is block or nothing, and the reason never repeats the value.

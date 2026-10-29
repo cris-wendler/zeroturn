@@ -15,6 +15,7 @@ const (
 	KindChoice  = "choice"
 	KindDays    = "days"
 	KindText    = "text"
+	KindLines   = "lines"
 )
 
 // Key is one guard setting that can be read and changed by name.
@@ -75,6 +76,9 @@ var keys = []Key{
 		Choices: []string{PromptsOff, PromptsBlock},
 		str:     func(c *Config) *string { return &c.Guard.Credentials.Prompts }},
 
+	{Name: "guard.reads.maxLines", Label: "longest whole read", Kind: KindLines,
+		num: func(c *Config) *int { return &c.Guard.Reads.MaxLines }},
+
 	{Name: "report.retentionDays", Label: "records kept", Kind: KindDays,
 		num: func(c *Config) *int { return &c.Report.RetentionDays }},
 
@@ -126,6 +130,11 @@ func (k Key) Display(c Config) string {
 		return k.Value(c) + " minutes"
 	case KindDays:
 		return k.Value(c) + " days"
+	case KindLines:
+		if *k.num(&c) == 0 {
+			return "off"
+		}
+		return k.Value(c) + " lines"
 	}
 	return k.Value(c)
 }

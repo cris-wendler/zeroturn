@@ -44,7 +44,12 @@ import (
 // counts join the session document, `observedSteps` and
 // `nearValidationRuns`, and a record may now say `partial`: some step of
 // the plan passed at this state and some has not been seen to.
-const ContractVersion = "2.3.0"
+//
+// 2.4.0 adds `ranged` to the file.read event, `steeredReads` to the
+// session document, and the `guard.reads.maxLines` setting, and takes
+// nothing away. A whole read of a long text file is turned back with a
+// reason that tells the model to search it or read a range.
+const ContractVersion = "2.4.0"
 
 // ClaudeTestedVersions are the harness releases on which a decision was
 // observed end to end: allow and deny on the first, and the interactive

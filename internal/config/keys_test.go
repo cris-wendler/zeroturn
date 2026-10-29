@@ -199,6 +199,7 @@ func TestDisplayCarriesTheUnit(t *testing.T) {
 		"guard.session.durationWarnMinutes": strconv.Itoa(g.Guard.Session.DurationWarnMinutes) + " minutes",
 		"guard.session.activeSubagentsWarn": strconv.Itoa(g.Guard.Session.ActiveSubagentsWarn),
 		"guard.mode":                        g.Guard.Mode,
+		"guard.reads.maxLines":              strconv.Itoa(g.Guard.Reads.MaxLines) + " lines",
 	}
 	for name, w := range want {
 		k, ok := Lookup(name)
@@ -209,6 +210,18 @@ func TestDisplayCarriesTheUnit(t *testing.T) {
 		if got := k.Display(g); got != w {
 			t.Errorf("%s displays %q, want %q", name, got, w)
 		}
+	}
+}
+
+func TestALongReadLimitOfZeroIsOffAndAccepted(t *testing.T) {
+	c := Default()
+	c.Guard.Reads.MaxLines = 0
+	if err := c.Validate(); err != nil {
+		t.Fatalf("0 switches it off and was refused: %v", err)
+	}
+	k, _ := Lookup("guard.reads.maxLines")
+	if got := k.Display(c); got != "off" {
+		t.Errorf("displays %q, want off", got)
 	}
 }
 

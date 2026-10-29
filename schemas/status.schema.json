@@ -151,6 +151,10 @@
           "type": "integer",
           "minimum": 0
         },
+        "steeredReads": {
+          "type": "integer",
+          "minimum": 0
+        },
         "pendingAsk": {
           "type": "integer",
           "minimum": 0

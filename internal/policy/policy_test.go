@@ -204,6 +204,32 @@ func BenchmarkEvaluate(b *testing.B) {
 	}
 }
 
+func TestLargeReadDecisionTurnsBackOnlyAWholeReadPastTheLimit(t *testing.T) {
+	cases := []struct {
+		max, lines int
+		ranged     bool
+		want       string
+	}{
+		{100, 101, false, DecisionDeny},
+		{100, 100, false, DecisionAllow},
+		{100, 101, true, DecisionAllow},
+		{0, 5000, false, DecisionAllow},
+		{1, 2, false, DecisionDeny},
+	}
+	for _, c := range cases {
+		got, reason := LargeReadDecision(c.max, "f.go", c.lines, c.ranged)
+		if got != c.want {
+			t.Errorf("max %d lines %d ranged %v: %s, want %s", c.max, c.lines, c.ranged, got, c.want)
+		}
+		if (got == DecisionDeny) != (reason != "") {
+			t.Errorf("max %d lines %d: decision %s with reason %q", c.max, c.lines, got, reason)
+		}
+	}
+	if _, reason := LargeReadDecision(1, "f.go", 2, false); !strings.Contains(reason, "the 1 line this") {
+		t.Errorf("reason %q does not count one line as one", reason)
+	}
+}
+
 func TestCredentialDecision(t *testing.T) {
 	cases := []struct {
 		mode       string

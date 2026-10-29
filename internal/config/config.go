@@ -56,6 +56,10 @@ const (
 // constant, and this value is the one it has always had.
 const DefaultRetentionDays = 7
 
+// DefaultMaxReadLines is a starting point, not a measurement. It sits
+// at half of the 2000 lines the harness reads when no range is given.
+const DefaultMaxReadLines = 1000
+
 type Config struct {
 	Version int    `json:"version"`
 	Guard   Guard  `json:"guard"`
@@ -77,6 +81,14 @@ type Guard struct {
 	Limits      Limits      `json:"limits"`
 	Session     Session     `json:"session"`
 	Credentials Credentials `json:"credentials"`
+	Reads       Reads       `json:"reads"`
+}
+
+// Reads controls whether a whole file read is turned back when the file
+// is long, so the model searches it or reads a range instead.
+type Reads struct {
+	// MaxLines is the longest file read whole. Zero switches it off.
+	MaxLines int `json:"maxLines"`
 }
 
 // Credentials controls what happens when the model asks to read a file
@@ -138,6 +150,7 @@ func Default() Config {
 			Limits:      Limits{FiveHourWarn: 75, SevenDayWarn: 75, Projection: ProjectionOn},
 			Session:     Session{DurationWarnMinutes: 240, ActiveSubagentsWarn: 2, SubagentStartsWarn: 4},
 			Credentials: Credentials{Mode: CredentialAsk, Prompts: PromptsOff},
+			Reads:       Reads{MaxLines: DefaultMaxReadLines},
 		},
 		Report: Report{RetentionDays: DefaultRetentionDays},
 		Verify: Verify{Steps: []Step{}},
@@ -278,6 +291,10 @@ func (c Config) Validate() error {
 	if c.Guard.Session.SubagentStartsWarn < 1 {
 		return ValidationError{"guard.session.subagentStartsWarn", "value must be at least 1",
 			"set a whole number of subagent starts"}
+	}
+	if c.Guard.Reads.MaxLines < 0 {
+		return ValidationError{"guard.reads.maxLines", "value must not be negative",
+			"set a whole number of lines, or 0 to switch it off"}
 	}
 	seen := map[string]bool{}
 	for i, s := range c.Verify.Steps {

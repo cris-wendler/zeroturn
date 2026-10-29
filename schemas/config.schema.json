@@ -134,6 +134,17 @@
               "description": "Whether ZeroTurn reads each message before it is sent, looking for credentials. off is the default. block stops a message that carries one, which the harness then erases."
             }
           }
+        },
+        "reads": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "maxLines": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "The longest text file the model may read whole. A longer one is turned back with a reason telling the model to search it or read a range. 0 switches it off."
+            }
+          }
         }
       }
     },

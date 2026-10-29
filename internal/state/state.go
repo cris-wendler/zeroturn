@@ -66,6 +66,9 @@ type Session struct {
 	BackgroundTasks int `json:"backgroundTasks"`
 
 	CredentialWarnings int `json:"credentialWarnings"`
+	// SteeredReads counts whole reads of a long file that were turned
+	// back. It is the number a claim about context has to be measured on.
+	SteeredReads int `json:"steeredReads"`
 
 	ConfirmRequests   int `json:"confirmRequests"`
 	DeniedStarts      int `json:"deniedSubagentStarts"`

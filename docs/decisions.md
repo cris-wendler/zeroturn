@@ -952,3 +952,15 @@ A check that is permanently red in a supported arrangement is one people learn t
 Two tests hold it. One requires the fact to be reported and what to do to be named, without asserting the level, because the level is not the point. The other requires `doctor` to exit zero in an extension, which is the thing that was impossible before, and it fails if the level goes back.
 
 Nothing about the guard changed. It has the same measurements it had, and `policy check` and `status` say the same as they did.
+
+## 61. A long file is searched before it is read whole
+
+Date: 2026-10-29
+
+A whole read of a long file puts all of it into the conversation when the model usually needs a few lines of it. The harness lets a hook turn a read back with a reason the model reads, and lets a read name a starting line and a line count. So ZeroTurn turns back a whole read of a text file longer than `guard.reads.maxLines`, 1000 by default, and the reason says what to do instead: search the file, or read the lines needed.
+
+A read that names a range always goes through, so the model can always reach the file, and the rule never applies to a file holding a zero byte or to a notebook. The credential guard reads the same copy of the file and answers first, because a credential is the more serious thing to say about it.
+
+The offset and the limit are decoded raw and only asked whether they are present. Decoding them as numbers would let a value of another type fail the whole payload, and the credential guard would then be silent for that read.
+
+Each read turned back is counted as `steeredReads`. The project makes no claim about what this saves until that has been measured on real sessions, with the method published beside the number.

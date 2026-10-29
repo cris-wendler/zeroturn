@@ -22,6 +22,7 @@ One executable. No dependencies, no network, no model calls. It never reads your
 | **Validation evidence** | `verify` runs your checks and records the state of the code they passed for. `report current` says when that state is gone | [docs/validation-evidence.md](docs/validation-evidence.md) |
 | **Session Guard** | A status line with context, usage windows, session time and running subagents, and a gate that can ask before another subagent starts | [docs/session-guard.md](docs/session-guard.md) |
 | **Credential guard** | Before the model reads a file that holds a key, the harness asks you first | [docs/credential-guard.md](docs/credential-guard.md) |
+| **Long reads** | A whole read of a long text file is turned back, and the model is told to search it or read the lines it needs | [Long reads](#long-reads) |
 | **Ship** | `ship` stages only the files you name, scans them, runs the checks, and pushes without force. `--dry-run` changes nothing | `zeroturn ship --help` |
 
 ## Install
@@ -77,7 +78,8 @@ The file it writes looks like this:
     "context": { "warn": 70, "confirm": 80, "critical": 90 },
     "limits": { "fiveHourWarn": 75, "sevenDayWarn": 75, "projection": "on" },
     "session": { "durationWarnMinutes": 240, "activeSubagentsWarn": 2, "subagentStartsWarn": 4 },
-    "credentials": { "mode": "ask", "prompts": "off" }
+    "credentials": { "mode": "ask", "prompts": "off" },
+    "reads": { "maxLines": 1000 }
   },
   "report": { "retentionDays": 7 },
   "verify": {
@@ -176,6 +178,7 @@ Session Guard's measurements arrive through the harness status line and through 
 | --- | --- | --- | --- |
 | Validation evidence, `verify`, `ship` | yes | yes | yes |
 | Credential guard | yes | yes | yes |
+| Long reads | yes | yes | yes |
 | Subagent counts and the gate on them | yes | yes | yes |
 | Context, usage windows, session time | yes | no | no |
 
@@ -248,6 +251,16 @@ The gate also looks at how fast the five hour window is being used, and `zerotur
 ![Two guards. Files the model reads, on by default: before a file is opened ZeroTurn scans it and the harness asks you, with modes ask, deny, and off. Messages you send, off by default: switch it on and a message holding a key is stopped before it is sent, which means ZeroTurn reads your messages in that repository in memory, and a stopped message is erased. Both checks run on your machine, nothing is stored, and the explanation names the file, the line, and the kind, never the value.](docs/img/credential-guard.svg)
 
 On by default for files, in `ask` mode. Off by default for messages you send, because switching it on means ZeroTurn reads them. It is a guard, not a guarantee: it looks for high confidence patterns and skips files over 1 MB. Details in [docs/credential-guard.md](docs/credential-guard.md).
+
+## Long reads
+
+When the model asks to read a whole text file longer than 1000 lines, ZeroTurn turns the read back with a reason the model reads: search the file first, or read the part it needs with a starting line and a line count. A read that already names a range goes through, so the model can always get at the file. A credential in the file is reported first, as above.
+
+```sh
+zeroturn policy set guard.reads.maxLines 2000   # 0 switches it off
+```
+
+Each read turned back is counted in the session record. Nothing about the file is stored.
 
 ## Commands
 

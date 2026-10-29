@@ -75,6 +75,9 @@ type Event struct {
 	// tool argument ZeroTurn binds, so that a credential can be found
 	// before its content reaches the model.
 	FilePath string
+	// Ranged reports that the read names a starting line or a line
+	// count, so it is not a read of the whole file.
+	Ranged bool
 
 	BackgroundTasks *int
 
@@ -131,9 +134,15 @@ type claudePayload struct {
 	// record is the name of the step it matched, or nothing. A command
 	// can carry a secret in an argument, which is why it is read for one
 	// question and discarded rather than kept.
+	//
+	// Offset and Limit are only asked whether they are present. They are
+	// raw so that a value of an unexpected type cannot fail the decode,
+	// which would switch the credential guard off for that read.
 	ToolInput *struct {
-		FilePath string `json:"file_path"`
-		Command  string `json:"command"`
+		FilePath string          `json:"file_path"`
+		Command  string          `json:"command"`
+		Offset   json.RawMessage `json:"offset"`
+		Limit    json.RawMessage `json:"limit"`
 	} `json:"tool_input"`
 
 	// BackgroundTasks is counted, never inspected. Entries carry a
@@ -221,6 +230,7 @@ func ParseClaude(r io.Reader, eventName string) (Event, error) {
 			e.Type = TypeFileRead
 			if p.ToolInput != nil {
 				e.FilePath = p.ToolInput.FilePath
+				e.Ranged = present(p.ToolInput.Offset) || present(p.ToolInput.Limit)
 			}
 		default:
 			return Event{}, errUnsupportedTool{p.ToolName}
@@ -252,6 +262,11 @@ func ParseClaude(r io.Reader, eventName string) (Event, error) {
 		return Event{}, errors.New("event " + name + " is not part of the ZeroTurn contract")
 	}
 	return e, nil
+}
+
+func present(raw json.RawMessage) bool {
+	v := string(trimSpace(raw))
+	return v != "" && v != "null"
 }
 
 type errUnsupportedTool struct{ name string }
@@ -288,6 +303,7 @@ type Normalized struct {
 	DurationMS       *int64   `json:"durationMs,omitempty"`
 	AgentID          string   `json:"agentId,omitempty"`
 	FilePath         string   `json:"filePath,omitempty"`
+	Ranged           bool     `json:"ranged,omitempty"`
 	Command          string   `json:"command,omitempty"`
 	AgentType        string   `json:"agentType,omitempty"`
 	BackgroundTasks  *int     `json:"backgroundTasks,omitempty"`
@@ -331,7 +347,7 @@ func ParseNormalized(r io.Reader) (Event, error) {
 		ContextPct: n.ContextPct, ContextSize: n.ContextSize,
 		FiveHourPct: n.FiveHourPct, FiveHourResetsAt: n.FiveHourResetsAt,
 		SevenDayPct: n.SevenDayPct, SevenDayResetsAt: n.SevenDayResetsAt,
-		DurationMS: n.DurationMS, AgentID: n.AgentID, AgentType: n.AgentType, FilePath: n.FilePath, Command: n.Command,
+		DurationMS: n.DurationMS, AgentID: n.AgentID, AgentType: n.AgentType, FilePath: n.FilePath, Ranged: n.Ranged, Command: n.Command,
 		BackgroundTasks: n.BackgroundTasks, EndReason: n.EndReason,
 	}, nil
 }

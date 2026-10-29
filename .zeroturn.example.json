@@ -20,6 +20,9 @@
     "credentials": {
       "mode": "ask",
       "prompts": "off"
+    },
+    "reads": {
+      "maxLines": 1000
     }
   },
   "report": {

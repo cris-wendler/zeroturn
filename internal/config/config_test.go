@@ -31,7 +31,8 @@ func TestValidateRejects(t *testing.T) {
 		"verify.steps[1].name": func(c *Config) {
 			c.Verify.Steps = []Step{{Name: "a", Command: []string{"a"}}, {Name: "a", Command: []string{"b"}}}
 		},
-		"git.remote": func(c *Config) { c.Git.Remote = "" },
+		"git.remote":           func(c *Config) { c.Git.Remote = "" },
+		"guard.reads.maxLines": func(c *Config) { c.Guard.Reads.MaxLines = -1 },
 	}
 	for field, mutate := range cases {
 		c := Default()

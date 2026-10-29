@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -64,14 +65,13 @@ func scanTarget(path string) ([]byte, bool) {
 	return content, true
 }
 
-// credentialGate scans the file a read tool is about to open. It reads
-// the file, never the prompt, and reports the file, the line, and the
-// category, never the value.
-func credentialGate(st *state.Store, cfg config.Config, e events.Event) error {
+// fileReadGate answers a read tool that is about to open a file. The file
+// is read once, and both checks below look at that one copy.
+func fileReadGate(st *state.Store, cfg config.Config, e events.Event) error {
 	if e.FilePath == "" {
 		return nil
 	}
-	if cfg.Guard.Credentials.Mode == config.CredentialOff {
+	if cfg.Guard.Credentials.Mode == config.CredentialOff && cfg.Guard.Reads.MaxLines == 0 {
 		return nil
 	}
 	content, ok := scanTarget(e.FilePath)
@@ -84,17 +84,53 @@ func credentialGate(st *state.Store, cfg config.Config, e events.Event) error {
 			name = filepath.ToSlash(rel)
 		}
 	}
+	if credentialGate(st, cfg, e, name, content) {
+		return nil
+	}
+	largeReadGate(st, cfg, e, name, content)
+	return nil
+}
+
+// credentialGate scans the file a read tool is about to open. It reads
+// the file, never the prompt, and reports the file, the line, and the
+// category, never the value. It reports whether it answered.
+func credentialGate(st *state.Store, cfg config.Config, e events.Event, name string, content []byte) bool {
+	if cfg.Guard.Credentials.Mode == config.CredentialOff {
+		return false
+	}
 	findings, serr := security.ScanBytes(name, content)
 	if serr != nil || len(findings) == 0 {
-		return nil
+		return false
 	}
 
 	decision, reason := policy.CredentialDecision(cfg.Guard.Credentials.Mode, name, findings[0].Line, security.Categories(findings))
 	if decision == policy.DecisionAllow {
-		return nil
+		return false
 	}
 	st.Update(e.SessionID, session.RepoHashFor(e.CWD), func(s *state.Session) { s.CredentialWarnings++ })
-	return printDecision(decision, reason)
+	printDecision(decision, reason)
+	return true
+}
+
+// largeReadGate turns back a whole read of a long text file, with a
+// reason the model reads and acts on. A file holding a zero byte is not
+// text, and a notebook is shown by cell rather than by line, so neither
+// is counted. A file over the scan limit is left to the harness, which
+// refuses a read that large itself.
+func largeReadGate(st *state.Store, cfg config.Config, e events.Event, name string, content []byte) {
+	if bytes.IndexByte(content, 0) >= 0 || strings.EqualFold(filepath.Ext(name), ".ipynb") {
+		return
+	}
+	lines := bytes.Count(content, []byte("\n"))
+	if len(content) > 0 && content[len(content)-1] != '\n' {
+		lines++
+	}
+	decision, reason := policy.LargeReadDecision(cfg.Guard.Reads.MaxLines, name, lines, e.Ranged)
+	if decision == policy.DecisionAllow {
+		return
+	}
+	st.Update(e.SessionID, session.RepoHashFor(e.CWD), func(s *state.Session) { s.SteeredReads++ })
+	printDecision(decision, reason)
 }
 
 // promptGate scans the message a developer is about to send. The text
@@ -212,7 +248,7 @@ func cmdEvent(ctx context.Context, args []string) error {
 	st.SetRetention(guard.Config().Report.RetentionDays)
 
 	if e.Type == events.TypeFileRead {
-		return credentialGate(st, guard.Config(), e)
+		return fileReadGate(st, guard.Config(), e)
 	}
 	if e.Type == events.TypePromptSubmit {
 		return promptGate(st, guard.Config(), e)

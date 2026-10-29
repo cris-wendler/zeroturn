@@ -383,3 +383,31 @@ func TestPostToolUseCarriesTheCommandForBashOnly(t *testing.T) {
 		t.Error("PostToolUse was accepted for a tool other than Bash")
 	}
 }
+
+func TestARangeIsReadAsPresentOrAbsentOnly(t *testing.T) {
+	cases := map[string]bool{
+		`{}`:                           false,
+		`{"offset":null,"limit":null}`: false,
+		`{"offset":10}`:                true,
+		`{"limit":10}`:                 true,
+		`{"offset":null,"limit":10}`:   true,
+		`{"offset":"10"}`:              true,
+	}
+	for input, want := range cases {
+		payload := `{"session_id":"s","hook_event_name":"PreToolUse","tool_name":"Read","tool_input":` +
+			strings.TrimSuffix(input, "}")
+		if input == `{}` {
+			payload += `"file_path":"f"}}`
+		} else {
+			payload += `,"file_path":"f"}}`
+		}
+		e, err := ParseClaude(strings.NewReader(payload), "")
+		if err != nil {
+			t.Errorf("%s: %v", input, err)
+			continue
+		}
+		if e.Ranged != want {
+			t.Errorf("%s: ranged %v, want %v", input, e.Ranged, want)
+		}
+	}
+}
